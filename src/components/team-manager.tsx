@@ -1,0 +1,146 @@
+"use client";
+
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog } from "@/components/ui/dialog";
+import { inviteMember, removeMember, updateMemberRole } from "@/actions/team-actions";
+import { toast } from "sonner";
+import { UserPlus, Trash2, Shield } from "lucide-react";
+
+interface Project {
+  id: string;
+  name: string;
+  members: Array<{
+    id: string;
+    userId: string;
+    role: string;
+    user: { id: string; name: string | null; email: string; imageUrl: string | null };
+  }>;
+}
+
+export function TeamManager({ projects, currentUserId }: { projects: Project[]; currentUserId: string }) {
+  const [selectedProject, setSelectedProject] = useState(projects[0]?.id || "");
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const project = projects.find((p) => p.id === selectedProject);
+
+  async function handleInvite() {
+    if (!inviteEmail || !selectedProject) return;
+    setLoading(true);
+    const result = await inviteMember(selectedProject, inviteEmail, "EDITOR");
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Invitation sent");
+      setInviteOpen(false);
+      setInviteEmail("");
+    }
+    setLoading(false);
+  }
+
+  async function handleRemove(memberId: string) {
+    const result = await removeMember(selectedProject, memberId);
+    if (result.error) toast.error(result.error);
+    else toast.success("Member removed");
+  }
+
+  async function handleRoleChange(memberId: string, newRole: string) {
+    const result = await updateMemberRole(selectedProject, memberId, newRole);
+    if (result.error) toast.error(result.error);
+    else toast.success("Role updated");
+  }
+
+  const roleVariant = (role: string) => {
+    switch (role) {
+      case "OWNER": return "info" as const;
+      case "EDITOR": return "success" as const;
+      default: return "default" as const;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Project selector */}
+      <div className="flex items-center gap-4">
+        <select
+          value={selectedProject}
+          onChange={(e) => setSelectedProject(e.target.value)}
+          className="input-field max-w-xs"
+        >
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+        <Button onClick={() => setInviteOpen(true)} size="sm">
+          <UserPlus className="h-4 w-4" /> Invite
+        </Button>
+      </div>
+
+      {/* Members list */}
+      {project && (
+        <div className="card">
+          <div className="divide-y divide-gray-200 dark:divide-gray-800">
+            {project.members.map((member) => (
+              <div key={member.id} className="flex items-center justify-between py-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-medium text-brand-700 dark:bg-brand-900 dark:text-brand-300">
+                    {member.user.name?.[0]?.toUpperCase() || member.user.email[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {member.user.name || member.user.email}
+                    </p>
+                    <p className="text-xs text-gray-500">{member.user.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={roleVariant(member.role)}>{member.role}</Badge>
+                  {member.userId !== currentUserId && member.role !== "OWNER" && (
+                    <>
+                      <select
+                        value={member.role}
+                        onChange={(e) => handleRoleChange(member.id, e.target.value)}
+                        className="input-field h-7 w-24 text-xs"
+                      >
+                        <option value="EDITOR">Editor</option>
+                        <option value="VIEWER">Viewer</option>
+                      </select>
+                      <button
+                        onClick={() => handleRemove(member.id)}
+                        className="rounded p-1 text-gray-400 hover:text-red-600"
+                        aria-label="Remove member"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Invite dialog */}
+      <Dialog open={inviteOpen} onClose={() => setInviteOpen(false)} title="Invite Team Member">
+        <div className="space-y-4">
+          <Input
+            label="Email address"
+            type="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            placeholder="colleague@company.com"
+          />
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setInviteOpen(false)}>Cancel</Button>
+            <Button onClick={handleInvite} loading={loading}>Send Invite</Button>
+          </div>
+        </div>
+      </Dialog>
+    </div>
+  );
+}

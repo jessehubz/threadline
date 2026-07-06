@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  BLOCKED
+  AWAITING_APPROVAL
+  REJECTED
+  COMPLETE
+}
+
+enum MemberRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum NotificationType {
+  ASSIGNED
+  APPROVAL_REQUESTED
+  APPROVED
+  REJECTED
+  DUE_SOON
+  MENTIONED
+  INVITED
+}
+
+enum CompletionRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NodeType {
+  TASK
+  FOLDER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  imageUrl  String?
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Preferences
+  theme              String @default("system")
+  emailNotifications Boolean @default(true)
+  notifyAssigned     Boolean @default(true)
+  notifyApproval     Boolean @default(true)
+  notifyDueSoon      Boolean @default(true)
+  notifyMentioned    Boolean @default(true)
+
+  memberships       ProjectMember[]
+  taskAssignments   TaskAssignment[]
+  notifications     Notification[]
+  completionRequestsSubmitted CompletionRequest[] @relation("Requester")
+  completionRequestsReceived  CompletionRequest[] @relation("Approver")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  shareToken  String?  @unique @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members ProjectMember[]
+  graphs  Graph[]
+}
+
+model ProjectMember {
+  id        String     @id @default(cuid())
+  userId    String
+  projectId String
+  role      MemberRole @default(VIEWER)
+  createdAt DateTime   @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+}
+
+model Graph {
+  id        String   @id @default(cuid())
+  projectId String
+  name      String   @default("Root")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  nodes      TaskNode[]
+  edges      Edge[]
+  parentNode TaskNode?  @relation("SubGraph")
+}
+
+model TaskNode {
+  id          String     @id @default(cuid())
+  graphId     String
+  title       String     @default("New Task")
+  description String?
+  status      TaskStatus @default(NOT_STARTED)
+  nodeType    NodeType   @default(TASK)
+  color       String?
+  dueDate     DateTime?
+  positionX   Float      @default(0)
+  positionY   Float      @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Sub-graph relationship
+  subGraphId String? @unique
+  subGraph   Graph?  @relation("SubGraph", fields: [subGraphId], references: [id], onDelete: SetNull)
+
+  graph       Graph            @relation(fields: [graphId], references: [id], onDelete: Cascade)
+  assignments TaskAssignment[]
+  attachments Attachment[]
+  completionRequests CompletionRequest[]
+
+  // Edges
+  outgoingEdges Edge[] @relation("SourceNode")
+  incomingEdges Edge[] @relation("TargetNode")
+}
+
+model Edge {
+  id           String @id @default(cuid())
+  graphId      String
+  sourceNodeId String
+  targetNodeId String
+  createdAt    DateTime @default(now())
+
+  graph      Graph    @relation(fields: [graphId], references: [id], onDelete: Cascade)
+  sourceNode TaskNode @relation("SourceNode", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+  targetNode TaskNode @relation("TargetNode", fields: [targetNodeId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceNodeId, targetNodeId])
+}
+
+model TaskAssignment {
+  id        String  @id @default(cuid())
+  nodeId    String
+  userId    String
+  isApprover Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  node TaskNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([nodeId, userId])
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  nodeId    String
+  fileName  String
+  fileUrl   String
+  fileType  String
+  fileSize  Int
+  createdAt DateTime @default(now())
+
+  node TaskNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+}
+
+model CompletionRequest {
+  id              String                  @id @default(cuid())
+  nodeId          String
+  requesterId     String
+  approverId      String
+  status          CompletionRequestStatus @default(PENDING)
+  rejectionReason String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  node      TaskNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  requester User     @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  approver  User     @relation("Approver", fields: [approverId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id              String           @id @default(cuid())
+  userId          String
+  type            NotificationType
+  message         String
+  read            Boolean          @default(false)
+  relatedNodeId   String?
+  relatedProjectId String?
+  createdAt       DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Invite {
+  id        String     @id @default(cuid())
+  email     String
+  projectId String
+  role      MemberRole @default(EDITOR)
+  token     String     @unique @default(cuid())
+  accepted  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  expiresAt DateTime
+}
