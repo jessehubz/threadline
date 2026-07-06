@@ -63,20 +63,25 @@ model User {
   memberships       ProjectMember[]
   taskAssignments   TaskAssignment[]
   notifications     Notification[]
+  messages          Message[]
   completionRequestsSubmitted CompletionRequest[] @relation("Requester")
   completionRequestsReceived  CompletionRequest[] @relation("Approver")
+  comments          Comment[]
+  directMessages    DirectMessage[]
+  conversations     ConversationParticipant[]
 }
 
 model Project {
   id          String   @id @default(cuid())
   name        String
   description String?
-  shareToken  String?  @unique @default(cuid())
+  shareToken  String?  @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   members ProjectMember[]
   graphs  Graph[]
+  messages Message[]
 }
 
 model ProjectMember {
@@ -127,6 +132,7 @@ model TaskNode {
   assignments TaskAssignment[]
   attachments Attachment[]
   completionRequests CompletionRequest[]
+  comments    Comment[]
 
   // Edges
   outgoingEdges Edge[] @relation("SourceNode")
@@ -205,8 +211,78 @@ model Invite {
   email     String
   projectId String
   role      MemberRole @default(EDITOR)
-  token     String     @unique @default(cuid())
+  token     String     @unique
   accepted  Boolean    @default(false)
   createdAt DateTime   @default(now())
   expiresAt DateTime
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  nodeId    String
+  userId    String
+  content   String
+  isPrivate Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  node        TaskNode           @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attachments CommentAttachment[]
+}
+
+model CommentAttachment {
+  id        String   @id @default(cuid())
+  commentId String
+  fileName  String
+  fileUrl   String
+  fileType  String
+  fileSize  Int
+  createdAt DateTime @default(now())
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  isGroup   Boolean  @default(false)
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages     DirectMessage[]
+}
+
+model ConversationParticipant {
+  id             String @id @default(cuid())
+  conversationId String
+  userId         String
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model DirectMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

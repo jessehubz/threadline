@@ -71,9 +71,10 @@ interface GraphEditorProps {
   role: string;
   breadcrumbs: Array<{ id: string; name: string; graphId?: string }>;
   currentPath: string[];
+  currentUserId: string;
 }
 
-export function GraphEditor({ projectId, graph, projectName, shareToken, members, role, breadcrumbs, currentPath }: GraphEditorProps) {
+export function GraphEditor({ projectId, graph, projectName, shareToken, members, role, breadcrumbs, currentPath, currentUserId }: GraphEditorProps) {
   const isReadOnly = role === "VIEWER";
   const router = useRouter();
 
@@ -351,6 +352,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
           <TaskDetailPanel
             key={selectedNodeId}
             projectId={projectId}
+            currentUserId={currentUserId}
             node={selectedNode}
             graphEdges={edges.map((e) => ({ id: e.id, sourceNodeId: e.source, targetNodeId: e.target }))}
             graphNodes={graph.nodes}

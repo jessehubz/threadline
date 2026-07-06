@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
+import { generateSecureToken } from "@/lib/tokens";
 import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 
@@ -76,6 +77,7 @@ export async function createProject(formData: FormData) {
     data: {
       name: parsed.data.name,
       description: parsed.data.description || null,
+      shareToken: generateSecureToken(),
       members: {
         create: {
           userId: user.id,

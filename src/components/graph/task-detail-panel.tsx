@@ -10,6 +10,7 @@ import { updateNode, createSubGraph } from "@/actions/graph-actions";
 import { submitForApproval } from "@/actions/approval-actions";
 import { assignUser, unassignUser } from "@/actions/assignment-actions";
 import { FileUpload } from "@/components/file-upload";
+import { TaskComments } from "@/components/graph/task-comments";
 import { cn, getStatusColor, getStatusLabel } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -21,6 +22,7 @@ const PRESET_COLORS = [
 
 interface TaskDetailPanelProps {
   projectId: string;
+  currentUserId: string;
   node: {
     id: string;
     title: string;
@@ -51,7 +53,7 @@ const STATUS_OPTIONS = [
 ];
 
 export function TaskDetailPanel({
-  projectId, node, graphEdges, graphNodes, members, isReadOnly, onClose, onDelete, currentPath,
+  projectId, currentUserId, node, graphEdges, graphNodes, members, isReadOnly, onClose, onDelete, currentPath,
 }: TaskDetailPanelProps) {
   const router = useRouter();
   const [title, setTitle] = useState(node.title);
@@ -272,6 +274,11 @@ export function TaskDetailPanel({
         <div>
           <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-gray-400">Attachments</label>
           <FileUpload nodeId={node.id} projectId={projectId} attachments={node.attachments} isReadOnly={isReadOnly} />
+        </div>
+
+        {/* Comments */}
+        <div>
+          <TaskComments nodeId={node.id} currentUserId={currentUserId} isReadOnly={isReadOnly} />
         </div>
 
         {/* Sub-graph */}

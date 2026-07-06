@@ -1,6 +1,7 @@
 import { getGraphData, getBreadcrumbs } from "@/actions/graph-actions";
 import { GraphEditor } from "@/components/graph/graph-editor";
 import { prisma } from "@/lib/prisma";
+import { requireUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 interface GraphPageProps {
@@ -11,6 +12,8 @@ interface GraphPageProps {
 export default async function GraphPage({ params, searchParams }: GraphPageProps) {
   const { projectId } = await params;
   const { path, graphId } = await searchParams;
+
+  const user = await requireUser();
 
   let data;
   try {
@@ -45,6 +48,7 @@ export default async function GraphPage({ params, searchParams }: GraphPageProps
         role={data.role}
         breadcrumbs={breadcrumbs}
         currentPath={pathArray}
+        currentUserId={user.id}
       />
     </div>
   );

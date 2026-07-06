@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { pusherClient } from "@/lib/pusher-client";
+import { getPusherClient } from "@/lib/pusher-client";
 
 interface PusherCallbacks {
   onNodeCreated?: (data: unknown) => void;
@@ -14,7 +14,7 @@ interface PusherCallbacks {
 
 export function usePusher(graphId: string, callbacks: PusherCallbacks) {
   useEffect(() => {
-    const channel = pusherClient.subscribe(`private-graph-${graphId}`);
+    const channel = getPusherClient().subscribe(`private-graph-${graphId}`);
 
     if (callbacks.onNodeCreated) channel.bind("node-created", callbacks.onNodeCreated);
     if (callbacks.onNodeUpdated) channel.bind("node-updated", callbacks.onNodeUpdated);
@@ -25,7 +25,7 @@ export function usePusher(graphId: string, callbacks: PusherCallbacks) {
 
     return () => {
       channel.unbind_all();
-      pusherClient.unsubscribe(`private-graph-${graphId}`);
+      getPusherClient().unsubscribe(`private-graph-${graphId}`);
     };
   }, [graphId]); // eslint-disable-line react-hooks/exhaustive-deps
 }

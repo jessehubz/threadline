@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { pusherClient } from "@/lib/pusher-client";
+import { getPusherClient } from "@/lib/pusher-client";
 import { cn } from "@/lib/utils";
 
 interface Member {
@@ -14,7 +14,7 @@ export function CollaboratorPresence({ graphId }: { graphId: string }) {
   const [members, setMembers] = useState<Member[]>([]);
 
   useEffect(() => {
-    const channel = pusherClient.subscribe(`presence-graph-${graphId}`);
+    const channel = getPusherClient().subscribe(`presence-graph-${graphId}`);
 
     channel.bind("pusher:subscription_succeeded", (data: { members: Record<string, Member> }) => {
       setMembers(Object.values(data.members));
@@ -29,7 +29,7 @@ export function CollaboratorPresence({ graphId }: { graphId: string }) {
     });
 
     return () => {
-      pusherClient.unsubscribe(`presence-graph-${graphId}`);
+      getPusherClient().unsubscribe(`presence-graph-${graphId}`);
     };
   }, [graphId]);
 

@@ -5,6 +5,8 @@ import { requireUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { wouldCreateCycle, canCompleteNode, deriveParentStatus } from "@/lib/graph-utils";
 import { pusherServer } from "@/lib/pusher";
+import { sanitizeTitle, sanitizeText } from "@/lib/sanitize";
+import { rateLimiters } from "@/lib/rate-limit";
 
 async function requireProjectAccess(projectId: string, minRole: "VIEWER" | "EDITOR" | "OWNER" = "VIEWER") {
   const user = await requireUser();
@@ -42,12 +44,19 @@ export async function getGraphData(projectId: string, graphId?: string) {
   const targetGraphId = graphId || project.graphs[0]?.id;
   if (!targetGraphId) throw new Error("No graph found");
 
+  // IDOR fix: verify graph belongs to this project
   const graph = await prisma.graph.findUnique({
-    where: { id: targetGraphId },
+    where: { id: targetGraphId, projectId },
     include: {
       nodes: {
         include: {
-          assignments: { include: { user: true } },
+          assignments: {
+            include: {
+              user: {
+                select: { id: true, name: true, email: true, imageUrl: true },
+              },
+            },
+          },
           attachments: true,
           subGraph: { include: { nodes: { select: { id: true, status: true } } } },
           incomingEdges: true,
@@ -74,17 +83,43 @@ export async function createNode(
 ) {
   const { user } = await requireProjectAccess(projectId, "EDITOR");
 
+  // Rate limit node creation
+  const { success: rateLimitOk } = await rateLimiters.api.check(user.id);
+  if (!rateLimitOk) throw new Error("Too many requests. Please wait.");
+
+  // IDOR fix: verify graph belongs to this project
+  const graph = await prisma.graph.findUnique({
+    where: { id: graphId, projectId },
+    select: { id: true },
+  });
+  if (!graph) throw new Error("Graph not found in this project");
+
+  // Validate inputs
+  if (!Number.isFinite(data.positionX) || !Number.isFinite(data.positionY)) {
+    throw new Error("Invalid position");
+  }
+  if (data.color && !/^#[0-9a-fA-F]{6}$/.test(data.color)) {
+    throw new Error("Invalid color");
+  }
+  if (data.nodeType && !["TASK", "FOLDER"].includes(data.nodeType)) {
+    throw new Error("Invalid node type");
+  }
+
   const node = await prisma.taskNode.create({
     data: {
       graphId,
-      title: data.title || (data.nodeType === "FOLDER" ? "New Folder" : "New Task"),
+      title: sanitizeTitle(data.title || (data.nodeType === "FOLDER" ? "New Folder" : "New Task")),
       nodeType: (data.nodeType as "TASK" | "FOLDER") || "TASK",
       color: data.color || null,
       positionX: data.positionX,
       positionY: data.positionY,
     },
     include: {
-      assignments: { include: { user: true } },
+      assignments: {
+        include: {
+          user: { select: { id: true, name: true, email: true, imageUrl: true } },
+        },
+      },
       attachments: true,
       incomingEdges: true,
       outgoingEdges: true,
@@ -112,10 +147,13 @@ export async function updateNode(
 
   const existingNode = await prisma.taskNode.findUnique({
     where: { id: nodeId },
-    include: { incomingEdges: true, outgoingEdges: true, graph: true },
+    include: { incomingEdges: true, outgoingEdges: true, graph: { select: { projectId: true } } },
   });
 
   if (!existingNode) throw new Error("Node not found");
+
+  // IDOR fix: verify node belongs to this project
+  if (existingNode.graph.projectId !== projectId) throw new Error("Node not found");
 
   // If trying to complete, check dependencies
   if (data.status === "COMPLETE" || data.status === "AWAITING_APPROVAL") {
@@ -135,19 +173,37 @@ export async function updateNode(
   }
 
   const updateData: Record<string, unknown> = {};
-  if (data.title !== undefined) updateData.title = data.title;
-  if (data.description !== undefined) updateData.description = data.description;
-  if (data.status !== undefined) updateData.status = data.status;
-  if (data.color !== undefined) updateData.color = data.color;
+  if (data.title !== undefined) updateData.title = sanitizeTitle(data.title);
+  if (data.description !== undefined) updateData.description = data.description ? sanitizeText(data.description) : null;
+  if (data.status !== undefined) {
+    const validStatuses = ["NOT_STARTED", "IN_PROGRESS", "BLOCKED", "AWAITING_APPROVAL", "REJECTED", "COMPLETE"];
+    if (!validStatuses.includes(data.status)) throw new Error("Invalid status");
+    updateData.status = data.status;
+  }
+  if (data.color !== undefined) {
+    // Allow null or valid hex color
+    if (data.color !== null && !/^#[0-9a-fA-F]{6}$/.test(data.color)) throw new Error("Invalid color");
+    updateData.color = data.color;
+  }
   if (data.dueDate !== undefined) updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
-  if (data.positionX !== undefined) updateData.positionX = data.positionX;
-  if (data.positionY !== undefined) updateData.positionY = data.positionY;
+  if (data.positionX !== undefined) {
+    if (!Number.isFinite(data.positionX)) throw new Error("Invalid position");
+    updateData.positionX = data.positionX;
+  }
+  if (data.positionY !== undefined) {
+    if (!Number.isFinite(data.positionY)) throw new Error("Invalid position");
+    updateData.positionY = data.positionY;
+  }
 
   const node = await prisma.taskNode.update({
     where: { id: nodeId },
     data: updateData,
     include: {
-      assignments: { include: { user: true } },
+      assignments: {
+        include: {
+          user: { select: { id: true, name: true, email: true, imageUrl: true } },
+        },
+      },
       attachments: true,
       incomingEdges: true,
       outgoingEdges: true,
@@ -171,6 +227,15 @@ export async function updateNodePosition(
 ) {
   await requireProjectAccess(projectId, "EDITOR");
 
+  // IDOR fix: verify node belongs to this project
+  const existingNode = await prisma.taskNode.findUnique({
+    where: { id: nodeId },
+    select: { graph: { select: { projectId: true } } },
+  });
+  if (!existingNode || existingNode.graph.projectId !== projectId) {
+    throw new Error("Node not found");
+  }
+
   const node = await prisma.taskNode.update({
     where: { id: nodeId },
     data: { positionX, positionY },
@@ -191,10 +256,13 @@ export async function deleteNode(projectId: string, nodeId: string) {
 
   const node = await prisma.taskNode.findUnique({
     where: { id: nodeId },
-    select: { id: true, graphId: true },
+    select: { id: true, graphId: true, graph: { select: { projectId: true } } },
   });
 
   if (!node) throw new Error("Node not found");
+
+  // IDOR fix: verify node belongs to this project
+  if (node.graph.projectId !== projectId) throw new Error("Node not found");
 
   await prisma.taskNode.delete({ where: { id: nodeId } });
   await pusherServer.trigger(`private-graph-${node.graphId}`, "node-deleted", { id: nodeId });
@@ -208,6 +276,26 @@ export async function createEdge(
   targetNodeId: string
 ) {
   await requireProjectAccess(projectId, "EDITOR");
+
+  // IDOR fix: verify graph belongs to this project
+  const graph = await prisma.graph.findUnique({
+    where: { id: graphId, projectId },
+    select: { id: true },
+  });
+  if (!graph) throw new Error("Graph not found in this project");
+
+  // IDOR fix: verify both nodes belong to this graph
+  const sourceNode = await prisma.taskNode.findUnique({
+    where: { id: sourceNodeId },
+    select: { graphId: true },
+  });
+  const targetNode = await prisma.taskNode.findUnique({
+    where: { id: targetNodeId },
+    select: { graphId: true },
+  });
+  if (!sourceNode || sourceNode.graphId !== graphId || !targetNode || targetNode.graphId !== graphId) {
+    throw new Error("Nodes must belong to the specified graph");
+  }
 
   // Get all edges in this graph for cycle detection
   const existingEdges = await prisma.edge.findMany({
@@ -241,10 +329,13 @@ export async function deleteEdge(projectId: string, edgeId: string) {
 
   const edge = await prisma.edge.findUnique({
     where: { id: edgeId },
-    select: { id: true, graphId: true },
+    select: { id: true, graphId: true, graph: { select: { projectId: true } } },
   });
 
   if (!edge) throw new Error("Edge not found");
+
+  // IDOR fix: verify edge belongs to this project
+  if (edge.graph.projectId !== projectId) throw new Error("Edge not found");
 
   await prisma.edge.delete({ where: { id: edgeId } });
   await pusherServer.trigger(`private-graph-${edge.graphId}`, "edge-deleted", { id: edgeId });
@@ -256,10 +347,14 @@ export async function createSubGraph(projectId: string, nodeId: string) {
 
   const node = await prisma.taskNode.findUnique({
     where: { id: nodeId },
-    include: { graph: true },
+    include: { graph: { select: { projectId: true } } },
   });
 
   if (!node) throw new Error("Node not found");
+
+  // IDOR fix: verify node belongs to this project
+  if (node.graph.projectId !== projectId) throw new Error("Node not found");
+
   if (node.subGraphId) throw new Error("Node already has a sub-graph");
 
   const subGraph = await prisma.graph.create({
@@ -279,6 +374,9 @@ export async function createSubGraph(projectId: string, nodeId: string) {
 }
 
 export async function getBreadcrumbs(projectId: string, path: string[]) {
+  // IDOR fix: verify user has access to this project
+  await requireProjectAccess(projectId, "VIEWER");
+
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     select: { name: true },

@@ -70,6 +70,17 @@ export async function unassignUser(projectId: string, nodeId: string, userId: st
 export async function getProjectMembers(projectId: string) {
   const user = await requireUser();
 
+  // IDOR check: verify requester is a member of this project
+  const requesterMembership = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: { userId: user.id, projectId },
+    },
+  });
+
+  if (!requesterMembership) {
+    throw new Error("Not a member of this project");
+  }
+
   const members = await prisma.projectMember.findMany({
     where: { projectId },
     include: { user: true },

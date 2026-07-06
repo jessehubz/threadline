@@ -10,12 +10,16 @@ import {
   Settings,
   User,
   CalendarDays,
+  MessageSquare,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "My Tasks", href: "/my-tasks", icon: CalendarDays },
+  { name: "Messages", href: "/messages", icon: MessageSquare },
+  { name: "Calendar", href: "/calendar", icon: Calendar },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Team", href: "/team", icon: Users },
   { name: "Settings", href: "/settings", icon: Settings },

@@ -1,8 +1,23 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { rateLimiters } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Rate limit check
+  const { success, resetAt } = await rateLimiters.upload.check(user.id);
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many uploads. Please wait." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   const body = (await req.json()) as HandleUploadBody;
 
   try {
@@ -10,9 +25,7 @@ export async function POST(req: NextRequest) {
       body,
       request: req,
       onBeforeGenerateToken: async () => {
-        const user = await getCurrentUser();
-        if (!user) throw new Error("Unauthorized");
-
+        // User already authenticated above via getCurrentUser()
         return {
           allowedContentTypes: [
             "image/jpeg",
