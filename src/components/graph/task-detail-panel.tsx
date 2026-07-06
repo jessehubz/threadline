@@ -64,12 +64,14 @@ export function TaskDetailPanel({
   const [saving, setSaving] = useState(false);
   const [showMemberPicker, setShowMemberPicker] = useState(false);
 
-  const blockedBy = node.incomingEdges
+  const blockedBy = graphEdges
+    .filter((e) => e.targetNodeId === node.id)
     .map((e) => graphNodes.find((n) => n.id === e.sourceNodeId))
     .filter(Boolean)
     .filter((n) => n!.status !== "COMPLETE");
 
-  const blocks = node.outgoingEdges
+  const blocks = graphEdges
+    .filter((e) => e.sourceNodeId === node.id)
     .map((e) => graphNodes.find((n) => n.id === e.targetNodeId))
     .filter(Boolean);
 
