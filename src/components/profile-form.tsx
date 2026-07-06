@@ -71,18 +71,18 @@ export function ProfileForm({ user }: { user: User }) {
   }
 
   return (
-    <div className="max-w-2xl">
-      <div className="card space-y-6">
+    <div className="rounded-2xl border border-surface-200/80 bg-white p-8 shadow-sm">
+      <div className="space-y-8">
         {/* Avatar with upload */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           <div className="relative">
-            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-2xl font-bold text-brand-700 dark:bg-brand-900 dark:text-brand-300">
+            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-brand-100 text-2xl font-bold text-brand-700">
               {imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={imageUrl}
                   alt={name || user.email}
-                  className="h-16 w-16 rounded-full object-cover"
+                  className="h-20 w-20 rounded-2xl object-cover"
                 />
               ) : (
                 name?.[0]?.toUpperCase() || user.email[0].toUpperCase()
@@ -91,10 +91,10 @@ export function ProfileForm({ user }: { user: User }) {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:opacity-50 dark:border-gray-900"
+              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-white bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:opacity-50900"
               aria-label="Upload profile picture"
             >
-              <Camera className="h-3.5 w-3.5" />
+              <Camera className="h-4 w-4" />
             </button>
             <input
               ref={fileInputRef}
@@ -105,10 +105,10 @@ export function ProfileForm({ user }: { user: User }) {
             />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
+            <p className="text-base font-semibold text-surface-900">
               {name || "Set your name"}
             </p>
-            <p className="text-xs text-gray-500">{user.email}</p>
+            <p className="text-sm text-surface-500">{user.email}</p>
             {uploading && (
               <p className="mt-1 text-xs text-brand-600">Uploading...</p>
             )}

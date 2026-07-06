@@ -35,12 +35,12 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div ref={overlayRef} className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className={cn("relative z-10 w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-900", className)}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
-          <button onClick={onClose} className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Close">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div ref={overlayRef} className="fixed inset-0 bg-surface-900/40 backdrop-blur-sm" onClick={onClose} />
+      <div className={cn("relative z-10 w-full max-w-lg rounded-2xl border border-surface-200/80 bg-white p-6 shadow-2xl", className)}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-surface-900">{title}</h2>
+          <button onClick={onClose} className="rounded-xl p-1.5 text-surface-400 transition-colors hover:bg-surface-100" aria-label="Close">
             <X className="h-5 w-5" />
           </button>
         </div>

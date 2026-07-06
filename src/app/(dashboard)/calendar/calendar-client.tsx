@@ -13,7 +13,7 @@ interface Task {
 }
 
 const STATUS_DOT_COLORS: Record<string, string> = {
-  NOT_STARTED: "bg-gray-400",
+  NOT_STARTED: "bg-surface-400",
   IN_PROGRESS: "bg-blue-500",
   BLOCKED: "bg-red-500",
   AWAITING_APPROVAL: "bg-amber-500",
@@ -101,30 +101,30 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Month navigation */}
-      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+      <div className="flex items-center justify-between rounded-2xl border border-surface-200/80 bg-white px-5 py-3.5 shadow-sm">
         <button
           onClick={prevMonth}
-          className="rounded-md p-1 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+          className="rounded-xl p-1.5 text-surface-500 transition-colors hover:bg-surface-100800"
           aria-label="Previous month"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-surface-900">
             {monthLabel}
           </h2>
           <button
             onClick={goToToday}
-            className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="rounded-lg border border-surface-200 px-2.5 py-1 text-xs font-medium text-surface-600 transition-colors hover:bg-surface-50700800"
           >
             Today
           </button>
         </div>
         <button
           onClick={nextMonth}
-          className="rounded-md p-1 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+          className="rounded-xl p-1.5 text-surface-500 transition-colors hover:bg-surface-100800"
           aria-label="Next month"
         >
           <ChevronRight className="h-5 w-5" />
@@ -132,13 +132,13 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
       </div>
 
       {/* Calendar grid */}
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className="overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-sm">
         {/* Day headers */}
-        <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-800">
+        <div className="grid grid-cols-7 border-b border-surface-100">
           {DAYS_OF_WEEK.map((day) => (
             <div
               key={day}
-              className="px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400"
+              className="px-2 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wider text-surface-400500"
             >
               {day}
             </div>
@@ -152,7 +152,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
               return (
                 <div
                   key={`empty-${index}`}
-                  className="min-h-[80px] border-b border-r border-gray-100 dark:border-gray-800"
+                  className="min-h-[80px] border-b border-r border-surface-100/80/80"
                 />
               );
             }
@@ -167,19 +167,19 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
                 key={dateKey}
                 onClick={() => setSelectedDate(dateKey === selectedDate ? null : dateKey)}
                 className={cn(
-                  "min-h-[80px] border-b border-r border-gray-100 p-1 text-left transition-colors dark:border-gray-800",
+                  "min-h-[80px] border-b border-r border-surface-100/80 p-1.5 text-left transition-all duration-150/80",
                   isSelected
-                    ? "bg-brand-50 dark:bg-brand-950"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800/50",
+                    ? "bg-brand-50/60950/30"
+                    : "hover:bg-surface-50800/30",
                 )}
                 aria-label={`${monthLabel.split(" ")[0]} ${day}, ${dayTasks.length} tasks`}
               >
                 <span
                   className={cn(
-                    "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium",
+                    "inline-flex h-6 w-6 items-center justify-center rounded-lg text-xs font-semibold",
                     isToday
                       ? "bg-brand-600 text-white"
-                      : "text-gray-900 dark:text-gray-100"
+                      : "text-surface-700300"
                   )}
                 >
                   {day}
@@ -192,12 +192,12 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
                         key={task.id}
                         className={cn(
                           "h-1.5 w-1.5 rounded-full",
-                          STATUS_DOT_COLORS[task.status] || "bg-gray-400"
+                          STATUS_DOT_COLORS[task.status] || "bg-surface-400"
                         )}
                       />
                     ))}
                     {dayTasks.length > 3 && (
-                      <span className="text-[10px] leading-none text-gray-500">
+                      <span className="text-[10px] leading-none text-surface-500">
                         +{dayTasks.length - 3}
                       </span>
                     )}
@@ -211,8 +211,8 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
 
       {/* Selected date detail */}
       {selectedDate && (
-        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+        <div className="rounded-2xl border border-surface-200/80 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-semibold text-surface-900">
             {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
               weekday: "long",
               month: "long",
@@ -221,27 +221,27 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
             })}
           </h3>
           {selectedTasks.length === 0 ? (
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-3 text-sm text-surface-400500">
               No tasks due on this date.
             </p>
           ) : (
-            <ul className="mt-3 space-y-2">
+            <ul className="mt-4 space-y-2">
               {selectedTasks.map((task) => (
                 <li
                   key={task.id}
-                  className="flex items-center gap-3 rounded-md border border-gray-100 px-3 py-2 dark:border-gray-800"
+                  className="flex items-center gap-3 rounded-xl border border-surface-100 px-4 py-2.5"
                 >
                   <span
                     className={cn(
                       "h-2.5 w-2.5 flex-shrink-0 rounded-full",
-                      STATUS_DOT_COLORS[task.status] || "bg-gray-400"
+                      STATUS_DOT_COLORS[task.status] || "bg-surface-400"
                     )}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                    <p className="truncate text-sm font-medium text-surface-900">
                       {task.title}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-surface-500">
                       {task.projectName} · {STATUS_LABELS[task.status] || task.status}
                     </p>
                   </div>

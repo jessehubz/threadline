@@ -39,8 +39,8 @@ export default async function SharePage({ params }: SharePageProps) {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6 dark:border-gray-800 dark:bg-gray-900">
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+      <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6800900">
+        <h1 className="text-lg font-semibold text-gray-900">
           {project.name}
           <span className="ml-2 text-sm font-normal text-gray-500">(View Only)</span>
         </h1>

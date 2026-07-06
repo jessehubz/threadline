@@ -23,14 +23,16 @@ export function MobileSidebar({ open, onClose }: { open: boolean; onClose: () =>
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-900">
-        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6 dark:border-gray-800">
-          <div className="flex items-center gap-2">
-            <GitBranch className="h-6 w-6 text-brand-600" />
-            <span className="text-lg font-bold">Threadline</span>
+      <div className="fixed inset-0 bg-surface-900/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-y-0 left-0 w-[280px] bg-white shadow-2xl">
+        <div className="flex h-16 items-center justify-between px-6">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
+              <GitBranch className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-lg font-bold tracking-tight text-surface-900">Threadline</span>
           </div>
-          <button onClick={onClose} className="p-1" aria-label="Close menu">
+          <button onClick={onClose} className="rounded-xl p-1.5 text-surface-400 hover:bg-surface-100 hover:text-surface-600" aria-label="Close menu">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -43,13 +45,13 @@ export function MobileSidebar({ open, onClose }: { open: boolean; onClose: () =>
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
                   isActive
-                    ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300"
-                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                    ? "bg-brand-50 text-brand-700 shadow-sm"
+                    : "text-surface-600 hover:bg-surface-50 hover:text-surface-900"
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className={cn("h-[18px] w-[18px]", isActive ? "text-brand-600" : "text-surface-400")} />
                 {item.name}
               </Link>
             );

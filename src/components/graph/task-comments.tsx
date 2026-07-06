@@ -156,7 +156,7 @@ export function TaskComments({
 
   return (
     <div>
-      <label className="mb-2 block text-xs font-medium text-gray-500 dark:text-gray-400">
+      <label className="mb-2 block text-xs font-medium text-gray-500400">
         Comments
       </label>
 
@@ -167,7 +167,7 @@ export function TaskComments({
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-brand-600" />
           </div>
         ) : comments.length === 0 ? (
-          <p className="py-2 text-center text-xs text-gray-400 dark:text-gray-500">
+          <p className="py-2 text-center text-xs text-gray-400500">
             No comments yet
           </p>
         ) : (
@@ -177,13 +177,13 @@ export function TaskComments({
               className={cn(
                 "rounded-lg border px-3 py-2",
                 comment.isPrivate
-                  ? "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950"
-                  : "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+                  ? "border-amber-200 bg-amber-50800950"
+                  : "border-gray-200 bg-gray-50700800"
               )}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand-100 text-[10px] font-medium text-brand-700 dark:bg-brand-900 dark:text-brand-300">
+                  <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand-100 text-[10px] font-medium text-brand-700">
                     {comment.user.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -195,7 +195,7 @@ export function TaskComments({
                       (comment.user.name || comment.user.email).charAt(0).toUpperCase()
                     )}
                   </div>
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-xs font-medium text-gray-700300">
                     {comment.user.name || comment.user.email}
                   </span>
                   {comment.isPrivate && (
@@ -212,7 +212,7 @@ export function TaskComments({
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-xs whitespace-pre-wrap break-words text-gray-600 dark:text-gray-300">
+              <p className="mt-1 text-xs whitespace-pre-wrap break-words text-gray-600300">
                 {comment.content}
               </p>
               {/* Attachments */}
@@ -224,7 +224,7 @@ export function TaskComments({
                       href={att.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 rounded bg-white px-2 py-1 text-xs text-brand-600 hover:underline dark:bg-gray-900"
+                      className="flex items-center gap-1.5 rounded bg-white px-2 py-1 text-xs text-brand-600 hover:underline900"
                     >
                       {isImage(att.fileType) ? (
                         <ImageIcon className="h-3 w-3" />
@@ -252,7 +252,7 @@ export function TaskComments({
               {pendingAttachments.map((att, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                  className="flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700800300"
                 >
                   {isImage(att.fileType) ? (
                     <ImageIcon className="h-3 w-3" />
@@ -274,8 +274,8 @@ export function TaskComments({
               className={cn(
                 "flex h-8 w-8 items-center justify-center rounded-md transition-colors",
                 isPrivate
-                  ? "bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-400"
-                  : "text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  ? "bg-amber-100 text-amber-600900400"
+                  : "text-gray-400 hover:bg-gray-100800"
               )}
               title={isPrivate ? "Private comment" : "Public comment"}
               aria-label={isPrivate ? "Private comment" : "Public comment"}
@@ -286,7 +286,7 @@ export function TaskComments({
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-gray-800"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 disabled:opacity-50800"
               aria-label="Attach file"
             >
               <Paperclip className="h-3.5 w-3.5" />
@@ -306,7 +306,7 @@ export function TaskComments({
               onKeyDown={handleKeyDown}
               placeholder="Add a comment..."
               disabled={isPending}
-              className="flex-1 rounded-md border border-gray-300 px-2.5 py-1.5 text-xs text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+              className="flex-1 rounded-md border border-gray-300 px-2.5 py-1.5 text-xs text-gray-900 placeholder-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50700800400"
               aria-label="Comment input"
             />
 

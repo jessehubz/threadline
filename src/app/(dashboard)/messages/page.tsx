@@ -17,19 +17,19 @@ export default async function MessagesPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-        Messages
-      </h1>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        Chat with your team in project channels or direct messages
-      </p>
-
-      <div className="mt-6">
-        <MessagesClient
-          projects={projects}
-          currentUserId={user.id}
-        />
+      <div className="mb-10">
+        <h1 className="text-2xl font-bold tracking-tight text-surface-900">
+          Messages
+        </h1>
+        <p className="mt-1.5 text-sm text-surface-500">
+          Chat with your team in project channels or direct messages
+        </p>
       </div>
+
+      <MessagesClient
+        projects={projects}
+        currentUserId={user.id}
+      />
     </div>
   );
 }

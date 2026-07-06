@@ -38,7 +38,7 @@ export default async function GraphPage({ params, searchParams }: GraphPageProps
   });
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
+    <div className="-mx-6 -my-8 lg:-mx-10 lg:-my-10 flex h-[calc(100vh-4rem)] flex-col">
       <GraphEditor
         projectId={projectId}
         graph={data.graph}

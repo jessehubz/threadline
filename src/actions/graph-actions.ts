@@ -343,34 +343,41 @@ export async function deleteEdge(projectId: string, edgeId: string) {
 }
 
 export async function createSubGraph(projectId: string, nodeId: string) {
-  await requireProjectAccess(projectId, "EDITOR");
+  try {
+    await requireProjectAccess(projectId, "EDITOR");
 
-  const node = await prisma.taskNode.findUnique({
-    where: { id: nodeId },
-    include: { graph: { select: { projectId: true } } },
-  });
+    const node = await prisma.taskNode.findUnique({
+      where: { id: nodeId },
+      include: { graph: { select: { projectId: true } } },
+    });
 
-  if (!node) throw new Error("Node not found");
+    if (!node) return { error: "Node not found" };
 
-  // IDOR fix: verify node belongs to this project
-  if (node.graph.projectId !== projectId) throw new Error("Node not found");
+    // IDOR fix: verify node belongs to this project
+    if (node.graph.projectId !== projectId) return { error: "Node not found" };
 
-  if (node.subGraphId) throw new Error("Node already has a sub-graph");
+    // If already has a sub-graph, just return its ID
+    if (node.subGraphId) {
+      return { graphId: node.subGraphId };
+    }
 
-  const subGraph = await prisma.graph.create({
-    data: {
-      projectId,
-      name: node.title,
-    },
-  });
+    const subGraph = await prisma.graph.create({
+      data: {
+        projectId,
+        name: node.title,
+      },
+    });
 
-  await prisma.taskNode.update({
-    where: { id: nodeId },
-    data: { subGraphId: subGraph.id },
-  });
+    await prisma.taskNode.update({
+      where: { id: nodeId },
+      data: { subGraphId: subGraph.id },
+    });
 
-  revalidatePath(`/graph/${projectId}`);
-  return { graphId: subGraph.id };
+    revalidatePath(`/graph/${projectId}`);
+    return { graphId: subGraph.id };
+  } catch (e) {
+    return { error: (e as Error).message || "Failed to create sub-graph" };
+  }
 }
 
 export async function getBreadcrumbs(projectId: string, path: string[]) {

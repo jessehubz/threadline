@@ -22,54 +22,54 @@ function FolderNodeInner({ data, selected }: NodeProps & { data: FolderNodeData 
   return (
     <div
       className={cn(
-        "min-w-[220px] max-w-[300px] rounded-xl border-2 border-dashed bg-white/95 shadow-sm transition-all dark:bg-gray-900/95",
+        "min-w-[220px] max-w-[300px] rounded-2xl border-2 border-dashed bg-white/95 shadow-sm transition-all duration-200/95",
         selected
-          ? "ring-2 ring-purple-300 dark:ring-purple-700"
+          ? "shadow-lg ring-2 ring-purple-300/50700/50"
           : "hover:shadow-md hover:border-solid"
       )}
-      style={{ borderColor: selected ? accentColor : `${accentColor}80` }}
+      style={{ borderColor: selected ? accentColor : `${accentColor}60` }}
     >
       <Handle
         type="source"
         position={Position.Right}
-        className="!h-3 !w-3 !border-2 !border-white !bg-purple-400 dark:!border-gray-900"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-white !bg-purple-400900"
       />
       <Handle
         type="target"
         position={Position.Left}
-        className="!h-3 !w-3 !border-2 !border-white !bg-purple-400 dark:!border-gray-900"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-white !bg-purple-400900"
       />
 
       <div className="p-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: `${accentColor}20` }}>
-            <Folder className="h-4 w-4" style={{ color: accentColor }} />
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: `${accentColor}15` }}>
+            <Folder className="h-4.5 w-4.5" style={{ color: accentColor }} />
           </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+          <div className="min-w-0 flex-1">
+            <h4 className="truncate text-[13px] font-semibold text-surface-900">
               {nodeData.title}
             </h4>
             {progress && (
-              <p className="text-[10px] text-gray-500">
+              <p className="text-[10px] text-surface-500">
                 {progress.completed}/{progress.total} tasks
               </p>
             )}
           </div>
-          <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
+          <ChevronRight className="h-4 w-4 shrink-0 text-surface-400" />
         </div>
 
         {progress && progress.total > 0 && (
           <div className="mt-3">
-            <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-800">
+            <div className="h-1.5 w-full rounded-full bg-surface-100">
               <div
-                className="h-1.5 rounded-full transition-all"
+                className="h-1.5 rounded-full transition-all duration-500"
                 style={{ width: `${pct}%`, backgroundColor: accentColor }}
               />
             </div>
           </div>
         )}
 
-        <div className="mt-2 text-[10px] font-medium" style={{ color: accentColor }}>
+        <div className="mt-2.5 text-[10px] font-medium" style={{ color: accentColor }}>
           Double-click to open
         </div>
       </div>

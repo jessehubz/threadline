@@ -82,14 +82,14 @@ export function FileUpload({ nodeId, projectId, attachments, isReadOnly }: FileU
       {files.map((file) => (
         <div
           key={file.id}
-          className="flex items-center gap-2 rounded-lg border border-gray-200 p-2 dark:border-gray-700"
+          className="flex items-center gap-2 rounded-lg border border-gray-200 p-2700"
         >
           {isImage(file.fileType) ? (
             <ImageIcon className="h-4 w-4 text-brand-500" />
           ) : (
             <FileText className="h-4 w-4 text-gray-500" />
           )}
-          <span className="flex-1 truncate text-xs text-gray-700 dark:text-gray-300">
+          <span className="flex-1 truncate text-xs text-gray-700300">
             {file.fileName}
           </span>
           <a
@@ -116,7 +116,7 @@ export function FileUpload({ nodeId, projectId, attachments, isReadOnly }: FileU
       {!isReadOnly && (
         <label
           className={cn(
-            "flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 p-3 text-sm text-gray-500 transition-colors hover:border-brand-500 hover:text-brand-600 dark:border-gray-700 dark:hover:border-brand-500",
+            "flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 p-3 text-sm text-gray-500 transition-colors hover:border-brand-500 hover:text-brand-600700500",
             uploading && "pointer-events-none opacity-50"
           )}
         >

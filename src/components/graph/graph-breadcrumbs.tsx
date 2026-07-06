@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { ChevronRight, Home } from "lucide-react";
 
 interface GraphBreadcrumbsProps {
@@ -11,13 +10,13 @@ interface GraphBreadcrumbsProps {
 
 export function GraphBreadcrumbs({ breadcrumbs, projectId, currentPath }: GraphBreadcrumbsProps) {
   return (
-    <nav className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-gray-700 dark:bg-gray-900">
-      <Link
+    <nav className="flex items-center gap-1 rounded-xl border border-surface-200/80 bg-white/95 px-3 py-2 text-sm shadow-sm backdrop-blur-md">
+      <a
         href={`/graph/${projectId}`}
-        className="flex items-center gap-1 text-gray-500 hover:text-brand-600 dark:text-gray-400"
+        className="flex items-center gap-1 text-surface-400 transition-colors hover:text-brand-600"
       >
         <Home className="h-3.5 w-3.5" />
-      </Link>
+      </a>
 
       {breadcrumbs.map((crumb, i) => {
         const pathUpTo = currentPath.slice(0, i);
@@ -29,15 +28,15 @@ export function GraphBreadcrumbs({ breadcrumbs, projectId, currentPath }: GraphB
 
         return (
           <span key={crumb.id} className="flex items-center gap-1">
-            <ChevronRight className="h-3 w-3 text-gray-400" />
+            <ChevronRight className="h-3 w-3 text-surface-300" />
             {isLast ? (
-              <span className="font-medium text-gray-900 dark:text-white">
+              <span className="font-medium text-[#1A1A1A]">
                 {crumb.name}
               </span>
             ) : (
-              <Link href={href} className="text-gray-500 hover:text-brand-600 dark:text-gray-400">
+              <a href={href} className="text-surface-400 transition-colors hover:text-brand-600">
                 {crumb.name}
-              </Link>
+              </a>
             )}
           </span>
         );

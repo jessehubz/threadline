@@ -5,10 +5,10 @@ export default async function SettingsPage() {
   const user = await requireUser();
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+    <div className="mx-auto max-w-2xl">
+      <div className="mb-10">
+        <h1 className="text-2xl font-bold tracking-tight text-surface-900">Settings</h1>
+        <p className="mt-1.5 text-sm text-surface-500">
           Manage your account preferences
         </p>
       </div>

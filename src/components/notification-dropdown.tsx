@@ -56,7 +56,7 @@ export function NotificationDropdown() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="btn-ghost relative p-2"
+        className="relative rounded-xl p-2 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700"
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />
@@ -68,13 +68,13 @@ export function NotificationDropdown() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
-          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-            <h3 className="text-sm font-semibold">Notifications</h3>
+        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-xl shadow-surface-900/5">
+          <div className="flex items-center justify-between border-b border-surface-100 px-4 py-3">
+            <h3 className="text-sm font-semibold text-surface-900">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllRead}
-                className="text-xs text-brand-600 hover:text-brand-700"
+                className="text-xs font-medium text-brand-600 transition-colors hover:text-brand-700"
               >
                 Mark all read
               </button>
@@ -82,7 +82,7 @@ export function NotificationDropdown() {
           </div>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-gray-500">
+              <div className="px-4 py-10 text-center text-sm text-surface-400">
                 No notifications yet
               </div>
             ) : (
@@ -90,14 +90,14 @@ export function NotificationDropdown() {
                 <div
                   key={notification.id}
                   className={cn(
-                    "border-b border-gray-100 px-4 py-3 last:border-0 dark:border-gray-800",
-                    !notification.read && "bg-brand-50/50 dark:bg-brand-950/20"
+                    "border-b border-surface-50 px-4 py-3.5 last:border-0",
+                    !notification.read && "bg-brand-50/40/20"
                   )}
                 >
-                  <p className="text-sm text-gray-900 dark:text-gray-100">
+                  <p className="text-[13px] text-surface-700">
                     {notification.message}
                   </p>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-[11px] text-surface-400">
                     {formatRelativeDate(notification.createdAt)}
                   </p>
                 </div>

@@ -27,7 +27,7 @@ export function MyTasksList({ tasks }: { tasks: Task[] }) {
   const completed = tasks.filter((t) => t.status === "COMPLETE");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {overdue.length > 0 && (
         <TaskGroup title="Overdue" icon={<AlertCircle className="h-4 w-4 text-red-500" />} tasks={overdue} variant="danger" />
       )}
@@ -38,7 +38,7 @@ export function MyTasksList({ tasks }: { tasks: Task[] }) {
         <TaskGroup title="Upcoming (7 days)" icon={<Calendar className="h-4 w-4 text-blue-500" />} tasks={upcoming} variant="info" />
       )}
       {later.length > 0 && (
-        <TaskGroup title="Later" icon={<Calendar className="h-4 w-4 text-gray-400" />} tasks={later} variant="default" />
+        <TaskGroup title="Later" icon={<Calendar className="h-4 w-4 text-surface-400" />} tasks={later} variant="default" />
       )}
       {completed.length > 0 && (
         <TaskGroup title="Completed" icon={<Calendar className="h-4 w-4 text-green-500" />} tasks={completed} variant="success" />
@@ -50,9 +50,9 @@ export function MyTasksList({ tasks }: { tasks: Task[] }) {
 function TaskGroup({ title, icon, tasks, variant }: { title: string; icon: React.ReactNode; tasks: Task[]; variant: "danger" | "warning" | "info" | "default" | "success" }) {
   return (
     <div>
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-3 flex items-center gap-2.5">
         {icon}
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h3>
+        <h3 className="text-sm font-semibold text-surface-900">{title}</h3>
         <Badge variant={variant}>{tasks.length}</Badge>
       </div>
       <div className="space-y-2">
@@ -60,17 +60,17 @@ function TaskGroup({ title, icon, tasks, variant }: { title: string; icon: React
           <Link
             key={task.id}
             href={`/graph/${task.projectId}?nodeId=${task.id}`}
-            className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800"
+            className="flex items-center justify-between rounded-xl border border-surface-200/80 bg-white p-4 transition-all duration-150 hover:border-surface-300 hover:shadow-sm"
           >
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{task.title}</p>
-              <p className="text-xs text-gray-500">{task.projectName}</p>
+              <p className="truncate text-sm font-medium text-surface-900">{task.title}</p>
+              <p className="mt-0.5 text-xs text-surface-500">{task.projectName}</p>
             </div>
-            <div className="flex items-center gap-2 ml-3">
+            <div className="ml-4 flex items-center gap-3">
               {task.dueDate && (
-                <span className="text-xs text-gray-500">{formatDate(task.dueDate)}</span>
+                <span className="text-xs text-surface-400">{formatDate(task.dueDate)}</span>
               )}
-              <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${getStatusColor(task.status)}`}>
+              <span className={`inline-flex rounded-lg px-2 py-0.5 text-[10px] font-semibold ${getStatusColor(task.status)}`}>
                 {getStatusLabel(task.status)}
               </span>
             </div>

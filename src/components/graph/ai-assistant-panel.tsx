@@ -70,7 +70,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
       {/* Toggle bar */}
       <button
         onClick={onToggle}
-        className="mx-auto flex items-center gap-2 rounded-t-lg border border-b-0 border-gray-200 bg-white px-4 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800"
+        className="mx-auto flex items-center gap-2 rounded-t-xl border border-b-0 border-surface-200/80 bg-white/95 px-4 py-2 text-xs font-medium text-surface-600 shadow-sm backdrop-blur-md transition-colors hover:bg-surface-50/80/95"
         style={{ marginLeft: "50%", transform: "translateX(-50%)" }}
       >
         <Sparkles className="h-3.5 w-3.5 text-purple-500" />
@@ -80,13 +80,13 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
 
       {/* Panel */}
       {open && (
-        <div className="border-t border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-900">
-          <div className="mx-auto max-w-3xl space-y-3">
+        <div className="border-t border-surface-200/80 bg-white p-5 shadow-xl">
+          <div className="mx-auto max-w-3xl space-y-4">
             <div className="flex items-center gap-3">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+              <p className="text-sm font-semibold text-surface-900">
                 Generate a dependency graph
               </p>
-              <Badge text="No API key needed" />
+              <BadgeLabel text="No API key needed" />
             </div>
 
             {/* Template selector */}
@@ -94,7 +94,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
               <select
                 value={selectedTemplate}
                 onChange={(e) => { setSelectedTemplate(e.target.value); setDescription(""); }}
-                className="input-field text-sm w-auto"
+                className="input-field w-auto text-sm"
               >
                 <option value="">Or pick a template...</option>
                 {templates.map((t) => (
@@ -115,7 +115,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
             )}
 
             {selectedTemplate && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-surface-500">
                 Will generate {templates.find((t) => t.name === selectedTemplate)?.nodes.length || 0} tasks with dependencies
               </p>
             )}
@@ -136,9 +136,9 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
   );
 }
 
-function Badge({ text }: { text: string }) {
+function BadgeLabel({ text }: { text: string }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-medium text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+    <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] font-semibold text-purple-700900300">
       {text}
     </span>
   );

@@ -82,22 +82,22 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
 
       {/* Members list */}
       {project && (
-        <div className="card">
-          <div className="divide-y divide-gray-200 dark:divide-gray-800">
+        <div className="rounded-2xl border border-surface-200/80 bg-white p-2 shadow-sm">
+          <div className="divide-y divide-surface-100800">
             {project.members.map((member) => (
-              <div key={member.id} className="flex items-center justify-between py-3">
+              <div key={member.id} className="flex items-center justify-between px-4 py-3.5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-medium text-brand-700 dark:bg-brand-900 dark:text-brand-300">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
                     {member.user.name?.[0]?.toUpperCase() || member.user.email[0].toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    <p className="text-sm font-medium text-surface-900">
                       {member.user.name || member.user.email}
                     </p>
-                    <p className="text-xs text-gray-500">{member.user.email}</p>
+                    <p className="text-xs text-surface-500">{member.user.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <Badge variant={roleVariant(member.role)}>{member.role}</Badge>
                   {member.userId !== currentUserId && member.role !== "OWNER" && (
                     <>
@@ -111,7 +111,7 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
                       </select>
                       <button
                         onClick={() => handleRemove(member.id)}
-                        className="rounded p-1 text-gray-400 hover:text-red-600"
+                        className="rounded-lg p-1.5 text-surface-400 transition-colors hover:text-red-600"
                         aria-label="Remove member"
                       >
                         <Trash2 className="h-4 w-4" />

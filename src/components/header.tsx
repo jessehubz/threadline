@@ -11,10 +11,10 @@ export function Header() {
 
   return (
     <>
-      <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 dark:border-gray-800 dark:bg-gray-900">
+      <header className="flex h-16 items-center justify-between border-b border-surface-200/80 bg-white px-6 lg:px-10">
         <button
           onClick={() => setMobileMenuOpen(true)}
-          className="btn-ghost p-2 lg:hidden"
+          className="rounded-xl p-2 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700 lg:hidden"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5" />
@@ -22,15 +22,18 @@ export function Header() {
 
         <div className="flex-1" />
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <NotificationDropdown />
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "h-8 w-8",
-              },
-            }}
-          />
+          <div className="ml-1 h-8 w-px bg-surface-200" />
+          <div className="ml-2">
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "h-8 w-8",
+                },
+              }}
+            />
+          </div>
         </div>
       </header>
 

@@ -57,20 +57,20 @@ export function SettingsForm({ user }: { user: User }) {
   ];
 
   return (
-    <div className="max-w-2xl space-y-8">
+    <div className="space-y-8">
       {/* Theme */}
-      <div className="card">
-        <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Appearance</h3>
+      <div className="rounded-2xl border border-surface-200/80 bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-sm font-semibold text-surface-900">Appearance</h3>
         <div className="flex gap-3">
           {themes.map((t) => (
             <button
               key={t.value}
               onClick={() => setTheme(t.value)}
               className={cn(
-                "flex items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors",
+                "flex items-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-150",
                 theme === t.value
-                  ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300"
-                  : "border-gray-200 text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:text-gray-400"
+                  ? "border-brand-500 bg-brand-50 text-brand-700 shadow-sm"
+                  : "border-surface-200 text-surface-500 hover:border-surface-300 hover:text-surface-700"
               )}
             >
               <t.icon className="h-4 w-4" />
@@ -81,18 +81,18 @@ export function SettingsForm({ user }: { user: User }) {
       </div>
 
       {/* Notifications */}
-      <div className="card">
-        <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">
+      <div className="rounded-2xl border border-surface-200/80 bg-white p-6 shadow-sm">
+        <h3 className="mb-5 text-sm font-semibold text-surface-900">
           Email Notifications
         </h3>
-        <div className="space-y-3">
+        <div className="space-y-4">
           <Toggle
             label="Enable email notifications"
             checked={emailNotifications}
             onChange={setEmailNotifications}
           />
           {emailNotifications && (
-            <div className="ml-6 space-y-3 border-l-2 border-gray-200 pl-4 dark:border-gray-700">
+            <div className="ml-6 space-y-4 border-l-2 border-surface-200 pl-5">
               <Toggle label="Task assigned to me" checked={notifyAssigned} onChange={setNotifyAssigned} />
               <Toggle label="Approval requests" checked={notifyApproval} onChange={setNotifyApproval} />
               <Toggle label="Due date reminders" checked={notifyDueSoon} onChange={setNotifyDueSoon} />
@@ -120,19 +120,19 @@ function Toggle({
 }) {
   return (
     <label className="flex cursor-pointer items-center justify-between">
-      <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
+      <span className="text-sm text-surface-600">{label}</span>
       <button
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={cn(
           "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
-          checked ? "bg-brand-600" : "bg-gray-300 dark:bg-gray-600"
+          checked ? "bg-brand-600" : "bg-surface-300600"
         )}
       >
         <span
           className={cn(
-            "inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform",
+            "inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm",
             checked ? "translate-x-4.5" : "translate-x-0.5"
           )}
         />

@@ -36,14 +36,14 @@ export function CollaboratorPresence({ graphId }: { graphId: string }) {
   if (members.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+    <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm700900">
       <div className="flex -space-x-2">
         {members.slice(0, 5).map((member) => (
           <div
             key={member.id}
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-xs font-medium dark:border-gray-900",
-              "bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300"
+              "flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-xs font-medium900",
+              "bg-brand-100 text-brand-700"
             )}
             title={member.name}
           >

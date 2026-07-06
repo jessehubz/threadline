@@ -44,10 +44,10 @@ export default function DashboardGroupError({
     <div className="flex h-screen items-center justify-center">
       <div className="text-center">
         <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
-        <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="mt-4 text-xl font-semibold text-gray-900">
           Something went wrong
         </h2>
-        <p className="mt-2 max-w-md text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-2 max-w-md text-sm text-gray-600400">
           {error.message || "An unexpected error occurred"}
         </p>
         <div className="mt-4 flex items-center justify-center gap-3">

@@ -4,7 +4,6 @@ import { useCallback, useState, useRef } from "react";
 import {
   ReactFlow,
   Background,
-  MiniMap,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -30,7 +29,7 @@ import { CollaboratorPresence } from "@/components/graph/collaborator-presence";
 import { ShareDialog } from "@/components/graph/share-dialog";
 import { DeadlinesPanel } from "@/components/graph/deadlines-panel";
 import { AIAssistantPanel } from "@/components/graph/ai-assistant-panel";
-import { createNode, createEdge, deleteNode, deleteEdge, updateNodePosition } from "@/actions/graph-actions";
+import { createNode, createEdge, deleteNode, deleteEdge, updateNodePosition, createSubGraph } from "@/actions/graph-actions";
 import { wouldCreateCycle } from "@/lib/graph-utils";
 import { toast } from "sonner";
 import { usePusher } from "@/hooks/use-pusher";
@@ -57,7 +56,7 @@ interface GraphEditorProps {
       dueDate: Date | string | null;
       positionX: number;
       positionY: number;
-      subGraph?: { nodes: Array<{ id: string; status: string }> } | null;
+      subGraph?: { id: string; nodes: Array<{ id: string; status: string }> } | null;
       assignments: Array<{ user: { id: string; name: string | null; imageUrl: string | null }; isApprover: boolean }>;
       attachments: Array<{ id: string; fileName: string; fileUrl: string; fileType: string }>;
       incomingEdges: Array<{ id: string; sourceNodeId: string }>;
@@ -245,14 +244,33 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
     setSelectedNodeId(node.id);
   }, []);
 
-  const handleNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => {
+  const handleNodeDoubleClick = useCallback(async (_: React.MouseEvent, node: Node) => {
     // Double-click folder nodes to navigate into sub-graph
     const graphNode = graph.nodes.find((n) => n.id === node.id);
-    if (graphNode?.nodeType === "FOLDER" && graphNode.subGraph) {
-      const newPath = [...currentPath, node.id].join(",");
-      router.push(`/graph/${projectId}?path=${newPath}&graphId=${graphNode.subGraph}`);
+    if (!graphNode || graphNode.nodeType !== "FOLDER") return;
+
+    let subGraphId: string | undefined;
+
+    if (graphNode.subGraph && graphNode.subGraph.id) {
+      subGraphId = graphNode.subGraph.id;
+    } else {
+      // Create a new sub-graph for this folder (or get existing one)
+      const result = await createSubGraph(projectId, node.id);
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+      if ("graphId" in result) {
+        subGraphId = result.graphId;
+      }
     }
-  }, [currentPath, graph.nodes, projectId, router]);
+
+    if (subGraphId) {
+      const newPath = [...currentPath, node.id].join(",");
+      // Use window.location for hard navigation to ensure fresh data load
+      window.location.href = `/graph/${projectId}?path=${newPath}&graphId=${subGraphId}`;
+    }
+  }, [currentPath, graph.nodes, projectId]);
 
   const handleSelectNodeFromPanel = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId);
@@ -294,31 +312,15 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             isValidConnection={isValidConnection}
             nodeTypes={nodeTypes}
             fitView
+            fitViewOptions={{ padding: 0.4, maxZoom: 1 }}
             deleteKeyCode={isReadOnly ? null : "Delete"}
-            className="bg-gray-50 dark:bg-gray-950"
+            className="bg-[#FAFAF8]"
           >
-            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#d1d5db" className="dark:!bg-gray-950" />
-            {/* Small, dark minimap in top-right */}
-            <MiniMap
-              position="top-right"
-              className="!w-[120px] !h-[80px] !rounded-lg !border !border-gray-200/50 !bg-white/80 !shadow-sm dark:!border-gray-700/50 dark:!bg-gray-900/80"
-              maskColor="rgba(0,0,0,0.1)"
-              nodeColor={(node) => {
-                const color = node.data?.color as string | undefined;
-                if (color) return color;
-                switch (node.data?.status) {
-                  case "COMPLETE": return "#22c55e";
-                  case "IN_PROGRESS": return "#3b82f6";
-                  case "BLOCKED": return "#ef4444";
-                  case "AWAITING_APPROVAL": return "#f59e0b";
-                  default: return "#9ca3af";
-                }
-              }}
-            />
+            <Background variant={BackgroundVariant.Dots} gap={22} size={1.8} color="#B0B0B0" />
             <Panel position="top-left" className="space-y-2">
               <GraphBreadcrumbs breadcrumbs={breadcrumbs} projectId={projectId} currentPath={currentPath} />
             </Panel>
-            <Panel position="top-right" className="!right-[140px] flex items-center gap-2">
+            <Panel position="top-right" className="flex items-center gap-2">
               <CollaboratorPresence graphId={graph.id} />
               <Button size="sm" variant="secondary" onClick={() => setShareOpen(true)} className="gap-1.5">
                 <Share2 className="h-3.5 w-3.5" /> Share
@@ -355,7 +357,10 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             currentUserId={currentUserId}
             node={selectedNode}
             graphEdges={edges.map((e) => ({ id: e.id, sourceNodeId: e.source, targetNodeId: e.target }))}
-            graphNodes={graph.nodes}
+            graphNodes={graph.nodes.map((gn) => {
+              const liveNode = nodes.find((n) => n.id === gn.id);
+              return { ...gn, status: (liveNode?.data?.status as string) || gn.status };
+            })}
             members={members}
             isReadOnly={isReadOnly}
             onClose={() => setSelectedNodeId(null)}
