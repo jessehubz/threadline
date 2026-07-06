@@ -120,15 +120,15 @@ export function Sidebar() {
       {/* Workspace switcher */}
       <div className={cn("flex h-16 items-center border-b border-surface-100", collapsed ? "justify-center px-2" : "gap-3 px-5")}>
         {collapsed ? (
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 flex-shrink-0">
+          <a href="/dashboard" className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 flex-shrink-0 hover:bg-brand-700 transition-colors">
             <GitBranch className="h-4 w-4 text-white" />
-          </div>
+          </a>
         ) : (
           <>
-            <div className="flex items-center gap-1 flex-1 min-w-0">
+            <a href="/dashboard" className="flex items-center gap-0 flex-1 min-w-0 hover:opacity-80 transition-opacity">
               <span className="text-lg font-bold tracking-tight text-[#1A1A1A]">thread</span>
               <span className="text-lg font-bold tracking-tight text-brand-600">line</span>
-            </div>
+            </a>
             <button
               onClick={() => setCollapsed(true)}
               className="rounded-lg p-1 text-surface-400 hover:bg-surface-100 hover:text-surface-600 transition-colors"

@@ -46,7 +46,7 @@ export async function DELETE(
     },
   });
 
-  if (!membership || membership.role === "VIEWER") {
+  if (!membership || membership.role === "MEMBER") {
     return NextResponse.json({ error: "Not authorized to delete this attachment" }, { status: 403 });
   }
 

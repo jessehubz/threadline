@@ -8,7 +8,7 @@ import { pusherServer } from "@/lib/pusher";
 import { sanitizeTitle, sanitizeText } from "@/lib/sanitize";
 import { rateLimiters } from "@/lib/rate-limit";
 
-async function requireProjectAccess(projectId: string, minRole: "VIEWER" | "EDITOR" | "OWNER" = "VIEWER") {
+async function requireProjectAccess(projectId: string, minRole: "MEMBER" | "CO_HEAD" | "HEAD" | "EDITOR" | "VIEWER" | "OWNER" = "MEMBER") {
   const user = await requireUser();
   const member = await prisma.projectMember.findUnique({
     where: { userId_projectId: { userId: user.id, projectId } },
@@ -16,8 +16,8 @@ async function requireProjectAccess(projectId: string, minRole: "VIEWER" | "EDIT
 
   if (!member) throw new Error("Not a member of this project");
 
-  const roleHierarchy = { VIEWER: 0, EDITOR: 1, OWNER: 2 };
-  if (roleHierarchy[member.role] < roleHierarchy[minRole]) {
+  const roleHierarchy: Record<string, number> = { MEMBER: 0, VIEWER: 0, CO_HEAD: 1, EDITOR: 1, HEAD: 2, OWNER: 2 };
+  if ((roleHierarchy[member.role] ?? 0) < (roleHierarchy[minRole] ?? 0)) {
     throw new Error("Insufficient permissions");
   }
 

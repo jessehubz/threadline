@@ -37,6 +37,7 @@ export async function getProjects() {
           },
         },
       },
+      labels: true,
     },
     orderBy: { updatedAt: "desc" },
   });
@@ -56,7 +57,8 @@ export async function getProjects() {
       completedTasks,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
-      role: project.members.find((m) => m.userId === user.id)?.role || "VIEWER",
+      role: project.members.find((m) => m.userId === user.id)?.role || "MEMBER",
+      labels: project.labels || [],
     };
   });
 }
@@ -81,7 +83,7 @@ export async function createProject(formData: FormData) {
       members: {
         create: {
           userId: user.id,
-          role: "OWNER",
+          role: "HEAD",
         },
       },
       graphs: {
@@ -93,7 +95,7 @@ export async function createProject(formData: FormData) {
   });
 
   revalidatePath("/dashboard");
-  return { project };
+  return { project, projectId: project.id };
 }
 
 export async function updateProject(formData: FormData) {
@@ -116,7 +118,7 @@ export async function updateProject(formData: FormData) {
     },
   });
 
-  if (!member || member.role === "VIEWER") {
+  if (!member || member.role === "MEMBER") {
     return { error: "Not authorized" };
   }
 
@@ -141,7 +143,7 @@ export async function deleteProject(projectId: string) {
     },
   });
 
-  if (!member || member.role !== "OWNER") {
+  if (!member || member.role !== "HEAD") {
     return { error: "Only the owner can delete a project" };
   }
 

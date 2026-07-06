@@ -16,9 +16,9 @@ enum TaskStatus {
 }
 
 enum MemberRole {
-  OWNER
-  EDITOR
-  VIEWER
+  HEAD
+  CO_HEAD
+  MEMBER
 }
 
 enum NotificationType {
@@ -69,6 +69,7 @@ model User {
   comments          Comment[]
   directMessages    DirectMessage[]
   conversations     ConversationParticipant[]
+  ownedTeams        Team[] @relation("TeamOwner")
 }
 
 model Project {
@@ -82,13 +83,14 @@ model Project {
   members ProjectMember[]
   graphs  Graph[]
   messages Message[]
+  labels  ProjectLabel[]
 }
 
 model ProjectMember {
   id        String     @id @default(cuid())
   userId    String
   projectId String
-  role      MemberRole @default(VIEWER)
+  role      MemberRole @default(MEMBER)
   createdAt DateTime   @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -210,7 +212,7 @@ model Invite {
   id        String     @id @default(cuid())
   email     String
   projectId String
-  role      MemberRole @default(EDITOR)
+  role      MemberRole @default(MEMBER)
   token     String     @unique
   accepted  Boolean    @default(false)
   createdAt DateTime   @default(now())
@@ -285,4 +287,37 @@ model DirectMessage {
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner   User         @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members TeamMember[]
+}
+
+model TeamMember {
+  id     String @id @default(cuid())
+  teamId String
+  email  String
+  createdAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, email])
+}
+
+model ProjectLabel {
+  id        String @id @default(cuid())
+  projectId String
+  name      String
+  color     String @default("#7c3aed")
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }

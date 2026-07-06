@@ -1,46 +1,28 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { TeamManager } from "@/components/team-manager";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Users } from "lucide-react";
+import { TeamsGrid } from "@/components/teams-grid";
 
 export default async function TeamPage() {
   const user = await requireUser();
 
-  const projects = await prisma.project.findMany({
-    where: { members: { some: { userId: user.id } } },
-    include: {
-      members: {
-        include: { user: true },
-      },
-    },
+  const teams = await prisma.team.findMany({
+    where: { ownerId: user.id },
+    include: { members: true },
     orderBy: { updatedAt: "desc" },
   });
 
-  if (projects.length === 0) {
-    return (
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-10">
-          <h1 className="text-2xl font-bold tracking-tight text-surface-900">Team</h1>
-        </div>
-        <EmptyState
-          icon={<Users className="h-8 w-8" />}
-          title="No projects yet"
-          description="Create a project first, then you can manage team members here."
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="mb-10">
-        <h1 className="text-2xl font-bold tracking-tight text-surface-900">Team</h1>
-        <p className="mt-1.5 text-sm text-surface-500">
-          Manage project members and permissions
+    <div className="mx-auto max-w-5xl">
+      <div className="mb-8">
+        <h1 className="text-[22px] font-bold tracking-tight text-[#1A1A1A]">Teams</h1>
+        <p className="mt-0.5 text-[13px] text-[#6B7280]">
+          Create teams and invite them to projects in one click.
         </p>
       </div>
-      <TeamManager projects={projects} currentUserId={user.id} />
+
+      <TeamsGrid teams={teams} />
     </div>
   );
 }

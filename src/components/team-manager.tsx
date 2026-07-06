@@ -31,7 +31,7 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
   async function handleInvite() {
     if (!inviteEmail || !selectedProject) return;
     setLoading(true);
-    const result = await inviteMember(selectedProject, inviteEmail, "EDITOR");
+    const result = await inviteMember(selectedProject, inviteEmail, "CO_HEAD");
     if (result.error) {
       toast.error(result.error);
     } else {
@@ -56,8 +56,8 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
 
   const roleVariant = (role: string) => {
     switch (role) {
-      case "OWNER": return "info" as const;
-      case "EDITOR": return "success" as const;
+      case "HEAD": return "info" as const;
+      case "CO_HEAD": return "success" as const;
       default: return "default" as const;
     }
   };
@@ -99,15 +99,15 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Badge variant={roleVariant(member.role)}>{member.role}</Badge>
-                  {member.userId !== currentUserId && member.role !== "OWNER" && (
+                  {member.userId !== currentUserId && member.role !== "HEAD" && (
                     <>
                       <select
                         value={member.role}
                         onChange={(e) => handleRoleChange(member.id, e.target.value)}
                         className="input-field h-7 w-24 text-xs"
                       >
-                        <option value="EDITOR">Editor</option>
-                        <option value="VIEWER">Viewer</option>
+                        <option value="CO_HEAD">Co-Head</option>
+                        <option value="MEMBER">Member</option>
                       </select>
                       <button
                         onClick={() => handleRemove(member.id)}

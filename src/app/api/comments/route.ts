@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   }
 
   const membership = node.graph.project.members[0];
-  const isOwner = membership.role === "OWNER";
+  const isOwner = membership.role === "HEAD";
 
   // Fetch comments - filter private comments (only visible to author and project owner)
   const comments = await prisma.comment.findMany({

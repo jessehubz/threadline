@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, Trash2, ChevronRight, AlertCircle, UserPlus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +56,12 @@ export function TaskDetailPanel({
   projectId, currentUserId, node, graphEdges, graphNodes, members, isReadOnly, onClose, onDelete, currentPath,
 }: TaskDetailPanelProps) {
   const router = useRouter();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to top when panel opens
+  useEffect(() => {
+    scrollRef.current?.scrollTo(0, 0);
+  }, []);
   const [title, setTitle] = useState(node.title);
   const [description, setDescription] = useState(node.description || "");
   const [status, setStatus] = useState(node.status);
@@ -128,7 +134,7 @@ export function TaskDetailPanel({
   }
 
   return (
-    <div className="w-[400px] shrink-0 overflow-y-auto border-l border-surface-200/80 bg-white">
+    <div ref={scrollRef} className="w-[400px] shrink-0 overflow-y-auto border-l border-surface-200/80 bg-white">
       <div className="flex items-center justify-between border-b border-surface-100 px-5 py-4">
         <h3 className="text-sm font-semibold text-surface-900">Task Details</h3>
         <div className="flex items-center gap-1">

@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { resend } from "@/lib/resend";
+
 import { rateLimiters } from "@/lib/rate-limit";
 import { generateSecureToken } from "@/lib/tokens";
 import { z } from "zod/v4";
@@ -11,26 +11,14 @@ import { z } from "zod/v4";
 const inviteMemberSchema = z.object({
   projectId: z.string().min(1),
   email: z.string().email().max(254),
-  role: z.enum(["EDITOR", "VIEWER"]), // Cannot invite as OWNER - prevents escalation
+  role: z.enum(["CO_HEAD", "MEMBER"]), // Cannot invite as OWNER - prevents escalation
 });
 
 const updateRoleSchema = z.object({
   projectId: z.string().min(1),
   memberId: z.string().min(1),
-  newRole: z.enum(["EDITOR", "VIEWER"]), // Cannot promote to OWNER - prevents escalation
+  newRole: z.enum(["CO_HEAD", "MEMBER"]), // Cannot promote to OWNER - prevents escalation
 });
-
-/**
- * HTML-escape a string to prevent XSS in email templates.
- */
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
 
 export async function inviteMember(projectId: string, email: string, role: string) {
   const user = await requireUser();
@@ -49,7 +37,7 @@ export async function inviteMember(projectId: string, email: string, role: strin
     where: { userId_projectId: { userId: user.id, projectId: parsed.data.projectId } },
   });
 
-  if (!member || member.role === "VIEWER") {
+  if (!member || member.role === "MEMBER") {
     return { error: "Not authorized to invite members" };
   }
 
@@ -82,39 +70,19 @@ export async function inviteMember(projectId: string, email: string, role: strin
       },
     });
   } else {
-    // Create an invite
     const invite = await prisma.invite.create({
       data: {
         email: parsed.data.email,
         projectId: parsed.data.projectId,
         role: parsed.data.role,
         token: generateSecureToken(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
-
-    // Send invite email with HTML-escaped values
-    try {
-      const project = await prisma.project.findUnique({ where: { id: parsed.data.projectId } });
-      const safeName = escapeHtml(user.name || user.email);
-      const safeProjectName = escapeHtml(project?.name || "Unknown Project");
-
-      await resend.emails.send({
-        from: "Threadline <onboarding@resend.dev>",
-        to: parsed.data.email,
-        subject: `You've been invited to "${project?.name}" on Threadline`,
-        html: `
-          <h2>You&#39;ve been invited!</h2>
-          <p>${safeName} has invited you to collaborate on &quot;${safeProjectName}&quot; in Threadline.</p>
-          <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/invite/${invite.token}">Accept Invitation</a></p>
-          <p>This invitation expires in 7 days.</p>
-        `,
-      });
-    } catch {
-      // Email sending is best-effort
-    }
+    revalidatePath("/team");
+    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${invite.token}`;
+    return { success: true, inviteLink: inviteUrl };
   }
-
   revalidatePath("/team");
   return { success: true };
 }
@@ -126,7 +94,7 @@ export async function removeMember(projectId: string, memberId: string) {
     where: { userId_projectId: { userId: user.id, projectId } },
   });
 
-  if (!currentMember || currentMember.role !== "OWNER") {
+  if (!currentMember || currentMember.role !== "HEAD") {
     return { error: "Only the owner can remove members" };
   }
 
@@ -137,7 +105,7 @@ export async function removeMember(projectId: string, memberId: string) {
   if (!targetMember || targetMember.projectId !== projectId) {
     return { error: "Member not found" };
   }
-  if (targetMember.role === "OWNER") return { error: "Cannot remove the owner" };
+  if (targetMember.role === "HEAD") return { error: "Cannot remove the head" };
 
   await prisma.projectMember.delete({ where: { id: memberId } });
   revalidatePath("/team");
@@ -150,14 +118,14 @@ export async function updateMemberRole(projectId: string, memberId: string, newR
   // Validate role to prevent escalation
   const parsed = updateRoleSchema.safeParse({ projectId, memberId, newRole });
   if (!parsed.success) {
-    return { error: "Invalid role. Must be EDITOR or VIEWER." };
+    return { error: "Invalid role. Must be CO_HEAD or MEMBER." };
   }
 
   const currentMember = await prisma.projectMember.findUnique({
     where: { userId_projectId: { userId: user.id, projectId } },
   });
 
-  if (!currentMember || currentMember.role !== "OWNER") {
+  if (!currentMember || currentMember.role !== "HEAD") {
     return { error: "Only the owner can change roles" };
   }
 

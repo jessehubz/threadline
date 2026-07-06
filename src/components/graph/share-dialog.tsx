@@ -24,7 +24,7 @@ interface ShareDialogProps {
 export function ShareDialog({ open, onClose, projectId, shareToken, members }: ShareDialogProps) {
   const [copied, setCopied] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("EDITOR");
+  const [inviteRole, setInviteRole] = useState("CO_HEAD");
   const [loading, setLoading] = useState(false);
   const [linkType, setLinkType] = useState<"view" | "edit">("view");
 
@@ -114,8 +114,8 @@ export function ShareDialog({ open, onClose, projectId, shareToken, members }: S
               onChange={(e) => setInviteRole(e.target.value)}
               className="input-field w-24 text-xs"
             >
-              <option value="EDITOR">Editor</option>
-              <option value="VIEWER">Viewer</option>
+              <option value="CO_HEAD">Co-Head</option>
+              <option value="MEMBER">Member</option>
             </select>
             <Button size="sm" onClick={handleInvite} loading={loading}>
               Invite
@@ -139,7 +139,7 @@ export function ShareDialog({ open, onClose, projectId, shareToken, members }: S
                     {member.user.name || member.user.email}
                   </span>
                 </div>
-                <Badge variant={member.role === "OWNER" ? "info" : member.role === "EDITOR" ? "success" : "default"}>
+                <Badge variant={member.role === "HEAD" ? "info" : member.role === "CO_HEAD" ? "success" : "default"}>
                   {member.role}
                 </Badge>
               </div>

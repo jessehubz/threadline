@@ -74,7 +74,7 @@ interface GraphEditorProps {
 }
 
 export function GraphEditor({ projectId, graph, projectName, shareToken, members, role, breadcrumbs, currentPath, currentUserId }: GraphEditorProps) {
-  const isReadOnly = role === "VIEWER";
+  const isReadOnly = role === "MEMBER";
   const router = useRouter();
 
   const initialNodes: Node[] = graph.nodes.map((node) => ({
@@ -247,11 +247,13 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
   const handleNodeDoubleClick = useCallback(async (_: React.MouseEvent, node: Node) => {
     // Double-click folder nodes to navigate into sub-graph
     const graphNode = graph.nodes.find((n) => n.id === node.id);
-    if (!graphNode || graphNode.nodeType !== "FOLDER") return;
+    const isFolder = graphNode?.nodeType === "FOLDER" || node.type === "folderNode";
+    if (!isFolder) return;
 
+    setSelectedNodeId(null);
     let subGraphId: string | undefined;
 
-    if (graphNode.subGraph && graphNode.subGraph.id) {
+    if (graphNode?.subGraph && graphNode.subGraph.id) {
       subGraphId = graphNode.subGraph.id;
     } else {
       // Create a new sub-graph for this folder (or get existing one)
@@ -267,7 +269,6 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
 
     if (subGraphId) {
       const newPath = [...currentPath, node.id].join(",");
-      // Use window.location for hard navigation to ensure fresh data load
       window.location.href = `/graph/${projectId}?path=${newPath}&graphId=${subGraphId}`;
     }
   }, [currentPath, graph.nodes, projectId]);
@@ -281,7 +282,22 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
     }
   }, [nodes, setNodes]);
 
-  const selectedNode = graph.nodes.find((n) => n.id === selectedNodeId);
+  const selectedNode = graph.nodes.find((n) => n.id === selectedNodeId) || (selectedNodeId && nodes.find((n) => n.id === selectedNodeId) ? {
+    id: selectedNodeId,
+    title: (nodes.find((n) => n.id === selectedNodeId)?.data?.title as string) || "New Task",
+    description: null,
+    status: (nodes.find((n) => n.id === selectedNodeId)?.data?.status as string) || "NOT_STARTED",
+    nodeType: (nodes.find((n) => n.id === selectedNodeId)?.type === "folderNode" ? "FOLDER" : "TASK"),
+    color: (nodes.find((n) => n.id === selectedNodeId)?.data?.color as string | null) || null,
+    dueDate: null,
+    positionX: 0,
+    positionY: 0,
+    subGraph: null,
+    assignments: [] as Array<{ user: { id: string; name: string | null; imageUrl: string | null }; isApprover: boolean }>,
+    attachments: [] as Array<{ id: string; fileName: string; fileUrl: string; fileType: string }>,
+    incomingEdges: [] as Array<{ id: string; sourceNodeId: string }>,
+    outgoingEdges: [] as Array<{ id: string; targetNodeId: string }>,
+  } : null);
   const validNodes = nodes.filter((n) => n.position && typeof n.position.x === "number" && typeof n.position.y === "number");
 
   const deadlineTasks = graph.nodes

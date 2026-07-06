@@ -123,7 +123,7 @@ export async function deleteComment(commentId: string) {
     return { error: "Access denied" };
   }
 
-  if (comment.userId !== user.id && membership.role !== "OWNER") {
+  if (comment.userId !== user.id && membership.role !== "HEAD") {
     return { error: "Only the author or project owner can delete this comment" };
   }
 

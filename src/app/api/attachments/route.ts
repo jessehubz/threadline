@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (!membership || membership.role === "VIEWER") {
+  if (!membership || membership.role === "MEMBER") {
     return NextResponse.json({ error: "Not authorized to attach files to this node" }, { status: 403 });
   }
 

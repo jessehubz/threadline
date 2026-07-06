@@ -36,7 +36,7 @@ export async function submitForApproval(projectId: string, nodeId: string) {
   const membership = await prisma.projectMember.findUnique({
     where: { userId_projectId: { userId: user.id, projectId } },
   });
-  if (!membership || membership.role === "VIEWER") return { error: "Not authorized" };
+  if (!membership || membership.role === "MEMBER") return { error: "Not authorized" };
 
   const approver = node.assignments.find((a) => a.isApprover);
   if (!approver) return { error: "No approver assigned" };

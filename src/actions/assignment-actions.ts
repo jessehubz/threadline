@@ -11,7 +11,7 @@ export async function assignUser(projectId: string, nodeId: string, userId: stri
   const member = await prisma.projectMember.findUnique({
     where: { userId_projectId: { userId: currentUser.id, projectId } },
   });
-  if (!member || member.role === "VIEWER") return { error: "Not authorized" };
+  if (!member || member.role === "MEMBER") return { error: "Not authorized" };
 
   // Verify target user is a project member
   const targetMember = await prisma.projectMember.findUnique({
@@ -53,7 +53,7 @@ export async function unassignUser(projectId: string, nodeId: string, userId: st
   const member = await prisma.projectMember.findUnique({
     where: { userId_projectId: { userId: currentUser.id, projectId } },
   });
-  if (!member || member.role === "VIEWER") return { error: "Not authorized" };
+  if (!member || member.role === "MEMBER") return { error: "Not authorized" };
 
   await prisma.taskAssignment.delete({
     where: { nodeId_userId: { nodeId, userId } },
