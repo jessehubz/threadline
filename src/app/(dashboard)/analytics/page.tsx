@@ -21,14 +21,14 @@ export default async function AnalyticsPage() {
     },
   });
 
-  // Compute analytics data
+  // Status breakdown
   const statusBreakdown = [
     { name: "Not Started", value: tasks.filter((t) => t.status === "NOT_STARTED").length, color: "#9ca3af" },
-    { name: "In Progress", value: tasks.filter((t) => t.status === "IN_PROGRESS").length, color: "#3b82f6" },
+    { name: "In Progress", value: tasks.filter((t) => t.status === "IN_PROGRESS").length, color: "#7c3aed" },
     { name: "Blocked", value: tasks.filter((t) => t.status === "BLOCKED").length, color: "#ef4444" },
     { name: "Awaiting Approval", value: tasks.filter((t) => t.status === "AWAITING_APPROVAL").length, color: "#f59e0b" },
     { name: "Rejected", value: tasks.filter((t) => t.status === "REJECTED").length, color: "#f97316" },
-    { name: "Complete", value: tasks.filter((t) => t.status === "COMPLETE").length, color: "#22c55e" },
+    { name: "Complete", value: tasks.filter((t) => t.status === "COMPLETE").length, color: "#10b981" },
   ].filter((s) => s.value > 0);
 
   // Overdue tasks
@@ -38,7 +38,7 @@ export default async function AnalyticsPage() {
   );
 
   // Workload per person
-  const workloadMap = new Map<string, { name: string; total: number; completed: number }>(); 
+  const workloadMap = new Map<string, { name: string; total: number; completed: number }>();
   tasks.forEach((task) => {
     task.assignments.forEach((a) => {
       const key = a.user.id;
@@ -67,10 +67,10 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-10">
-        <h1 className="text-2xl font-bold tracking-tight text-surface-900">Analytics</h1>
-        <p className="mt-1.5 text-sm text-surface-500">
-          Track progress across all your projects
+      <div className="mb-8">
+        <h1 className="text-[22px] font-bold tracking-tight text-[#1A1A1A]">Analytics</h1>
+        <p className="mt-0.5 text-[13px] text-[#6B7280]">
+          Your performance and activity across all projects
         </p>
       </div>
 
