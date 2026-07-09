@@ -40,10 +40,10 @@ export default async function CalendarPage() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-10">
-        <h1 className="text-2xl font-bold tracking-tight text-surface-900">
+        <h1 className="text-2xl font-bold tracking-tight text-[#1A1A1A]">
           Calendar
         </h1>
-        <p className="mt-1.5 text-sm text-surface-500">
+        <p className="mt-1.5 text-sm text-[#6B7280]">
           View tasks by their due dates
         </p>
       </div>

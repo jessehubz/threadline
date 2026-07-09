@@ -106,13 +106,13 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
       <div className="flex items-center justify-between rounded-2xl border border-surface-200/80 bg-white px-5 py-3.5 shadow-sm">
         <button
           onClick={prevMonth}
-          className="rounded-xl p-1.5 text-surface-500 transition-colors hover:bg-surface-100800"
+          className="rounded-xl p-1.5 text-[#6B7280] transition-colors hover:bg-surface-100800"
           aria-label="Previous month"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-surface-900">
+          <h2 className="text-lg font-semibold text-[#1A1A1A]">
             {monthLabel}
           </h2>
           <button
@@ -124,7 +124,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
         </div>
         <button
           onClick={nextMonth}
-          className="rounded-xl p-1.5 text-surface-500 transition-colors hover:bg-surface-100800"
+          className="rounded-xl p-1.5 text-[#6B7280] transition-colors hover:bg-surface-100800"
           aria-label="Next month"
         >
           <ChevronRight className="h-5 w-5" />
@@ -197,7 +197,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
                       />
                     ))}
                     {dayTasks.length > 3 && (
-                      <span className="text-[10px] leading-none text-surface-500">
+                      <span className="text-[10px] leading-none text-[#6B7280]">
                         +{dayTasks.length - 3}
                       </span>
                     )}
@@ -212,7 +212,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
       {/* Selected date detail */}
       {selectedDate && (
         <div className="rounded-2xl border border-surface-200/80 bg-white p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-surface-900">
+          <h3 className="text-sm font-semibold text-[#1A1A1A]">
             {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
               weekday: "long",
               month: "long",
@@ -238,10 +238,10 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
                     )}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-surface-900">
+                    <p className="truncate text-sm font-medium text-[#1A1A1A]">
                       {task.title}
                     </p>
-                    <p className="text-xs text-surface-500">
+                    <p className="text-xs text-[#6B7280]">
                       {task.projectName} · {STATUS_LABELS[task.status] || task.status}
                     </p>
                   </div>

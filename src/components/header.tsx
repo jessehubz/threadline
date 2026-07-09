@@ -12,7 +12,7 @@ export function Header({ currentUserId }: { currentUserId: string }) {
   return (
     <>
       <header className="flex h-16 items-center justify-between border-b border-surface-200/80 bg-white px-6 lg:px-10">
-        <button onClick={() => setMobileMenuOpen(true)} className="rounded-xl p-2 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700 lg:hidden" aria-label="Open menu"><Menu className="h-5 w-5" /></button>
+        <button onClick={() => setMobileMenuOpen(true)} className="rounded-xl p-2 text-[#6B7280] transition-colors hover:bg-surface-100 hover:text-surface-700 lg:hidden" aria-label="Open menu"><Menu className="h-5 w-5" /></button>
         <div className="flex-1" />
         <div className="flex items-center gap-2">
           <ChatPopup currentUserId={currentUserId} />

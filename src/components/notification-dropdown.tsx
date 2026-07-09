@@ -56,7 +56,7 @@ export function NotificationDropdown() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative rounded-xl p-2 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700"
+        className="relative rounded-xl p-2 text-[#6B7280] transition-colors hover:bg-surface-100 hover:text-surface-700"
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />
@@ -68,9 +68,9 @@ export function NotificationDropdown() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-xl shadow-surface-900/5">
+        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-surface-200/60 bg-white shadow-xl animate-[fadeInUp_0.15s_ease-out]">
           <div className="flex items-center justify-between border-b border-surface-100 px-4 py-3">
-            <h3 className="text-sm font-semibold text-surface-900">Notifications</h3>
+            <h3 className="text-sm font-semibold text-[#1A1A1A]">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllRead}

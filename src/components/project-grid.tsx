@@ -45,7 +45,7 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
-          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search projects..." className="w-full rounded-xl border border-surface-200/80 bg-white py-2.5 pl-9 pr-4 text-sm text-[#1A1A1A] placeholder-surface-400 shadow-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search projects..." className="w-full rounded-xl border border-surface-200/60 bg-white py-2.5 pl-9 pr-4 text-sm text-[#1A1A1A] placeholder-surface-400 shadow-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
         </div>
         {allLabels.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -94,7 +94,7 @@ function ProjectCard({ project }: { project: Project }) {
 
   return (
     <>
-      <div className="group relative rounded-2xl border border-surface-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-surface-300 hover:shadow-md">
+      <div className="group relative rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-surface-300 hover:shadow-md hover:-translate-y-[1px]">
         <div className="flex items-start justify-between">
           <Link href={`/graph/${project.id}`} className="flex-1">
             <h3 className="text-[15px] font-semibold text-[#1A1A1A] transition-colors group-hover:text-brand-600">

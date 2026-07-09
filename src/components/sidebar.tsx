@@ -179,7 +179,7 @@ export function Sidebar() {
               href={item.href}
               title={collapsed ? item.name : undefined}
               className={cn(
-                "relative flex items-center rounded-lg transition-all duration-100 mb-0.5",
+                "relative flex items-center rounded-lg transition-all duration-150 ease-out mb-0.5",
                 collapsed ? "justify-center p-2.5" : "gap-2.5 px-3 py-2 text-[13px] font-medium",
                 isActive
                   ? "bg-surface-100 text-[#1A1A1A] font-semibold"
@@ -209,7 +209,7 @@ export function Sidebar() {
               href={item.href}
               title={collapsed ? item.name : undefined}
               className={cn(
-                "relative flex items-center rounded-lg transition-all duration-100 mb-0.5",
+                "relative flex items-center rounded-lg transition-all duration-150 ease-out mb-0.5",
                 collapsed ? "justify-center p-2.5" : "gap-2.5 px-3 py-2 text-[13px] font-medium",
                 isActive
                   ? "bg-surface-100 text-[#1A1A1A] font-semibold"

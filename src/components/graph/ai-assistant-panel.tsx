@@ -83,7 +83,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
         <div className="border-t border-surface-200/80 bg-white p-5 shadow-xl">
           <div className="mx-auto max-w-3xl space-y-4">
             <div className="flex items-center gap-3">
-              <p className="text-sm font-semibold text-surface-900">
+              <p className="text-sm font-semibold text-[#1A1A1A]">
                 Generate a dependency graph
               </p>
               <BadgeLabel text="No API key needed" />
@@ -115,7 +115,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
             )}
 
             {selectedTemplate && (
-              <p className="text-sm text-surface-500">
+              <p className="text-sm text-[#6B7280]">
                 Will generate {templates.find((t) => t.name === selectedTemplate)?.nodes.length || 0} tasks with dependencies
               </p>
             )}

@@ -103,37 +103,37 @@ export default async function DashboardPage() {
 
       {/* Stat cards - UNCHANGED */}
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:shadow-md">
           <div className="flex items-center gap-2 mb-2">
-            <FolderOpen className="h-4 w-4 text-brand-500" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50"><FolderOpen className="h-4 w-4 text-brand-600" /></div>
             <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Projects</span>
           </div>
-          <p className="text-[28px] font-bold text-[#1A1A1A]">{projects.length}</p>
+          <p className="text-[32px] font-extrabold text-[#1A1A1A] tracking-tight">{projects.length}</p>
         </div>
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:shadow-md">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50"><CheckCircle2 className="h-4 w-4 text-emerald-600" /></div>
             <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Completed</span>
           </div>
-          <p className="text-[28px] font-bold text-[#1A1A1A]">{completedTasks}</p>
+          <p className="text-[32px] font-extrabold text-[#1A1A1A] tracking-tight">{completedTasks}</p>
           <p className="text-[11px] text-emerald-600 mt-0.5">of {totalTasks} tasks</p>
         </div>
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:shadow-md">
           <div className="flex items-center gap-2 mb-2">
-            <Clock className="h-4 w-4 text-amber-500" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50"><Clock className="h-4 w-4 text-amber-600" /></div>
             <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">In Progress</span>
           </div>
-          <p className="text-[28px] font-bold text-[#1A1A1A]">{inProgressTasks}</p>
+          <p className="text-[32px] font-extrabold text-[#1A1A1A] tracking-tight">{inProgressTasks}</p>
           <div className="mt-2 h-1.5 w-full rounded-full bg-surface-100">
             <div className="h-1.5 rounded-full bg-brand-500" style={{ width: `${completionRate}%` }} />
           </div>
         </div>
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:shadow-md">
           <div className="flex items-center gap-2 mb-2">
-            <UsersRound className="h-4 w-4 text-brand-500" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50"><UsersRound className="h-4 w-4 text-brand-600" /></div>
             <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Teams</span>
           </div>
-          <p className="text-[28px] font-bold text-[#1A1A1A]">{teams.length}</p>
+          <p className="text-[32px] font-extrabold text-[#1A1A1A] tracking-tight">{teams.length}</p>
           <p className="text-[11px] text-[#6B7280] mt-0.5">{totalMembers} members</p>
         </div>
       </div>
@@ -142,7 +142,7 @@ export default async function DashboardPage() {
       <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
 
         {/* My Assigned Tasks */}
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:shadow-md">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[14px] font-semibold text-[#1A1A1A]">My Tasks</h3>
             <Link href="/my-tasks" className="text-[12px] text-brand-600 hover:text-brand-700 font-medium">View all</Link>
@@ -154,7 +154,7 @@ export default async function DashboardPage() {
               {myTasks.map((task) => {
                 const style = STATUS_STYLES[task.status] || STATUS_STYLES.NOT_STARTED;
                 return (
-                  <Link key={task.id} href={`/graph/${task.graph.project.id}?nodeId=${task.id}`} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-surface-50 transition-colors">
+                  <Link key={task.id} href={`/graph/${task.graph.project.id}?nodeId=${task.id}`} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-surface-50 transition-all duration-150 ease-out">
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-medium text-[#1A1A1A] truncate">{task.title}</p>
                       <p className="text-[11px] text-[#9CA3AF]">{task.graph.project.name}</p>
@@ -168,7 +168,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Upcoming Deadlines */}
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:shadow-md">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[14px] font-semibold text-[#1A1A1A]">Upcoming Deadlines</h3>
             <Link href="/calendar" className="text-[12px] text-brand-600 hover:text-brand-700 font-medium">Calendar</Link>
@@ -202,7 +202,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Recent Activity (team) */}
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:shadow-md">
           <h3 className="text-[14px] font-semibold text-[#1A1A1A] mb-4">Recent Activity</h3>
           {recentCompletions.length === 0 ? (
             <p className="text-[13px] text-[#9CA3AF] py-4 text-center">No recent activity</p>
@@ -231,7 +231,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Projects Needing Attention */}
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:shadow-md">
           <h3 className="text-[14px] font-semibold text-[#1A1A1A] mb-4">Projects Status</h3>
           {projects.length === 0 ? (
             <p className="text-[13px] text-[#9CA3AF] py-4 text-center">No projects yet</p>
@@ -240,7 +240,7 @@ export default async function DashboardPage() {
               {projects.slice(0, 5).map((project) => {
                 const pct = project.totalTasks > 0 ? Math.round((project.completedTasks / project.totalTasks) * 100) : 0;
                 return (
-                  <Link key={project.id} href={`/graph/${project.id}`} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-50 transition-colors">
+                  <Link key={project.id} href={`/graph/${project.id}`} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-50 transition-all duration-150 ease-out">
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-medium text-[#1A1A1A] truncate">{project.name}</p>
                       <p className="text-[11px] text-[#9CA3AF]">{project.completedTasks}/{project.totalTasks} tasks</p>
@@ -261,7 +261,7 @@ export default async function DashboardPage() {
 
       {/* Team Activity - who's been active */}
       {recentCompletions.length > 0 && (
-        <div className="mb-8 rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm">
+        <div className="mb-8 rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:shadow-md">
           <h3 className="text-[14px] font-semibold text-[#1A1A1A] mb-3">Active Team Members</h3>
           <div className="flex items-center gap-2 flex-wrap">
             {(() => {

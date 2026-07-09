@@ -36,12 +36,26 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div ref={overlayRef} className="fixed inset-0 bg-surface-900/40 backdrop-blur-sm" onClick={onClose} />
-      <div className={cn("relative z-10 w-full max-w-lg rounded-2xl border border-surface-200/80 bg-white p-6 shadow-2xl", className)}>
+      <div
+        ref={overlayRef}
+        className="fixed inset-0 bg-black/20 backdrop-blur-[2px] animate-[fadeIn_0.15s_ease-out]"
+        onClick={onClose}
+      />
+      <div
+        className={cn(
+          "relative z-10 w-full max-w-lg rounded-2xl border border-surface-200/60 bg-white p-6 shadow-2xl",
+          "animate-[fadeInUp_0.2s_ease-out]",
+          className
+        )}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-surface-900">{title}</h2>
-          <button onClick={onClose} className="rounded-xl p-1.5 text-surface-400 transition-colors hover:bg-surface-100" aria-label="Close">
-            <X className="h-5 w-5" />
+          <h2 className="text-[16px] font-semibold text-[#1A1A1A]">{title}</h2>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-surface-400 transition-all duration-150 hover:bg-surface-100 hover:text-surface-600"
+            aria-label="Close"
+          >
+            <X className="h-4.5 w-4.5" />
           </button>
         </div>
         {children}

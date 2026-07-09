@@ -37,7 +37,7 @@ export function ChatPopup({ currentUserId }: { currentUserId: string }) {
 
   return (
     <>
-      <button onClick={() => setOpen(!open)} className={cn("relative rounded-xl p-2 transition-colors", open ? "bg-brand-50 text-brand-600" : "text-surface-500 hover:bg-surface-100 hover:text-surface-700")} aria-label="Messages"><MessageSquare className="h-5 w-5" /></button>
+      <button onClick={() => setOpen(!open)} className={cn("relative rounded-xl p-2 transition-colors", open ? "bg-brand-50 text-brand-600" : "text-[#6B7280] hover:bg-surface-100 hover:text-surface-700")} aria-label="Messages"><MessageSquare className="h-5 w-5" /></button>
       {open && (
         <div className="fixed bottom-4 right-4 z-50 flex h-[480px] w-[360px] flex-col overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-2xl">
           <div className="flex items-center justify-between border-b border-surface-100 px-4 py-3">

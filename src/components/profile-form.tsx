@@ -105,10 +105,10 @@ export function ProfileForm({ user }: { user: User }) {
             />
           </div>
           <div>
-            <p className="text-base font-semibold text-surface-900">
+            <p className="text-base font-semibold text-[#1A1A1A]">
               {name || "Set your name"}
             </p>
-            <p className="text-sm text-surface-500">{user.email}</p>
+            <p className="text-sm text-[#6B7280]">{user.email}</p>
             {uploading && (
               <p className="mt-1 text-xs text-brand-600">Uploading...</p>
             )}

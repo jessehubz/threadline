@@ -91,10 +91,10 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
                     {member.user.name?.[0]?.toUpperCase() || member.user.email[0].toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-surface-900">
+                    <p className="text-sm font-medium text-[#1A1A1A]">
                       {member.user.name || member.user.email}
                     </p>
-                    <p className="text-xs text-surface-500">{member.user.email}</p>
+                    <p className="text-xs text-[#6B7280]">{member.user.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5">

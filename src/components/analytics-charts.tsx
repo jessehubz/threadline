@@ -72,7 +72,7 @@ export function AnalyticsCharts({
 
         {/* Status breakdown */}
         <div className="rounded-2xl border border-surface-200/60 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
-          <h3 className="mb-5 text-sm font-semibold text-surface-900">Status Breakdown</h3>
+          <h3 className="mb-5 text-sm font-semibold text-[#1A1A1A]">Status Breakdown</h3>
           {statusBreakdown.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
@@ -91,7 +91,7 @@ export function AnalyticsCharts({
 
         {/* Workload */}
         <div className="rounded-2xl border border-surface-200/60 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
-          <h3 className="mb-5 text-sm font-semibold text-surface-900">Workload per Person</h3>
+          <h3 className="mb-5 text-sm font-semibold text-[#1A1A1A]">Workload per Person</h3>
           {workload.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={workload}>
@@ -111,14 +111,14 @@ export function AnalyticsCharts({
 
         {/* Overdue tasks */}
         <div className="rounded-2xl border border-surface-200/60 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
-          <h3 className="mb-5 text-sm font-semibold text-surface-900">Overdue Tasks</h3>
+          <h3 className="mb-5 text-sm font-semibold text-[#1A1A1A]">Overdue Tasks</h3>
           {overdueTasks.length > 0 ? (
             <div className="max-h-[250px] space-y-2 overflow-y-auto">
               {overdueTasks.map((task) => (
                 <div key={task.id} className="flex items-center justify-between rounded-xl border border-red-100 bg-red-50/50 px-4 py-2.5900950/50">
                   <div>
-                    <p className="text-sm font-medium text-surface-900">{task.title}</p>
-                    <p className="text-xs text-surface-500">{task.projectName}</p>
+                    <p className="text-sm font-medium text-[#1A1A1A]">{task.title}</p>
+                    <p className="text-xs text-[#6B7280]">{task.projectName}</p>
                   </div>
                   <span className="text-xs font-medium text-red-600">Due {formatDate(task.dueDate)}</span>
                 </div>
@@ -140,8 +140,8 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
         {icon}
       </div>
       <div>
-        <p className="text-2xl font-bold text-surface-900">{value}</p>
-        <p className="text-xs font-medium text-surface-500">{label}</p>
+        <p className="text-2xl font-bold text-[#1A1A1A]">{value}</p>
+        <p className="text-xs font-medium text-[#6B7280]">{label}</p>
       </div>
     </div>
   );

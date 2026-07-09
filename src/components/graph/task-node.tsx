@@ -65,7 +65,7 @@ function TaskNodeInner({ data, selected }: NodeProps & { data: TaskNodeData }) {
         </div>
 
         {/* Title */}
-        <h4 className="text-[13px] font-semibold leading-tight text-surface-900 line-clamp-2">
+        <h4 className="text-[13px] font-semibold leading-tight text-[#1A1A1A] line-clamp-2">
           {nodeData.title}
         </h4>
 
@@ -78,7 +78,7 @@ function TaskNodeInner({ data, selected }: NodeProps & { data: TaskNodeData }) {
                 style={{ width: `${nodeData.subGraphProgress.total > 0 ? (nodeData.subGraphProgress.completed / nodeData.subGraphProgress.total) * 100 : 0}%`, backgroundColor: accentColor }}
               />
             </div>
-            <span className="text-[10px] font-medium text-surface-500">
+            <span className="text-[10px] font-medium text-[#6B7280]">
               {nodeData.subGraphProgress.completed}/{nodeData.subGraphProgress.total}
             </span>
             <ChevronRight className="h-3 w-3 text-surface-400" />
@@ -100,7 +100,7 @@ function TaskNodeInner({ data, selected }: NodeProps & { data: TaskNodeData }) {
                   </div>
                 ))}
                 {nodeData.assignees.length > 3 && (
-                  <span className="ml-1 text-[10px] text-surface-500">+{nodeData.assignees.length - 3}</span>
+                  <span className="ml-1 text-[10px] text-[#6B7280]">+{nodeData.assignees.length - 3}</span>
                 )}
               </div>
             )}

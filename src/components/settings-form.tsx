@@ -60,7 +60,7 @@ export function SettingsForm({ user }: { user: User }) {
     <div className="space-y-8">
       {/* Theme */}
       <div className="rounded-2xl border border-surface-200/80 bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-sm font-semibold text-surface-900">Appearance</h3>
+        <h3 className="mb-4 text-sm font-semibold text-[#1A1A1A]">Appearance</h3>
         <div className="flex gap-3">
           {themes.map((t) => (
             <button
@@ -70,7 +70,7 @@ export function SettingsForm({ user }: { user: User }) {
                 "flex items-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-150",
                 theme === t.value
                   ? "border-brand-500 bg-brand-50 text-brand-700 shadow-sm"
-                  : "border-surface-200 text-surface-500 hover:border-surface-300 hover:text-surface-700"
+                  : "border-surface-200 text-[#6B7280] hover:border-surface-300 hover:text-surface-700"
               )}
             >
               <t.icon className="h-4 w-4" />
@@ -82,7 +82,7 @@ export function SettingsForm({ user }: { user: User }) {
 
       {/* Notifications */}
       <div className="rounded-2xl border border-surface-200/80 bg-white p-6 shadow-sm">
-        <h3 className="mb-5 text-sm font-semibold text-surface-900">
+        <h3 className="mb-5 text-sm font-semibold text-[#1A1A1A]">
           Email Notifications
         </h3>
         <div className="space-y-4">

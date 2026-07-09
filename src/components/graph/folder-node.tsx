@@ -46,11 +46,11 @@ function FolderNodeInner({ data, selected }: NodeProps & { data: FolderNodeData 
             <Folder className="h-4.5 w-4.5" style={{ color: accentColor }} />
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="truncate text-[13px] font-semibold text-surface-900">
+            <h4 className="truncate text-[13px] font-semibold text-[#1A1A1A]">
               {nodeData.title}
             </h4>
             {progress && (
-              <p className="text-[10px] text-surface-500">
+              <p className="text-[10px] text-[#6B7280]">
                 {progress.completed}/{progress.total} tasks
               </p>
             )}

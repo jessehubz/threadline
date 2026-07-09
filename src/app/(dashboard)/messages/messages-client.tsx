@@ -69,8 +69,8 @@ export function MessagesClient({
           className={cn(
             "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150",
             activeTab === "channels"
-              ? "bg-white text-surface-900 shadow-sm"
-              : "text-surface-500 hover:text-surface-700300"
+              ? "bg-white text-[#1A1A1A] shadow-sm"
+              : "text-[#6B7280] hover:text-surface-700300"
           )}
         >
           <Users className="h-4 w-4" />
@@ -81,8 +81,8 @@ export function MessagesClient({
           className={cn(
             "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150",
             activeTab === "dms"
-              ? "bg-white text-surface-900 shadow-sm"
-              : "text-surface-500 hover:text-surface-700300"
+              ? "bg-white text-[#1A1A1A] shadow-sm"
+              : "text-[#6B7280] hover:text-surface-700300"
           )}
         >
           <MessageSquare className="h-4 w-4" />
@@ -164,7 +164,7 @@ function ChannelsPanel({
   if (projects.length === 0) {
     return (
       <div className="rounded-2xl border border-surface-200/80 bg-white p-12 text-center shadow-sm">
-        <p className="text-sm text-surface-500">
+        <p className="text-sm text-[#6B7280]">
           Join or create a project to start messaging.
         </p>
       </div>
@@ -354,7 +354,7 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
       {/* Conversation list */}
       <div className="w-64 flex-shrink-0 border-r border-surface-100">
         <div className="flex items-center justify-between border-b border-surface-100 px-4 py-3">
-          <h3 className="text-sm font-semibold text-surface-900">Conversations</h3>
+          <h3 className="text-sm font-semibold text-[#1A1A1A]">Conversations</h3>
           <button
             onClick={handleNewDM}
             className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600800"
@@ -371,7 +371,7 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
             </div>
           ) : showNewDM ? (
             <div className="p-2">
-              <p className="mb-2 px-2 text-xs font-medium text-surface-500">Select a team member</p>
+              <p className="mb-2 px-2 text-xs font-medium text-[#6B7280]">Select a team member</p>
               {teammates.length === 0 ? (
                 <p className="px-2 text-xs text-surface-400">No team members found</p>
               ) : (
@@ -388,7 +388,7 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
               )}
               <button
                 onClick={() => setShowNewDM(false)}
-                className="mt-2 w-full rounded-lg px-2 py-1.5 text-xs text-surface-500 hover:bg-surface-100800"
+                className="mt-2 w-full rounded-lg px-2 py-1.5 text-xs text-[#6B7280] hover:bg-surface-100800"
               >
                 Cancel
               </button>
@@ -418,11 +418,11 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
                 >
                   <UserAvatar user={other || { id: "", name: "?", email: "", imageUrl: null }} size="md" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-surface-900">
+                    <p className="truncate text-sm font-medium text-[#1A1A1A]">
                       {other?.name || other?.email || "Unknown"}
                     </p>
                     {lastMessage && (
-                      <p className="truncate text-xs text-surface-500">
+                      <p className="truncate text-xs text-[#6B7280]">
                         {lastMessage.content}
                       </p>
                     )}
@@ -440,7 +440,7 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
           <div className="flex h-full items-center justify-center">
             <div className="text-center">
               <MessageSquare className="mx-auto h-8 w-8 text-surface-300600" />
-              <p className="mt-2 text-sm text-surface-500">
+              <p className="mt-2 text-sm text-[#6B7280]">
                 Select a conversation or start a new one
               </p>
             </div>
@@ -454,7 +454,7 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
                   user={getOtherParticipant(selectedConversation) || { id: "", name: "?", email: "", imageUrl: null }}
                   size="sm"
                 />
-                <p className="text-sm font-medium text-surface-900">
+                <p className="text-sm font-medium text-[#1A1A1A]">
                   {getOtherParticipant(selectedConversation)?.name ||
                     getOtherParticipant(selectedConversation)?.email ||
                     "Unknown"}
@@ -532,11 +532,11 @@ function MessageBubble({ msg, currentUserId }: { msg: Message; currentUserId: st
           "max-w-[70%] rounded-2xl px-4 py-2.5",
           isOwn
             ? "bg-brand-600 text-white"
-            : "bg-surface-100 text-surface-900"
+            : "bg-surface-100 text-[#1A1A1A]"
         )}
       >
         {!isOwn && (
-          <p className="mb-0.5 text-xs font-medium text-surface-500">
+          <p className="mb-0.5 text-xs font-medium text-[#6B7280]">
             {msg.user.name || msg.user.email}
           </p>
         )}

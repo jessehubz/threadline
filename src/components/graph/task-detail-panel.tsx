@@ -136,7 +136,7 @@ export function TaskDetailPanel({
   return (
     <div ref={scrollRef} className="w-[400px] shrink-0 overflow-y-auto border-l border-surface-200/80 bg-white">
       <div className="flex items-center justify-between border-b border-surface-100 px-5 py-4">
-        <h3 className="text-sm font-semibold text-surface-900">Task Details</h3>
+        <h3 className="text-sm font-semibold text-[#1A1A1A]">Task Details</h3>
         <div className="flex items-center gap-1">
           {!isReadOnly && (
             <button onClick={onDelete} className="rounded-xl p-1.5 text-surface-400 transition-colors hover:bg-red-50 hover:text-red-600950" aria-label="Delete">
@@ -163,7 +163,7 @@ export function TaskDetailPanel({
                   onClick={() => handleStatusChange(opt.value)}
                   className={cn(
                     "rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150",
-                    status === opt.value ? getStatusColor(opt.value) : "bg-surface-100 text-surface-500 hover:bg-surface-200"
+                    status === opt.value ? getStatusColor(opt.value) : "bg-surface-100 text-[#6B7280] hover:bg-surface-200"
                   )}
                 >
                   {opt.label}
@@ -231,7 +231,7 @@ export function TaskDetailPanel({
             <div className="relative mt-3">
               <button
                 onClick={() => setShowMemberPicker(!showMemberPicker)}
-                className="flex items-center gap-1.5 rounded-xl border border-dashed border-surface-300 px-3 py-2 text-xs font-medium text-surface-500 transition-colors hover:border-brand-400 hover:text-brand-600600"
+                className="flex items-center gap-1.5 rounded-xl border border-dashed border-surface-300 px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors hover:border-brand-400 hover:text-brand-600600"
               >
                 <UserPlus className="h-3.5 w-3.5" /> Assign member
               </button>
