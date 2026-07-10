@@ -48,6 +48,10 @@ export default function RootLayout({
             href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&family=Outfit:wght@600;700;800&display=swap"
             rel="stylesheet"
           />
+          <link
+            href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap"
+            rel="stylesheet"
+          />
         </head>
         <body className="min-h-screen antialiased">
           <ThemeProvider>

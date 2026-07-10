@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Menu, Search, LayoutDashboard, CalendarDays, BarChart3, MessageSquare, ClipboardList, Users, Settings, Calendar } from "lucide-react";
+import { Menu, Search, LayoutDashboard, CalendarDays, BarChart3, MessageSquare, ClipboardList, Users, UserPlus, Settings, Calendar } from "lucide-react";
 import { NotificationDropdown } from "@/components/notification-dropdown";
 import { ChatPopup } from "@/components/chat-popup";
 import { useState } from "react";
@@ -18,6 +18,7 @@ const navItems = [
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Calendar", href: "/calendar", icon: Calendar },
   { name: "Team", href: "/team", icon: Users },
+  { name: "Friends", href: "/friends", icon: UserPlus },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -37,7 +38,7 @@ export function Header({ currentUserId }: { currentUserId: string }) {
           </Link>
 
           {/* Center: Nav items as pills */}
-          <div className="hidden items-center gap-0.5 md:flex">
+          <div className="hidden items-center gap-0 overflow-x-auto scrollbar-hide md:flex">
             {navItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
               return (
@@ -45,14 +46,14 @@ export function Header({ currentUserId }: { currentUserId: string }) {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-all duration-150",
+                    "flex items-center gap-1.5 rounded-full px-2 py-1.5 lg:px-3.5 text-[12px] font-medium transition-all duration-150",
                     isActive
                       ? "bg-white/90 dark:bg-white/10 text-heading shadow-sm"
                       : "text-body hover:text-heading hover:bg-white/5"
                   )}
                 >
-                  <item.icon className={cn("h-3.5 w-3.5", isActive && "accent-color")} />
-                  <span>{item.name}</span>
+                  <item.icon className={cn("h-3.5 w-3.5 shrink-0", isActive && "accent-color")} />
+                  <span className="hidden lg:inline">{item.name}</span>
                 </Link>
               );
             })}

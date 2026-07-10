@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Send, MessageSquare, Users, Plus } from "lucide-react";
+import { Send, MessageSquare, Users, Plus, Search } from "lucide-react";
 import { getPusherClient } from "@/lib/pusher-client";
 import { sendMessage } from "@/actions/message-actions";
 import {
@@ -59,9 +59,28 @@ export function MessagesClient({
   currentUserId: string;
 }) {
   const [activeTab, setActiveTab] = useState<Tab>("channels");
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredProjects = projects.filter(p =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div>
+      {/* Persistent Search */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dim" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search conversations..."
+            className="input-field pl-10"
+          />
+        </div>
+      </div>
+
       {/* Tabs */}
       <div className="mb-6 flex gap-1 rounded-xl border border-themed-subtle bg-page p-1">
         <button
@@ -75,6 +94,7 @@ export function MessagesClient({
         >
           <Users className="h-4 w-4" />
           Channels
+          <span className="ml-1.5 rounded-full bg-[var(--bg-muted)] px-1.5 py-0.5 text-[10px] font-medium text-dim">{filteredProjects.length}</span>
         </button>
         <button
           onClick={() => setActiveTab("dms")}
@@ -91,9 +111,9 @@ export function MessagesClient({
       </div>
 
       {activeTab === "channels" ? (
-        <ChannelsPanel projects={projects} currentUserId={currentUserId} />
+        <ChannelsPanel projects={filteredProjects} currentUserId={currentUserId} searchQuery={searchQuery} />
       ) : (
-        <DMsPanel currentUserId={currentUserId} />
+        <DMsPanel currentUserId={currentUserId} searchQuery={searchQuery} />
       )}
     </div>
   );
@@ -104,9 +124,11 @@ export function MessagesClient({
 function ChannelsPanel({
   projects,
   currentUserId,
+  searchQuery,
 }: {
   projects: Project[];
   currentUserId: string;
+  searchQuery: string;
 }) {
   const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?.id ?? "");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -183,7 +205,7 @@ function ChannelsPanel({
         >
           {projects.map((project) => (
             <option key={project.id} value={project.id}>
-              # {project.name}
+              {project.name}
             </option>
           ))}
         </select>
@@ -240,7 +262,7 @@ function ChannelsPanel({
 
 // ─── DMs Panel ──────────────────────────────────────────────────────────────
 
-function DMsPanel({ currentUserId }: { currentUserId: string }) {
+function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searchQuery: string }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -404,7 +426,14 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
               </button>
             </div>
           ) : (
-            conversations.map((convo) => {
+            conversations
+              .filter((convo) => {
+                if (!searchQuery) return true;
+                const other = getOtherParticipant(convo);
+                const name = other?.name || other?.email || "";
+                return name.toLowerCase().includes(searchQuery.toLowerCase());
+              })
+              .map((convo) => {
               const other = getOtherParticipant(convo);
               const lastMessage = convo.messages[0];
               return (
@@ -416,7 +445,11 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
                     selectedConversation?.id === convo.id && "bg-hover"
                   )}
                 >
-                  <UserAvatar user={other || { id: "", name: "?", email: "", imageUrl: null }} size="md" />
+                  <div className="relative">
+                    <UserAvatar user={other || { id: "", name: "?", email: "", imageUrl: null }} size="md" />
+                    {/* Unread indicator dot */}
+                    <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-violet-500" />
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-heading">
                       {other?.name || other?.email || "Unknown"}

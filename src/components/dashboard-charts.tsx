@@ -61,10 +61,8 @@ export function HealthGauge({ score }: HealthGaugeProps) {
   return (
     <div className="flex animate-[fadeIn_0.4s_ease-out] flex-col items-center">
       <svg
-        width="140"
-        height="90"
         viewBox="0 0 140 90"
-        className="overflow-visible"
+        className="h-[70px] w-[110px] overflow-visible sm:h-[90px] sm:w-[140px]"
       >
         {/* Background arc */}
         <path

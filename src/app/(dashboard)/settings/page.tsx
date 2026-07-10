@@ -1,8 +1,11 @@
 import { requireUser } from "@/lib/auth";
 import { SettingsForm } from "@/components/settings-form";
+import { RecentlyDeleted } from "@/components/recently-deleted";
+import { getDeletedProjects } from "@/actions/project-actions";
 
 export default async function SettingsPage() {
   const user = await requireUser();
+  const deletedProjects = await getDeletedProjects();
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -13,6 +16,9 @@ export default async function SettingsPage() {
         </p>
       </div>
       <SettingsForm user={user} />
+      <div className="mt-8">
+        <RecentlyDeleted projects={deletedProjects} />
+      </div>
     </div>
   );
 }

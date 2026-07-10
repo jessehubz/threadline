@@ -22,6 +22,7 @@ export async function getProjects() {
 
   const projects = await prisma.project.findMany({
     where: {
+      deletedAt: null,
       members: {
         some: { userId: user.id },
       },
@@ -147,7 +148,55 @@ export async function deleteProject(projectId: string) {
     return { error: "Only the owner can delete a project" };
   }
 
+  await prisma.project.update({
+    where: { id: projectId },
+    data: {
+      deletedAt: new Date(),
+      deleteAfter: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+    },
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/settings");
+  return { success: true };
+}
+
+export async function restoreProject(projectId: string) {
+  const user = await requireUser();
+  const member = await prisma.projectMember.findUnique({
+    where: { userId_projectId: { userId: user.id, projectId } },
+  });
+  if (!member || member.role !== "HEAD") throw new Error("Only the project owner can restore");
+
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { deletedAt: null, deleteAfter: null },
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/settings");
+  return { success: true };
+}
+
+export async function permanentlyDeleteProject(projectId: string) {
+  const user = await requireUser();
+  const member = await prisma.projectMember.findUnique({
+    where: { userId_projectId: { userId: user.id, projectId } },
+  });
+  if (!member || member.role !== "HEAD") throw new Error("Only the project owner can permanently delete");
+
   await prisma.project.delete({ where: { id: projectId } });
   revalidatePath("/dashboard");
+  revalidatePath("/settings");
   return { success: true };
+}
+
+export async function getDeletedProjects() {
+  const user = await requireUser();
+  return prisma.project.findMany({
+    where: {
+      deletedAt: { not: null },
+      members: { some: { userId: user.id, role: "HEAD" } },
+    },
+    select: { id: true, name: true, deletedAt: true, deleteAfter: true },
+    orderBy: { deletedAt: "desc" },
+  });
 }

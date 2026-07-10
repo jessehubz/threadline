@@ -70,6 +70,8 @@ model User {
   directMessages    DirectMessage[]
   conversations     ConversationParticipant[]
   ownedTeams        Team[] @relation("TeamOwner")
+  friends        Friendship[] @relation("UserFriends")
+  friendOf       Friendship[] @relation("FriendOf")
 }
 
 model Project {
@@ -79,6 +81,8 @@ model Project {
   shareToken  String?  @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  deleteAfter DateTime?
 
   members ProjectMember[]
   graphs  Graph[]
@@ -320,4 +324,16 @@ model ProjectLabel {
   createdAt DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userId    String
+  friendId  String
+  createdAt DateTime @default(now())
+
+  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
 }

@@ -4,15 +4,11 @@ import { CreateProjectButton } from "@/components/create-project-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   LayoutDashboard,
-  CheckCircle2,
-  AlertTriangle,
-  TrendingUp,
   Target,
 } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
-import { HealthGauge } from "@/components/dashboard-charts";
 import { DashboardClient } from "@/components/dashboard-client";
 
 export default async function DashboardPage() {
@@ -39,7 +35,6 @@ export default async function DashboardPage() {
   // ─── KPIs ──────────────────────────────────────────────────────────────────
   const totalTasks = allTasks.length;
   const completedTasks = allTasks.filter((t) => t.status === "COMPLETE").length;
-  const inProgressTasks = allTasks.filter((t) => t.status === "IN_PROGRESS").length;
   const blockedTasksCount = allTasks.filter((t) => t.status === "BLOCKED").length;
   const overdueCount = allTasks.filter((t) => t.dueDate && t.dueDate < now && t.status !== "COMPLETE").length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -186,71 +181,92 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl animate-[fadeIn_0.3s_ease-out]">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-[22px] font-bold tracking-tight text-heading">
-            {greeting}, {firstName}
-          </h1>
-          <p className="mt-0.5 text-[13px] text-body">Here&apos;s your project overview</p>
+      {/* Hero Section */}
+      <div className="mb-4 sm:mb-6 grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        {/* Hero Card - Greeting + Health Ring */}
+        <div className="lg:col-span-2 relative overflow-hidden rounded-3xl border border-themed-subtle bg-card p-5 sm:p-6 shadow-themed">
+          {/* Decorative gradient blob */}
+          <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-brand-500/10 blur-3xl" />
+          <div className="relative flex items-center justify-between">
+            <div>
+              <h1 className="text-[20px] sm:text-[22px] font-bold tracking-tight text-heading">
+                {greeting}, {firstName}
+              </h1>
+              <p className="mt-0.5 text-[13px] text-body">Here&apos;s your project overview</p>
+            </div>
+            {/* Circular Health Ring */}
+            <div className="flex flex-col items-center">
+              <div className="relative h-16 w-16 sm:h-20 sm:w-20">
+                <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--border-default)" strokeWidth="3" />
+                  <circle cx="18" cy="18" r="15.5" fill="none" stroke={healthScore >= 80 ? '#8B5CF6' : healthScore >= 50 ? '#f59e0b' : '#ef4444'} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${healthScore} ${100 - healthScore}`} className="transition-all duration-700" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[14px] sm:text-[16px] font-bold text-heading">{healthScore}</span>
+                </div>
+              </div>
+              <p className={cn("mt-1 text-[11px] font-semibold", healthLabelColor)}>{healthLabel}</p>
+            </div>
+          </div>
         </div>
-        <CreateProjectButton />
+
+        {/* Quick Stats Mini Card */}
+        <div className="rounded-3xl border border-themed-subtle bg-card p-5 shadow-themed flex flex-col justify-between">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-dim">This Week</span>
+          </div>
+          <div>
+            <p className="text-[28px] font-bold text-heading">{completionsThisWeek}</p>
+            <p className="text-[12px] text-body">tasks completed</p>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <CreateProjectButton />
+          </div>
+        </div>
       </div>
 
-      {/* Health Score + KPI Stats — single cohesive row */}
-      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[auto_1fr]">
-        {/* Health Gauge — square box, full height left */}
-        <div className="flex aspect-square flex-col items-center justify-center self-stretch rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
-          <HealthGauge score={healthScore} />
-          <p className={cn("mt-2 text-[12px] font-semibold", healthLabelColor)}>
-            {healthLabel}
-          </p>
+      {/* KPI Bento Grid */}
+      <div className="mb-4 sm:mb-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        {/* Total Tasks - spans 2 cols on sm */}
+        <div className="sm:col-span-2 animate-entrance-1 rounded-2xl border border-themed-subtle bg-card p-4 shadow-themed hover-lift">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-dim">Total Tasks</span>
+              <p className="text-[28px] font-bold text-heading mt-1">{totalTasks}</p>
+              <p className="text-[11px] text-body">{projects.length} active projects</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl accent-bg">
+              <Target className="h-5 w-5 accent-color" />
+            </div>
+          </div>
         </div>
 
-        {/* KPI 2x2 Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="animate-entrance-1 rounded-2xl border border-themed-subtle bg-card p-4 shadow-themed hover-lift">
-            <div className="mb-2 flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg accent-bg">
-                <Target className="h-3.5 w-3.5 accent-color" />
-              </div>
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-dim">Total Tasks</span>
+        {/* Completed - with mini donut */}
+        <div className="animate-entrance-2 rounded-2xl border border-themed-subtle bg-card p-4 shadow-themed hover-lift">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-dim">Done</span>
+          <div className="mt-2 flex items-center gap-2">
+            <div className="relative h-10 w-10">
+              <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="14" fill="none" stroke="var(--border-default)" strokeWidth="4" />
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#8B5CF6" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${completionRate} ${100 - completionRate}`} />
+              </svg>
             </div>
-            <p className="text-[24px] font-bold text-heading">{totalTasks}</p>
-            <p className="text-[11px] text-body">{projects.length} projects</p>
+            <div>
+              <p className="text-[20px] font-bold text-heading">{completedTasks}</p>
+              <p className="text-[10px] text-body">{completionRate}%</p>
+            </div>
           </div>
+        </div>
 
-          <div className="animate-entrance-2 rounded-2xl border border-themed-subtle bg-card p-4 shadow-themed hover-lift">
-            <div className="mb-2 flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-dim">Completed</span>
-            </div>
-            <p className="text-[24px] font-bold text-heading">{completedTasks}</p>
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-400">{completionRate}% rate</p>
-          </div>
-
-          <div className="animate-entrance-3 rounded-2xl border border-themed-subtle bg-card p-4 shadow-themed hover-lift">
-            <div className="mb-2 flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-500/10">
-                <TrendingUp className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-dim">In Progress</span>
-            </div>
-            <p className="text-[24px] font-bold text-heading">{inProgressTasks}</p>
-            <p className="text-[11px] text-body">{completionsThisWeek} this week</p>
-          </div>
-
-          <div className="animate-entrance-4 rounded-2xl border border-themed-subtle bg-card p-4 shadow-themed hover-lift">
-            <div className="mb-2 flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 dark:bg-red-500/10">
-                <AlertTriangle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
-              </div>
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-dim">Blocked / Overdue</span>
-            </div>
-            <p className="text-[24px] font-bold text-heading">{blockedTasksCount + overdueCount}</p>
-            <p className="text-[11px] text-red-600 dark:text-red-400">{blockedTasksCount} blocked · {overdueCount} overdue</p>
+        {/* Blocked/Overdue */}
+        <div className="animate-entrance-3 rounded-2xl border border-themed-subtle bg-card p-4 shadow-themed hover-lift">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-dim">Attention</span>
+          <p className="text-[20px] font-bold text-heading mt-2">{blockedTasksCount + overdueCount}</p>
+          <div className="mt-1 flex items-center gap-1.5 text-[10px]">
+            <span className="text-red-500">{blockedTasksCount} blocked</span>
+            <span className="text-dim">·</span>
+            <span className="text-red-500">{overdueCount} overdue</span>
           </div>
         </div>
       </div>

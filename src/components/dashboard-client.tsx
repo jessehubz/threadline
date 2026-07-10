@@ -64,9 +64,12 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const [activeProject, setActiveProject] = useState<string | null>(null);
   const [workloadProject, setWorkloadProject] = useState<string | null>(null);
-  const [todayOpen, setTodayOpen] = useState(true);
-  const [weekOpen, setWeekOpen] = useState(true);
-  const [laterOpen, setLaterOpen] = useState(false);
+  const [openSection, setOpenSection] = useState<'today' | 'week' | 'later' | null>(() => {
+    if (dueToday.length > 0) return 'today';
+    if (dueThisWeek.length > 0) return 'week';
+    if (dueLater.length > 0) return 'later';
+    return null;
+  });
 
   // Filter function
   function filterByProject<T extends { projectId: string }>(items: T[]): T[] {
@@ -142,8 +145,8 @@ export function DashboardClient({
         <CollapsibleSection
           title="Due Today"
           count={filteredToday.length}
-          open={todayOpen}
-          onToggle={() => setTodayOpen(!todayOpen)}
+          open={openSection === 'today'}
+          onToggle={() => setOpenSection(prev => prev === 'today' ? null : 'today')}
           accentColor="text-red-600 dark:text-red-400"
         >
           {filteredToday.length === 0 ? (
@@ -161,8 +164,8 @@ export function DashboardClient({
         <CollapsibleSection
           title="This Week"
           count={filteredWeek.length}
-          open={weekOpen}
-          onToggle={() => setWeekOpen(!weekOpen)}
+          open={openSection === 'week'}
+          onToggle={() => setOpenSection(prev => prev === 'week' ? null : 'week')}
           accentColor="text-amber-600 dark:text-amber-400"
         >
           {filteredWeek.length === 0 ? (
@@ -180,8 +183,8 @@ export function DashboardClient({
         <CollapsibleSection
           title="Later"
           count={filteredLater.length}
-          open={laterOpen}
-          onToggle={() => setLaterOpen(!laterOpen)}
+          open={openSection === 'later'}
+          onToggle={() => setOpenSection(prev => prev === 'later' ? null : 'later')}
           accentColor="text-body"
         >
           {filteredLater.length === 0 ? (
