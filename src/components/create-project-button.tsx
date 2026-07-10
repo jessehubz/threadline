@@ -88,7 +88,7 @@ export function CreateProjectButton() {
                 {members.map((m) => (
                   <div key={m.email} className="flex items-center justify-between rounded-lg bg-page px-3 py-1.5 text-[12px] text-heading">
                     {m.email}
-                    <button type="button" onClick={() => setMembers((p) => p.filter((x) => x.email !== m.email))} className="text-dim hover:text-red-500"><X className="h-3 w-3" /></button>
+                    <button type="button" onClick={() => setMembers((p) => p.filter((x) => x.email !== m.email))} className="text-dim hover:text-[var(--danger)]"><X className="h-3 w-3" /></button>
                   </div>
                 ))}
               </div>

@@ -332,7 +332,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             deleteKeyCode={isReadOnly ? null : "Delete"}
             className="bg-page"
           >
-            <Background variant={BackgroundVariant.Dots} gap={22} size={1.8} color="#B0B0B0" />
+            <Background variant={BackgroundVariant.Dots} gap={22} size={1.4} color="var(--border-default)" />
             <Panel position="top-left" className="space-y-2">
               <GraphBreadcrumbs breadcrumbs={breadcrumbs} projectId={projectId} currentPath={currentPath} />
             </Panel>

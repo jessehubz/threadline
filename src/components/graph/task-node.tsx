@@ -3,16 +3,7 @@
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { Calendar, Paperclip, ChevronRight } from "lucide-react";
-import { cn, getStatusLabel, formatDate } from "@/lib/utils";
-
-const STATUS_COLORS: Record<string, string> = {
-  NOT_STARTED: "#9ca3af",
-  IN_PROGRESS: "#3b82f6",
-  BLOCKED: "#ef4444",
-  AWAITING_APPROVAL: "#f59e0b",
-  REJECTED: "#f97316",
-  COMPLETE: "#22c55e",
-};
+import { cn, getStatusLabel, getStatusDotColor, formatDate } from "@/lib/utils";
 
 interface TaskNodeData {
   title: string;
@@ -28,17 +19,17 @@ interface TaskNodeData {
 
 function TaskNodeInner({ data, selected }: NodeProps & { data: TaskNodeData }) {
   const nodeData = data as TaskNodeData;
-  const accentColor = nodeData.color || STATUS_COLORS[nodeData.status] || "#9ca3af";
+  const accentColor = nodeData.color || getStatusDotColor(nodeData.status);
 
   return (
     <div
       className={cn(
-        "min-w-[200px] max-w-[280px] rounded-2xl border bg-card shadow-sm transition-all duration-200",
+        "min-w-[200px] max-w-[280px] rounded-2xl border bg-card shadow-sm transition-all duration-200 ease-out",
         selected
-          ? "shadow-lg ring-2 ring-brand-300/50"
-          : "hover:shadow-md"
+          ? "shadow-lg ring-2 ring-[var(--accent)]/50"
+          : "hover:-translate-y-px hover:shadow-md hover:border-[var(--accent)]/40"
       )}
-      style={{ borderColor: selected ? accentColor : `${accentColor}30`, borderLeftWidth: "4px", borderLeftColor: accentColor }}
+      style={{ borderColor: selected ? accentColor : `${accentColor}25`, borderLeftWidth: "3px", borderLeftColor: accentColor }}
     >
       {/* Source Handle (right) */}
       <Handle
@@ -54,18 +45,19 @@ function TaskNodeInner({ data, selected }: NodeProps & { data: TaskNodeData }) {
       />
 
       <div className="p-3.5">
-        {/* Status Badge */}
+        {/* Status Badge — soft tint, not a solid block */}
         <div className="mb-2">
           <span
-            className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold text-white"
-            style={{ backgroundColor: accentColor }}
+            className="status-tint"
+            style={{ backgroundColor: `${accentColor}18`, color: accentColor }}
           >
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
             {getStatusLabel(nodeData.status)}
           </span>
         </div>
 
         {/* Title */}
-        <h4 className="text-[13px] font-semibold leading-tight text-heading line-clamp-2">
+        <h4 className="text-item-title leading-tight line-clamp-2">
           {nodeData.title}
         </h4>
 

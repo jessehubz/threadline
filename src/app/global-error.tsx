@@ -15,7 +15,7 @@ export default function GlobalError({
       <body>
         <div className="flex min-h-screen items-center justify-center bg-page p-6">
           <div className="text-center">
-            <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+            <AlertCircle className="mx-auto h-12 w-12 text-[var(--danger)]" />
             <h1 className="mt-4 text-2xl font-bold text-heading">
               Something went wrong
             </h1>

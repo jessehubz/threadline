@@ -8,15 +8,15 @@ interface BadgeProps {
 
 const variants = {
   default: "bg-hover text-body",
-  success: "bg-green-50 text-green-700900300",
-  warning: "bg-amber-50 text-amber-700900300",
-  danger: "bg-red-50 text-red-700900300",
-  info: "bg-blue-50 text-blue-700900300",
+  success: "bg-[var(--accent-soft)] text-[var(--accent)]",
+  warning: "bg-[var(--danger-soft)] text-[var(--danger)]",
+  danger: "bg-[var(--danger-soft)] text-[var(--danger)]",
+  info: "bg-[var(--violet-100)] text-[var(--violet-600)]",
 };
 
 export function Badge({ children, variant = "default", className }: BadgeProps) {
   return (
-    <span className={cn("inline-flex items-center rounded-lg px-2 py-0.5 text-[11px] font-semibold", variants[variant], className)}>
+    <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium", variants[variant], className)}>
       {children}
     </span>
   );

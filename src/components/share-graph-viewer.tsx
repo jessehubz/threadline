@@ -76,7 +76,7 @@ export function ShareGraphViewer({ graph }: ShareGraphViewerProps) {
         elementsSelectable={false}
         className="bg-page"
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#e5e7eb" />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--border-default)" />
         <Controls />
         <MiniMap />
       </ReactFlow>

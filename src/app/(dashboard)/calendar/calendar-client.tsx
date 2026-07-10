@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getStatusDotColor } from "@/lib/utils";
 
 interface Task {
   id: string;
@@ -11,15 +11,6 @@ interface Task {
   dueDate: string;
   projectName: string;
 }
-
-const STATUS_DOT_COLORS: Record<string, string> = {
-  NOT_STARTED: "bg-[var(--border-default)]",
-  IN_PROGRESS: "bg-blue-500",
-  BLOCKED: "bg-red-500",
-  AWAITING_APPROVAL: "bg-amber-500",
-  REJECTED: "bg-orange-500",
-  COMPLETE: "bg-green-500",
-};
 
 const STATUS_LABELS: Record<string, string> = {
   NOT_STARTED: "Not Started",
@@ -103,7 +94,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
   return (
     <div className="space-y-5">
       {/* Month navigation */}
-      <div className="flex items-center justify-between rounded-2xl border border-themed-subtle bg-card px-5 py-3.5 shadow-sm">
+      <div className="panel-quiet flex items-center justify-between px-5 py-3.5">
         <button
           onClick={prevMonth}
           className="rounded-xl p-1.5 text-body transition-colors hover:bg-hover"
@@ -138,7 +129,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
           {DAYS_OF_WEEK.map((day) => (
             <div
               key={day}
-              className="px-2 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wider text-dim"
+              className="text-eyebrow px-2 py-2.5 text-center"
             >
               {day}
             </div>
@@ -178,7 +169,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
                   className={cn(
                     "inline-flex h-6 w-6 items-center justify-center rounded-lg text-xs font-semibold",
                     isToday
-                      ? "bg-brand-600 text-white"
+                      ? "bg-[var(--accent)] text-white"
                       : "text-body"
                   )}
                 >
@@ -190,10 +181,8 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
                     {dayTasks.slice(0, 3).map((task) => (
                       <span
                         key={task.id}
-                        className={cn(
-                          "h-1.5 w-1.5 rounded-full",
-                          STATUS_DOT_COLORS[task.status] || "bg-[var(--border-default)]"
-                        )}
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ backgroundColor: getStatusDotColor(task.status) }}
                       />
                     ))}
                     {dayTasks.length > 3 && (
@@ -211,7 +200,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
 
       {/* Selected date detail */}
       {selectedDate && (
-        <div className="rounded-2xl border border-themed-subtle bg-card p-5 shadow-sm">
+        <div className="panel-quiet p-5">
           <h3 className="text-sm font-semibold text-heading">
             {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
               weekday: "long",
@@ -225,23 +214,21 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
               No tasks due on this date.
             </p>
           ) : (
-            <ul className="mt-4 space-y-2">
+            <ul className="mt-3 divide-y divide-[var(--border-subtle)]">
               {selectedTasks.map((task) => (
                 <li
                   key={task.id}
-                  className="flex items-center gap-3 rounded-xl border border-themed px-4 py-2.5"
+                  className="flex items-center gap-3 px-1 py-2.5"
                 >
                   <span
-                    className={cn(
-                      "h-2.5 w-2.5 flex-shrink-0 rounded-full",
-                      STATUS_DOT_COLORS[task.status] || "bg-[var(--border-default)]"
-                    )}
+                    className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                    style={{ backgroundColor: getStatusDotColor(task.status) }}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-heading">
+                    <p className="truncate text-item-title">
                       {task.title}
                     </p>
-                    <p className="text-xs text-body">
+                    <p className="text-meta">
                       {task.projectName} · {STATUS_LABELS[task.status] || task.status}
                     </p>
                   </div>

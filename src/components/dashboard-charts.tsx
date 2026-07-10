@@ -37,7 +37,7 @@ interface HealthGaugeProps {
 export function HealthGauge({ score }: HealthGaugeProps) {
   const clampedScore = Math.max(0, Math.min(100, score));
   const color =
-    clampedScore >= 80 ? "#10b981" : clampedScore >= 50 ? "#f59e0b" : "#ef4444";
+    clampedScore >= 80 ? "var(--accent)" : clampedScore >= 50 ? "var(--text-secondary)" : "var(--danger)";
 
   // Semicircle arc parameters
   const cx = 70;
@@ -120,8 +120,8 @@ export function CompletionTrendChart({ data }: CompletionTrendChartProps) {
         <AreaChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
           <defs>
             <linearGradient id="dashboardTrendGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.25} />
+              <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid stroke="var(--border-default)" strokeDasharray="3 3" vertical={false} />
@@ -147,11 +147,11 @@ export function CompletionTrendChart({ data }: CompletionTrendChartProps) {
           <Area
             type="monotone"
             dataKey="count"
-            stroke="#7c3aed"
+            stroke="var(--accent)"
             strokeWidth={2.5}
             fill="url(#dashboardTrendGradient)"
             dot={false}
-            activeDot={{ r: 4, fill: "#7c3aed", strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: "var(--accent)", strokeWidth: 0 }}
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -269,14 +269,14 @@ export function WorkloadChart({ data }: WorkloadChartProps) {
           <Bar
             dataKey="active"
             stackId="workload"
-            fill="#7c3aed"
+            fill="var(--accent)"
             name="Active"
             radius={[0, 0, 0, 0]}
           />
           <Bar
             dataKey="completed"
             stackId="workload"
-            fill="rgba(139, 92, 246, 0.3)"
+            fill="var(--violet-200)"
             name="Completed"
             radius={[0, 4, 4, 0]}
           />
@@ -293,13 +293,15 @@ interface ProgressRingProps {
   size?: number;
   strokeWidth?: number;
   color?: string;
+  labelSize?: number;
 }
 
 export function ProgressRing({
   progress,
   size = 36,
   strokeWidth = 3,
-  color = "#7c3aed",
+  color = "var(--accent)",
+  labelSize = 9,
 }: ProgressRingProps) {
   const clampedProgress = Math.max(0, Math.min(100, progress));
   const radius = (size - strokeWidth) / 2;
@@ -339,7 +341,7 @@ export function ProgressRing({
       {/* Center percentage */}
       <span
         className="absolute font-semibold text-heading"
-        style={{ fontSize: "9px" }}
+        style={{ fontSize: `${labelSize}px` }}
       >
         {Math.round(clampedProgress)}%
       </span>

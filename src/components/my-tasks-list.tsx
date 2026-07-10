@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { getStatusColor, getStatusLabel, formatDate } from "@/lib/utils";
+import { getStatusColor, getStatusDotColor, getStatusLabel, formatDate } from "@/lib/utils";
 import { AlertCircle, Clock, Calendar } from "lucide-react";
 
 interface Task {
@@ -29,19 +29,19 @@ export function MyTasksList({ tasks }: { tasks: Task[] }) {
   return (
     <div className="space-y-8">
       {overdue.length > 0 && (
-        <TaskGroup title="Overdue" icon={<AlertCircle className="h-4 w-4 text-red-500" />} tasks={overdue} variant="danger" />
+        <TaskGroup title="Overdue" icon={<AlertCircle className="h-4 w-4 text-[var(--danger)]" />} tasks={overdue} variant="danger" />
       )}
       {dueToday.length > 0 && (
-        <TaskGroup title="Due Today" icon={<Clock className="h-4 w-4 text-amber-500" />} tasks={dueToday} variant="warning" />
+        <TaskGroup title="Due Today" icon={<Clock className="h-4 w-4 accent-color" />} tasks={dueToday} variant="warning" />
       )}
       {upcoming.length > 0 && (
-        <TaskGroup title="Upcoming (7 days)" icon={<Calendar className="h-4 w-4 text-blue-500" />} tasks={upcoming} variant="info" />
+        <TaskGroup title="Upcoming (7 days)" icon={<Calendar className="h-4 w-4 accent-color" />} tasks={upcoming} variant="info" />
       )}
       {later.length > 0 && (
         <TaskGroup title="Later" icon={<Calendar className="h-4 w-4 text-dim" />} tasks={later} variant="default" />
       )}
       {completed.length > 0 && (
-        <TaskGroup title="Completed" icon={<Calendar className="h-4 w-4 text-green-500" />} tasks={completed} variant="success" />
+        <TaskGroup title="Completed" icon={<Calendar className="h-4 w-4 accent-color" />} tasks={completed} variant="success" />
       )}
     </div>
   );
@@ -55,22 +55,23 @@ function TaskGroup({ title, icon, tasks, variant }: { title: string; icon: React
         <h3 className="text-sm font-semibold text-heading">{title}</h3>
         <Badge variant={variant}>{tasks.length}</Badge>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-0.5">
         {tasks.map((task) => (
           <Link
             key={task.id}
             href={`/graph/${task.projectId}?nodeId=${task.id}`}
-            className="flex items-center justify-between rounded-xl border border-themed-subtle bg-card p-4 transition-all duration-150 hover:border-themed hover:shadow-sm"
+            className="group flex items-center justify-between gap-3 rounded-lg border-l-[3px] px-3 py-2.5 transition-all duration-150 hover:translate-x-0.5 hover:bg-hover"
+            style={{ borderLeftColor: getStatusDotColor(task.status) }}
           >
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-heading">{task.title}</p>
-              <p className="mt-0.5 text-xs text-body">{task.projectName}</p>
+              <p className="truncate text-item-title transition-colors group-hover:accent-color">{task.title}</p>
+              <p className="mt-0.5 text-meta">{task.projectName}</p>
             </div>
-            <div className="ml-4 flex items-center gap-3">
+            <div className="ml-4 flex flex-shrink-0 items-center gap-3">
               {task.dueDate && (
-                <span className="text-xs text-dim">{formatDate(task.dueDate)}</span>
+                <span className="text-meta">{formatDate(task.dueDate)}</span>
               )}
-              <span className={`inline-flex rounded-lg px-2 py-0.5 text-[10px] font-semibold ${getStatusColor(task.status)}`}>
+              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-medium ${getStatusColor(task.status)}`}>
                 {getStatusLabel(task.status)}
               </span>
             </div>

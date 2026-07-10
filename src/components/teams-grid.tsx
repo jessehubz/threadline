@@ -34,11 +34,11 @@ export function TeamsGrid({ teams }: { teams: Team[] }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {teams.map((team) => (
+          {teams.map((team, i) => (
             <button
               key={team.id}
               onClick={() => setSelectedTeam(team)}
-              className="group rounded-2xl border border-themed-subtle bg-card p-5 text-left shadow-sm transition-all hover:border-themed hover:shadow-themed-md"
+              className={`group animate-entrance-${Math.min(i + 1, 6)} hover-lift rounded-2xl border border-themed-subtle bg-card p-5 text-left shadow-sm transition-all hover:border-themed hover:shadow-themed-md`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl accent-bg">
@@ -46,7 +46,7 @@ export function TeamsGrid({ teams }: { teams: Team[] }) {
                 </div>
                 <Badge variant="default">{team.members.length}</Badge>
               </div>
-              <h3 className="mt-3 text-[14px] font-semibold text-heading group-hover:accent-color">{team.name}</h3>
+              <h3 className="mt-3 text-item-title group-hover:accent-color">{team.name}</h3>
               <div className="mt-2 flex flex-wrap gap-1">
                 {team.members.slice(0, 3).map((m) => (
                   <span key={m.id} className="rounded-full bg-hover px-2 py-0.5 text-[10px] text-body">{m.email.split("@")[0]}</span>
@@ -101,7 +101,7 @@ function CreateTeamDialog({ open, onClose }: { open: boolean; onClose: () => voi
             {members.map((e) => (
               <div key={e} className="flex items-center justify-between rounded-xl bg-page px-3 py-2 text-sm text-heading">
                 {e}
-                <button onClick={() => setMembers((p) => p.filter((x) => x !== e))} className="text-dim hover:text-red-500"><X className="h-3.5 w-3.5" /></button>
+                <button onClick={() => setMembers((p) => p.filter((x) => x !== e))} className="text-dim hover:text-[var(--danger)]"><X className="h-3.5 w-3.5" /></button>
               </div>
             ))}
           </div>
@@ -149,10 +149,10 @@ function TeamDetailDialog({ team, onClose }: { team: Team; onClose: () => void }
         </div>
         <div className="space-y-1.5 max-h-48 overflow-y-auto">
           {members.map((m) => (
-            <div key={m.id} className="flex items-center justify-between rounded-xl bg-page px-3 py-2 text-sm">{m.email}<button onClick={() => handleRemove(m.id)} className="text-dim hover:text-red-500"><X className="h-3.5 w-3.5" /></button></div>
+            <div key={m.id} className="flex items-center justify-between rounded-xl bg-page px-3 py-2 text-sm">{m.email}<button onClick={() => handleRemove(m.id)} className="text-dim hover:text-[var(--danger)]"><X className="h-3.5 w-3.5" /></button></div>
           ))}
         </div>
-        <button onClick={handleDelete} className="text-xs text-red-500 hover:text-red-600">Delete team</button>
+        <button onClick={handleDelete} className="text-xs text-[var(--danger)] hover:text-[var(--danger-hover)]">Delete team</button>
       </div>
     </Dialog>
   );

@@ -22,6 +22,7 @@ interface Project {
   memberCount: number;
   totalTasks: number;
   completedTasks: number;
+  needsAttention?: boolean;
   createdAt: Date;
   updatedAt: Date;
   role: string;
@@ -45,13 +46,13 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-dim" />
-          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search projects..." className="w-full rounded-xl border border-themed-subtle bg-card py-2.5 pl-9 pr-4 text-sm text-heading placeholder-surface-400 shadow-themed focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search projects..." className="input-field pl-9" />
         </div>
         {allLabels.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            <button onClick={() => setActiveLabel(null)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${!activeLabel ? "bg-[var(--text-primary)] text-[var(--bg-base)]" : "bg-[var(--bg-muted)] text-body hover:bg-hover"}`}>All</button>
+            <button onClick={() => setActiveLabel(null)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${!activeLabel ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-body hover:text-heading hover:bg-[var(--glass-bg-subtle)]"}`}>All</button>
             {allLabels.map((l) => (
-              <button key={l.name} onClick={() => setActiveLabel(activeLabel === l.name ? null : l.name)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${activeLabel === l.name ? "text-white" : "bg-[var(--bg-muted)] text-body hover:bg-hover"}`} style={activeLabel === l.name ? { backgroundColor: l.color } : undefined}>{l.name}</button>
+              <button key={l.name} onClick={() => setActiveLabel(activeLabel === l.name ? null : l.name)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${activeLabel === l.name ? "text-white" : "text-body hover:text-heading hover:bg-[var(--glass-bg-subtle)]"}`} style={activeLabel === l.name ? { backgroundColor: l.color } : undefined}>{l.name}</button>
             ))}
           </div>
         )}
@@ -60,7 +61,11 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
         <p className="py-8 text-center text-sm text-body">No projects found</p>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((project) => (<ProjectCard key={project.id} project={project} />))}
+          {filtered.map((project, i) => (
+            <div key={project.id} className={`animate-entrance-${Math.min(i + 1, 6)}`}>
+              <ProjectCard project={project} />
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -94,10 +99,15 @@ function ProjectCard({ project }: { project: Project }) {
 
   return (
     <>
-      <div className="group relative rounded-2xl border border-themed-subtle bg-card p-5 shadow-themed transition-all duration-200 ease-out hover-lift hover:border-themed hover:shadow-themed-md">
+      <div className="group relative rounded-2xl border border-[var(--glass-border)] p-5 transition-all duration-200 ease-out hover:border-[var(--accent)]/30">
         <div className="flex items-start justify-between">
-          <Link href={`/graph/${project.id}`} className="flex-1">
-            <h3 className="text-[15px] font-semibold text-heading transition-colors group-hover:accent-color">
+          <Link href={`/graph/${project.id}`} className="flex flex-1 items-center gap-2.5 min-w-0">
+            <span
+              className="h-2 w-2 flex-shrink-0 rounded-full"
+              style={{ backgroundColor: project.needsAttention ? "var(--danger)" : "var(--accent)" }}
+              title={project.needsAttention ? "Needs attention" : "On track"}
+            />
+            <h3 className="truncate text-[15px] font-medium text-heading transition-colors group-hover:accent-color">
               {project.name}
             </h3>
           </Link>
@@ -133,7 +143,7 @@ function ProjectCard({ project }: { project: Project }) {
                       <Tag className="h-3.5 w-3.5 text-dim" /> Add Label
                     </button>
                     <div className="my-1 border-t border-themed-subtle" />
-                    <button onClick={() => { setDeleteConfirm(true); setMenuOpen(false); }} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10">
+                    <button onClick={() => { setDeleteConfirm(true); setMenuOpen(false); }} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-[var(--danger)] transition-colors hover:bg-[var(--danger-soft)]">
                       <Trash2 className="h-3.5 w-3.5" /> Delete
                     </button>
                   </div>
@@ -169,7 +179,7 @@ function ProjectCard({ project }: { project: Project }) {
             <div className="mt-2.5">
               <div className="h-1 w-full rounded-full accent-bg">
                 <div
-                  className="h-1 rounded-full bg-brand-500 transition-all duration-500"
+                  className="h-1 rounded-full bg-[var(--accent)] transition-all duration-500"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -300,12 +310,12 @@ function LabelDialog({ open, onClose, projectId, labels, onLabelsChange }: { ope
         </div>
         <div className="flex gap-2">
           {LABEL_COLORS.map((c) => (
-            <button key={c} onClick={() => setSelectedColor(c)} className={`h-6 w-6 rounded-full transition-all ${selectedColor === c ? "ring-2 ring-offset-2 ring-brand-500 scale-110" : "hover:scale-110"}`} style={{ backgroundColor: c }} />
+            <button key={c} onClick={() => setSelectedColor(c)} className={`h-6 w-6 rounded-full transition-all ${selectedColor === c ? "ring-2 ring-offset-2 ring-[var(--accent)] scale-110" : "hover:scale-110"}`} style={{ backgroundColor: c }} />
           ))}
         </div>
         <div className="flex flex-wrap gap-1.5">
           {["Urgent", "In Progress", "Review", "Design", "Backend"].map((p) => (
-            <button key={p} onClick={() => setNewLabel(p)} className="rounded-full border border-themed-subtle px-2.5 py-1 text-[11px] text-body hover:border-brand-300 hover:accent-color">{p}</button>
+            <button key={p} onClick={() => setNewLabel(p)} className="rounded-full border border-themed-subtle px-2.5 py-1 text-[11px] text-body hover:border-[var(--accent)] hover:accent-color">{p}</button>
           ))}
         </div>
       </div>
@@ -381,9 +391,9 @@ function InviteDialog({ open, onClose, projectId }: { open: boolean; onClose: ()
           <div className="space-y-1.5">
             <p className="text-xs font-medium text-body">Invited:</p>
             {invited.map((inv) => (
-              <div key={inv.email} className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+              <div key={inv.email} className="rounded-lg bg-[var(--accent-soft)] px-3 py-2 text-xs text-[var(--accent)]">
                 {inv.email}
-                {inv.link && <input readOnly value={inv.link} className="mt-1 w-full rounded border border-emerald-200 bg-card px-2 py-1 text-[11px] text-body" onClick={(e) => { (e.target as HTMLInputElement).select(); navigator.clipboard.writeText(inv.link!); toast.success("Copied!"); }} />}
+                {inv.link && <input readOnly value={inv.link} className="mt-1 w-full rounded border border-themed-subtle bg-card px-2 py-1 text-[11px] text-body" onClick={(e) => { (e.target as HTMLInputElement).select(); navigator.clipboard.writeText(inv.link!); toast.success("Copied!"); }} />}
               </div>
             ))}
           </div>

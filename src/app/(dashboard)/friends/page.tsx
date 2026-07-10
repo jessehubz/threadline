@@ -10,7 +10,9 @@ export default async function FriendsPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-[22px] font-bold tracking-tight text-heading">Friends</h1>
+        <h1 className="text-[20px] font-light tracking-tight text-heading sm:text-[22px]">
+          <span className="font-semibold">Friends</span>
+        </h1>
         <p className="mt-1 text-[13px] text-body">Manage your friends and add them to projects</p>
       </div>
       <FriendsClient projects={projectList} currentUserId={user.id} />

@@ -34,7 +34,9 @@ export default async function MyTasksPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-10">
-        <h1 className="text-2xl font-bold tracking-tight text-heading">My Tasks</h1>
+        <h1 className="text-[20px] font-light tracking-tight text-heading sm:text-[22px]">
+          <span className="font-semibold">My Tasks</span>
+        </h1>
         <p className="mt-1.5 text-sm text-body">
           All tasks assigned to you across projects
         </p>

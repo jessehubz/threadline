@@ -21,14 +21,15 @@ export default async function AnalyticsPage() {
     },
   });
 
-  // Status breakdown
+  // Status breakdown — single-accent system: violet intensity rises with progress,
+  // muted coral flags anything that needs attention. No other hues.
   const statusBreakdown = [
-    { name: "Not Started", value: tasks.filter((t) => t.status === "NOT_STARTED").length, color: "#9ca3af" },
-    { name: "In Progress", value: tasks.filter((t) => t.status === "IN_PROGRESS").length, color: "#7c3aed" },
-    { name: "Blocked", value: tasks.filter((t) => t.status === "BLOCKED").length, color: "#ef4444" },
-    { name: "Awaiting Approval", value: tasks.filter((t) => t.status === "AWAITING_APPROVAL").length, color: "#f59e0b" },
-    { name: "Rejected", value: tasks.filter((t) => t.status === "REJECTED").length, color: "#f97316" },
-    { name: "Complete", value: tasks.filter((t) => t.status === "COMPLETE").length, color: "#10b981" },
+    { name: "Not Started", value: tasks.filter((t) => t.status === "NOT_STARTED").length, color: "var(--text-muted)" },
+    { name: "Awaiting Approval", value: tasks.filter((t) => t.status === "AWAITING_APPROVAL").length, color: "var(--violet-500)" },
+    { name: "In Progress", value: tasks.filter((t) => t.status === "IN_PROGRESS").length, color: "var(--violet-600)" },
+    { name: "Complete", value: tasks.filter((t) => t.status === "COMPLETE").length, color: "var(--violet-700)" },
+    { name: "Blocked", value: tasks.filter((t) => t.status === "BLOCKED").length, color: "var(--danger)" },
+    { name: "Rejected", value: tasks.filter((t) => t.status === "REJECTED").length, color: "var(--danger-hover)" },
   ].filter((s) => s.value > 0);
 
   // Overdue tasks
@@ -48,7 +49,7 @@ export default async function AnalyticsPage() {
       workloadMap.set(key, existing);
     });
   });
-  const workload = Array.from(workloadMap.values());
+  const workload = Array.from(workloadMap.values()).sort((a, b) => b.total - a.total).slice(0, 8);
 
   // Completion over time (last 30 days)
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -65,10 +66,23 @@ export default async function AnalyticsPage() {
     completionTimeline.push({ date: dateStr, count });
   }
 
+  // Week-over-week trend — gives the hero chart something to actually say
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const completionsThisWeek = tasks.filter((t) => t.status === "COMPLETE" && t.updatedAt >= sevenDaysAgo).length;
+  const completionsPrevWeek = tasks.filter(
+    (t) => t.status === "COMPLETE" && t.updatedAt >= fourteenDaysAgo && t.updatedAt < sevenDaysAgo
+  ).length;
+  const weeklyTrendPct = completionsPrevWeek > 0
+    ? Math.round(((completionsThisWeek - completionsPrevWeek) / completionsPrevWeek) * 100)
+    : completionsThisWeek > 0 ? 100 : 0;
+
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-[22px] font-bold tracking-tight text-heading">Analytics</h1>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-[20px] sm:text-[22px] font-light tracking-tight text-heading">
+          <span className="font-semibold">Analytics</span>
+        </h1>
         <p className="mt-0.5 text-[13px] text-body">
           Your performance and activity across all projects
         </p>
@@ -86,6 +100,8 @@ export default async function AnalyticsPage() {
         }))}
         totalTasks={tasks.length}
         completedCount={tasks.filter((t) => t.status === "COMPLETE").length}
+        completionsThisWeek={completionsThisWeek}
+        weeklyTrendPct={weeklyTrendPct}
       />
     </div>
   );

@@ -35,16 +35,21 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ isolation: "isolate" }}
+    >
+      {/* Overlay — dimmed background */}
       <div
         ref={overlayRef}
-        className="fixed inset-0 bg-black/20 backdrop-blur-[2px] animate-[fadeIn_0.15s_ease-out]"
+        className="fixed inset-0 bg-black/50 backdrop-blur-[2px] animate-[fadeIn_0.15s_ease-out]"
         onClick={onClose}
       />
+      {/* Dialog panel — centered via parent flex, scale-in animation */}
       <div
         className={cn(
           "relative z-10 w-full max-w-lg rounded-2xl border border-themed-subtle bg-card p-6 shadow-2xl",
-          "animate-[fadeInUp_0.2s_ease-out]",
+          "animate-[scaleIn_0.2s_ease-out]",
           className
         )}
       >

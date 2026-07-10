@@ -54,51 +54,53 @@ export function SettingsForm({ user }: { user: User }) {
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Theme */}
-      <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
-        <h3 className="mb-4 text-sm font-semibold text-heading">Appearance</h3>
-        <div className="flex gap-3">
-          {themes.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => {
-                setThemeLocal(t.value);
-                applyTheme(t.value as "light" | "dark" | "system");
-              }}
-              className={cn(
-                "flex items-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-150",
-                theme === t.value
-                  ? "border-[var(--accent)] accent-bg accent-color shadow-sm"
-                  : "border-themed text-body hover:bg-hover"
-              )}
-            >
-              <t.icon className="h-4 w-4" />
-              {t.label}
-            </button>
-          ))}
+    <div className="space-y-7">
+      {/* Theme — iOS-style grouped section: label above, border-only group below */}
+      <div>
+        <p className="text-eyebrow mb-2.5 px-1">Appearance</p>
+        <div className="panel-quiet p-5">
+          <div className="flex gap-3">
+            {themes.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => {
+                  setThemeLocal(t.value);
+                  applyTheme(t.value as "light" | "dark" | "system");
+                }}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-150 hover:-translate-y-px",
+                  theme === t.value
+                    ? "border-[var(--accent)] accent-bg accent-color shadow-sm"
+                    : "border-themed text-body hover:bg-hover"
+                )}
+              >
+                <t.icon className="h-4 w-4" />
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Notifications */}
-      <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
-        <h3 className="mb-5 text-sm font-semibold text-heading">
-          Email Notifications
-        </h3>
-        <div className="space-y-4">
-          <Toggle
-            label="Enable email notifications"
-            checked={emailNotifications}
-            onChange={setEmailNotifications}
-          />
-          {emailNotifications && (
-            <div className="ml-6 space-y-4 border-l-2 border-themed pl-5">
-              <Toggle label="Task assigned to me" checked={notifyAssigned} onChange={setNotifyAssigned} />
-              <Toggle label="Approval requests" checked={notifyApproval} onChange={setNotifyApproval} />
-              <Toggle label="Due date reminders" checked={notifyDueSoon} onChange={setNotifyDueSoon} />
-              <Toggle label="Mentions" checked={notifyMentioned} onChange={setNotifyMentioned} />
-            </div>
-          )}
+      <div>
+        <p className="text-eyebrow mb-2.5 px-1">Email Notifications</p>
+        <div className="panel-quiet p-5">
+          <div className="space-y-4">
+            <Toggle
+              label="Enable email notifications"
+              checked={emailNotifications}
+              onChange={setEmailNotifications}
+            />
+            {emailNotifications && (
+              <div className="ml-6 space-y-4 border-l-2 border-themed pl-5">
+                <Toggle label="Task assigned to me" checked={notifyAssigned} onChange={setNotifyAssigned} />
+                <Toggle label="Approval requests" checked={notifyApproval} onChange={setNotifyApproval} />
+                <Toggle label="Due date reminders" checked={notifyDueSoon} onChange={setNotifyDueSoon} />
+                <Toggle label="Mentions" checked={notifyMentioned} onChange={setNotifyMentioned} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -127,7 +129,7 @@ function Toggle({
         onClick={() => onChange(!checked)}
         className={cn(
           "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
-          checked ? "bg-brand-600" : "bg-[var(--border-default)]"
+          checked ? "bg-[var(--accent)]" : "bg-[var(--border-default)]"
         )}
       >
         <span

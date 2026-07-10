@@ -28,22 +28,37 @@ export function formatRelativeDate(date: Date | string): string {
   return formatDate(date);
 }
 
+// Single-accent status system: violet-shade for neutral/positive states,
+// muted coral (--danger) for anything that needs attention. No other hues.
 export function getStatusColor(status: string): string {
   switch (status) {
     case "NOT_STARTED":
-      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+      return "bg-[var(--bg-muted)] text-[var(--text-muted)]";
     case "IN_PROGRESS":
-      return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
-    case "BLOCKED":
-      return "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300";
+      return "bg-[var(--violet-200)] text-[var(--violet-600)]";
     case "AWAITING_APPROVAL":
-      return "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300";
+      return "bg-[var(--violet-100)] text-[var(--violet-600)]";
+    case "BLOCKED":
+      return "bg-[var(--danger-soft)] text-[var(--danger)]";
     case "REJECTED":
-      return "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300";
+      return "bg-[var(--danger-soft)] text-[var(--danger)]";
     case "COMPLETE":
-      return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
+      return "bg-[var(--accent-soft)] text-[var(--accent)]";
     default:
-      return "bg-gray-100 text-gray-700";
+      return "bg-[var(--bg-muted)] text-[var(--text-muted)]";
+  }
+}
+
+// Solid-color equivalent for dots/rings/inline styles (SVG fills, borderLeftColor, etc.)
+export function getStatusDotColor(status: string): string {
+  switch (status) {
+    case "NOT_STARTED":
+      return "var(--text-muted)";
+    case "BLOCKED":
+    case "REJECTED":
+      return "var(--danger)";
+    default:
+      return "var(--accent)"; // IN_PROGRESS, AWAITING_APPROVAL, COMPLETE
   }
 }
 

@@ -43,7 +43,7 @@ export default function DashboardGroupError({
   return (
     <div className="flex h-screen items-center justify-center">
       <div className="text-center">
-        <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+        <AlertCircle className="mx-auto h-12 w-12 text-[var(--danger)]" />
         <h2 className="mt-4 text-xl font-semibold text-heading">
           Something went wrong
         </h2>

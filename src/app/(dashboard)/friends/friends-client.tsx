@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { Search, UserPlus, X, Users, FolderPlus, Trash2 } from "lucide-react";
+import { Search, Users, FolderPlus, Trash2 } from "lucide-react";
 import { searchUsers, addFriend, removeFriend, getFriends, addFriendToProject } from "@/actions/friend-actions";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -112,49 +112,32 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
   }
 
   return (
-    <div className="space-y-6">
-      {/* Add Friend Section */}
-      <div className="rounded-2xl border border-themed-subtle bg-card p-5 shadow-themed">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <UserPlus className="h-4 w-4 accent-color" />
-            <h2 className="text-[14px] font-semibold text-heading">Add Friend</h2>
-          </div>
-          <button
-            onClick={() => setShowAddFriend(!showAddFriend)}
-            className={cn(
-              "btn-primary text-[12px] px-3 py-1.5",
-              showAddFriend && "bg-[var(--bg-muted)] text-body hover:bg-[var(--bg-muted)]"
-            )}
-          >
-            {showAddFriend ? "Cancel" : "Search Users"}
-          </button>
+    <div className="space-y-5">
+      {/* Search-first add-friend bar — floats results below, no permanent boxed panel */}
+      <div className="relative">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dim" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setShowAddFriend(true); }}
+            onFocus={() => setShowAddFriend(true)}
+            placeholder="Search by name or email to add a friend..."
+            className="input-field pl-10"
+          />
         </div>
 
-        {showAddFriend && (
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dim" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or email..."
-                className="input-field pl-10"
-                autoFocus
-              />
-            </div>
-
-            {isSearching && (
-              <div className="flex items-center justify-center py-4">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-themed border-t-[var(--accent)]" />
-              </div>
-            )}
-
-            {!isSearching && searchResults.length > 0 && (
-              <div className="space-y-1">
-                {searchResults.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between rounded-xl px-3 py-2.5 hover:bg-hover transition-colors">
+        {showAddFriend && searchQuery.length >= 2 && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setShowAddFriend(false)} />
+            <div className="animate-entrance absolute left-0 right-0 top-full z-20 mt-2 max-h-80 overflow-y-auto rounded-2xl border border-themed bg-card p-1.5 shadow-2xl">
+              {isSearching ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-themed border-t-[var(--accent)]" />
+                </div>
+              ) : searchResults.length > 0 ? (
+                searchResults.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between rounded-xl px-3 py-2.5 transition-colors hover:bg-hover">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full accent-bg text-xs font-medium accent-color">
                         {user.imageUrl ? (
@@ -176,22 +159,19 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                       Add
                     </button>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {!isSearching && searchQuery.length >= 2 && searchResults.length === 0 && (
-              <p className="text-center text-[12px] text-dim py-3">No users found</p>
-            )}
-          </div>
+                ))
+              ) : (
+                <p className="py-6 text-center text-[12px] text-dim">No users found</p>
+              )}
+            </div>
+          </>
         )}
       </div>
 
-      {/* Friends List */}
-      <div className="rounded-2xl border border-themed-subtle bg-card p-5 shadow-themed">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="h-4 w-4 text-dim" />
-          <h2 className="text-[14px] font-semibold text-heading">Your Friends</h2>
+      {/* Friends list — open, not nested inside another card */}
+      <div>
+        <div className="mb-3 flex items-center gap-2">
+          <h2 className="text-[13px] font-medium uppercase tracking-wide text-dim">Your Friends</h2>
           <span className="rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-[10px] font-medium text-dim">
             {friends.length}
           </span>
@@ -202,15 +182,15 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-themed border-t-[var(--accent)]" />
           </div>
         ) : friends.length === 0 ? (
-          <div className="text-center py-8">
+          <div className="rounded-2xl border border-dashed border-themed py-10 text-center">
             <Users className="mx-auto h-8 w-8 text-dim mb-2" />
             <p className="text-[13px] text-body">No friends yet</p>
-            <p className="text-[11px] text-dim mt-1">Search for users to add as friends</p>
+            <p className="text-[11px] text-dim mt-1">Search above to add your first friend</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {friends.map((friend) => (
-              <div key={friend.id} className="rounded-xl border border-themed-subtle p-3 transition-colors hover:bg-hover">
+          <div className="divide-y divide-[var(--border-subtle)] rounded-2xl border border-themed-subtle">
+            {friends.map((friend, i) => (
+              <div key={friend.id} className={cn("p-3.5 transition-colors hover:bg-hover", `animate-entrance-${Math.min(i + 1, 6)}`)}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full accent-bg text-sm font-medium accent-color">
@@ -228,7 +208,7 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setAddToProjectFriend(addToProjectFriend === friend.friendId ? null : friend.friendId)}
-                      className="rounded-lg p-1.5 text-dim hover:bg-[var(--bg-muted)] hover:text-body transition-colors"
+                      className="rounded-lg p-1.5 text-dim transition-all duration-150 hover:scale-105 hover:bg-[var(--bg-muted)] hover:text-body"
                       title="Add to project"
                     >
                       <FolderPlus className="h-4 w-4" />
@@ -236,7 +216,7 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                     <button
                       onClick={() => handleRemoveFriend(friend.friendId)}
                       disabled={isPending}
-                      className="rounded-lg p-1.5 text-dim hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition-colors"
+                      className="rounded-lg p-1.5 text-dim transition-all duration-150 hover:scale-105 hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
                       title="Remove friend"
                     >
                       <Trash2 className="h-4 w-4" />

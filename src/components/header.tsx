@@ -1,52 +1,91 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Menu, Search, LayoutDashboard, CalendarDays, BarChart3, MessageSquare, ClipboardList, Users, UserPlus, Settings, Calendar } from "lucide-react";
+import { Menu, Search, LayoutDashboard, CalendarDays, BarChart3, MessageSquare, ClipboardList, Users, UserPlus, Settings, Calendar, User } from "lucide-react";
 import { NotificationDropdown } from "@/components/notification-dropdown";
 import { ChatPopup } from "@/components/chat-popup";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MobileSidebar } from "@/components/mobile-sidebar";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+// Primary workflow nav — lives in the center pill.
+const primaryNavItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Overview", href: "/overview", icon: ClipboardList },
   { name: "Tasks", href: "/my-tasks", icon: CalendarDays },
   { name: "Messages", href: "/messages", icon: MessageSquare },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Calendar", href: "/calendar", icon: Calendar },
+  { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Team", href: "/team", icon: Users },
+];
+
+// Secondary/account nav — lives in the profile menu (and the mobile sidebar).
+const secondaryNavItems = [
   { name: "Friends", href: "/friends", icon: UserPlus },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Profile", href: "/profile", icon: User },
 ];
+
+const allNavItems = [...primaryNavItems, ...secondaryNavItems];
 
 export function Header({ currentUserId }: { currentUserId: string }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+        setTimeout(() => searchInputRef.current?.focus(), 50);
+      }
+      if (e.key === "Escape" && searchOpen) {
+        setSearchOpen(false);
+        setSearchQuery("");
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [searchOpen]);
+
+  const filteredNav = searchQuery
+    ? allNavItems.filter((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : allNavItems;
+
+  function handleSearchNavigate(href: string) {
+    router.push(href);
+    setSearchOpen(false);
+    setSearchQuery("");
+  }
 
   return (
     <>
       <div className="flex items-center justify-center px-4 pt-4 pb-2 lg:px-6">
         {/* Floating pill navbar */}
-        <nav className="flex w-full max-w-5xl items-center justify-between rounded-full border border-themed-subtle bg-[var(--bg-surface)] px-3 py-1.5 shadow-themed-md">
+        <nav className="flex w-full max-w-5xl items-center gap-2 rounded-full border border-themed-subtle bg-[var(--bg-surface)] px-3 py-1.5 shadow-themed-md">
           {/* Left: Logo + Name */}
-          <Link href="/dashboard" className="flex items-center gap-0 pl-2 hover:opacity-80 transition-opacity">
-            <span className="text-[15px] font-bold tracking-tight text-heading font-[var(--font-logo)]">Thread</span>
-            <span className="text-[15px] font-bold tracking-tight accent-color">line</span>
+          <Link href="/dashboard" className="flex flex-shrink-0 items-center gap-0 pl-2 hover:opacity-80 transition-opacity">
+            <span className="text-[15px] font-bold tracking-tight text-heading font-logo">Thread</span>
+            <span className="text-[15px] font-bold tracking-tight accent-color font-logo">line</span>
           </Link>
 
-          {/* Center: Nav items as pills */}
-          <div className="hidden items-center gap-0 overflow-x-auto scrollbar-hide md:flex">
-            {navItems.map((item) => {
+          {/* Center: primary nav pills — icon-only from md, labels join at lg */}
+          <div className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 md:flex">
+            {primaryNavItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link
                   key={item.href}
                   href={item.href}
+                  title={item.name}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full px-2 py-1.5 lg:px-3.5 text-[12px] font-medium transition-all duration-150",
+                    "flex items-center gap-1.5 rounded-full px-2.5 py-1.5 lg:px-3.5 text-[12px] font-medium transition-all duration-150 hover:scale-[1.02]",
                     isActive
                       ? "bg-white/90 dark:bg-white/10 text-heading shadow-sm"
                       : "text-body hover:text-heading hover:bg-white/5"
@@ -59,27 +98,84 @@ export function Header({ currentUserId }: { currentUserId: string }) {
             })}
           </div>
 
-          {/* Right: Icons */}
-          <div className="flex items-center gap-1 pr-1">
+          {/* Right: utility icons */}
+          <div className="flex flex-shrink-0 items-center gap-1 pr-1">
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="rounded-full p-2 text-body transition-colors hover:bg-white/5 hover:text-heading md:hidden"
+              className="rounded-full p-2 text-body transition-all duration-150 hover:scale-[1.05] hover:bg-white/5 hover:text-heading md:hidden"
               aria-label="Open menu"
             >
               <Menu className="h-4 w-4" />
+            </button>
+
+            <button
+              onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
+              className="hidden rounded-full p-2 text-body transition-all duration-150 hover:scale-[1.05] hover:bg-white/5 hover:text-heading md:flex"
+              aria-label="Search"
+              title="Search (⌘K)"
+            >
+              <Search className="h-4 w-4" />
             </button>
 
             <ChatPopup currentUserId={currentUserId} />
             <NotificationDropdown />
             <div className="ml-0.5 h-6 w-px bg-[var(--border-default)] opacity-50" />
             <div className="ml-1">
-              <UserButton appearance={{ elements: { avatarBox: "h-7 w-7" } }} />
+              <UserButton appearance={{ elements: { avatarBox: "h-7 w-7" } }}>
+                <UserButton.MenuItems>
+                  {secondaryNavItems.map((item) => (
+                    <UserButton.Link key={item.href} label={item.name} href={item.href} labelIcon={<item.icon className="h-4 w-4" />} />
+                  ))}
+                </UserButton.MenuItems>
+              </UserButton>
             </div>
           </div>
         </nav>
       </div>
+
       <MobileSidebar open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+
+      {/* Quick Find (⌘K) */}
+      {searchOpen && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[18vh]">
+          <div
+            className="fixed inset-0 bg-black/30 animate-[fadeIn_0.15s_ease-out]"
+            onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+          />
+          <div className="relative z-10 w-full max-w-md animate-entrance rounded-2xl border border-themed bg-card shadow-2xl">
+            <div className="flex items-center gap-3 border-b border-themed px-4 py-3">
+              <Search className="h-4 w-4 text-dim" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search pages..."
+                className="flex-1 bg-transparent text-sm text-heading placeholder-[var(--text-secondary)] outline-none"
+                autoFocus
+              />
+              <kbd className="rounded border border-themed bg-page px-1 py-0.5 text-[10px] font-medium text-dim">Esc</kbd>
+            </div>
+            <div className="max-h-72 overflow-y-auto py-1.5">
+              {filteredNav.length === 0 ? (
+                <p className="px-4 py-6 text-center text-sm text-dim">No results</p>
+              ) : (
+                filteredNav.map((item) => (
+                  <button
+                    key={item.href}
+                    onClick={() => handleSearchNavigate(item.href)}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-body transition-colors hover:bg-hover hover:text-heading"
+                  >
+                    <item.icon className="h-4 w-4 text-dim" />
+                    <span className="font-medium">{item.name}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

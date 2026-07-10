@@ -104,7 +104,7 @@ export function FileUpload({ nodeId, projectId, attachments, isReadOnly }: FileU
           {!isReadOnly && (
             <button
               onClick={() => handleDelete(file.id)}
-              className="rounded p-1 text-dim hover:text-red-600"
+              className="rounded p-1 text-dim hover:text-[var(--danger)]"
               aria-label="Remove"
             >
               <X className="h-3.5 w-3.5" />
@@ -116,7 +116,7 @@ export function FileUpload({ nodeId, projectId, attachments, isReadOnly }: FileU
       {!isReadOnly && (
         <label
           className={cn(
-            "flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-themed p-3 text-sm text-dim transition-colors hover:border-brand-500 hover:accent-color",
+            "flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-themed p-3 text-sm text-dim transition-colors hover:border-[var(--accent)] hover:accent-color",
             uploading && "pointer-events-none opacity-50"
           )}
         >

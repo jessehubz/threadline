@@ -1,23 +1,8 @@
 "use client";
 
-import {
-  AreaChart,
-  Area,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  type PieLabelRenderProps,
-} from "recharts";
-import { AlertCircle, TrendingUp, CheckCircle2, Clock } from "lucide-react";
+import { AlertCircle, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { CompletionTrendChart, StatusDonutChart, WorkloadChart, ProgressRing } from "@/components/dashboard-charts";
 
 interface AnalyticsChartsProps {
   statusBreakdown: Array<{ name: string; value: number; color: string }>;
@@ -26,6 +11,32 @@ interface AnalyticsChartsProps {
   overdueTasks: Array<{ id: string; title: string; dueDate: string; projectName: string }>;
   totalTasks: number;
   completedCount: number;
+  completionsThisWeek: number;
+  weeklyTrendPct: number;
+}
+
+function buildInsight({
+  weeklyTrendPct,
+  completionsThisWeek,
+  overdueCount,
+}: {
+  weeklyTrendPct: number;
+  completionsThisWeek: number;
+  overdueCount: number;
+}): string {
+  if (overdueCount > 0) {
+    return `${overdueCount} task${overdueCount > 1 ? "s are" : " is"} overdue — clearing ${overdueCount > 1 ? "these" : "it"} first will lift your health score fastest.`;
+  }
+  if (completionsThisWeek === 0) {
+    return "No completions yet this week — trends will appear here once tasks wrap up.";
+  }
+  if (weeklyTrendPct > 0) {
+    return `Completion pace is up ${weeklyTrendPct}% from last week. Nice momentum.`;
+  }
+  if (weeklyTrendPct < 0) {
+    return `Completion pace is down ${Math.abs(weeklyTrendPct)}% from last week.`;
+  }
+  return "Completion pace is steady with last week.";
 }
 
 export function AnalyticsCharts({
@@ -35,114 +46,136 @@ export function AnalyticsCharts({
   overdueTasks,
   totalTasks,
   completedCount,
+  completionsThisWeek,
+  weeklyTrendPct,
 }: AnalyticsChartsProps) {
   const completionRate = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+  const workloadChartData = workload.map((w) => ({ name: w.name, active: w.total - w.completed, completed: w.completed }));
+  const insight = buildInsight({ weeklyTrendPct, completionsThisWeek, overdueCount: overdueTasks.length });
 
   return (
-    <div className="space-y-8">
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={<CheckCircle2 className="h-5 w-5 text-green-500" />} label="Completion Rate" value={`${completionRate}%`} />
-        <StatCard icon={<TrendingUp className="h-5 w-5 accent-color" />} label="Total Tasks" value={String(totalTasks)} />
-        <StatCard icon={<Clock className="h-5 w-5 text-amber-500" />} label="Completed" value={String(completedCount)} />
-        <StatCard icon={<AlertCircle className="h-5 w-5 text-red-500" />} label="Overdue" value={String(overdueTasks.length)} />
+    <div className="space-y-5">
+      {/* Insight strip — no container. Lives directly on the background,
+          separated from the charts below by a hairline rule and whitespace. */}
+      <div className="flex flex-col gap-4 border-b border-themed-subtle pb-5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-wrap gap-x-8 gap-y-3">
+          <StatInline label="Completion rate" value={`${completionRate}%`} />
+          <StatInline label="Completed this week" value={completionsThisWeek} trendPct={weeklyTrendPct} />
+          <StatInline
+            label="Overdue"
+            value={overdueTasks.length}
+            tone={overdueTasks.length > 0 ? "danger" : undefined}
+          />
+        </div>
+        <p className="max-w-xs text-[13px] leading-relaxed text-body sm:text-right">{insight}</p>
       </div>
 
-      {/* Charts grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Completion over time */}
-        <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
-          <h3 className="mb-5 text-sm font-semibold text-heading">Completions Over Time</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={completionTimeline}>
-              <defs>
-                <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke="#F3F4F6" strokeDasharray="3 3" />
-              <XAxis dataKey="date" stroke="#E5E7EB" tick={{ fontSize: 10, fill: '#9CA3AF' }} tickFormatter={(d) => d.slice(5)} />
-              <YAxis stroke="#E5E7EB" tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-              <Tooltip />
-              <Area type="monotone" dataKey="count" stroke="#7c3aed" strokeWidth={2.5} fill="url(#colorCount)" dot={false} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+      {/* Hero: one focal panel — trend chart + completion radial share the same card
+          instead of standing as two equal-weight boxes. */}
+      <div className="animate-entrance-1 rounded-3xl border border-themed-subtle bg-card p-5 shadow-themed sm:p-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto]">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-baseline justify-between gap-1">
+              <h3 className="text-[15px] font-semibold text-heading">Completions over time</h3>
+              <span className="text-meta">Last 30 days</span>
+            </div>
+            <p className="mb-4 text-[13px] text-body">{completedCount} of {totalTasks} tasks complete</p>
+            {completionTimeline.length > 0 ? (
+              <CompletionTrendChart data={completionTimeline} />
+            ) : (
+              <p className="py-16 text-center text-sm text-dim">No completions yet</p>
+            )}
+          </div>
 
-        {/* Status breakdown */}
-        <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
-          <h3 className="mb-5 text-sm font-semibold text-heading">Status Breakdown</h3>
+          <div className="flex flex-col items-center justify-center border-t border-themed-subtle pt-5 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
+            <span className="text-eyebrow">Completion Rate</span>
+            <div className="mt-4">
+              <ProgressRing progress={completionRate} size={128} strokeWidth={9} labelSize={26} />
+            </div>
+            <p className="mt-3 text-meta">{completedCount} of {totalTasks} tasks</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Second row: quieter, border-only supporting panels — not a repeat of the hero's card. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_1fr]">
+        <div className="animate-entrance-2 panel-quiet p-5">
+          <h3 className="mb-1 text-[13px] font-semibold text-heading">Status breakdown</h3>
           {statusBreakdown.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={statusBreakdown} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={(props: PieLabelRenderProps) => `${props.name || ""} ${((props.percent ?? 0) * 100).toFixed(0)}%`}>
-                  {statusBreakdown.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            <StatusDonutChart data={statusBreakdown} totalTasks={totalTasks} />
           ) : (
             <p className="py-16 text-center text-sm text-dim">No tasks yet</p>
           )}
         </div>
 
-        {/* Workload */}
-        <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
-          <h3 className="mb-5 text-sm font-semibold text-heading">Workload per Person</h3>
+        <div className="animate-entrance-3 panel-quiet p-5">
+          <h3 className="mb-1 text-[13px] font-semibold text-heading">Workload per person</h3>
           {workload.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={workload}>
-                <CartesianGrid stroke="#F3F4F6" strokeDasharray="3 3" />
-                <XAxis dataKey="name" stroke="#E5E7EB" tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-                <YAxis stroke="#E5E7EB" tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="completed" stackId="a" fill="#7c3aed" name="Completed" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="total" stackId="a" fill="#EDE9FE" name="Remaining" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <WorkloadChart data={workloadChartData} />
           ) : (
             <p className="py-16 text-center text-sm text-dim">No assignments yet</p>
           )}
         </div>
+      </div>
 
-        {/* Overdue tasks */}
-        <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
-          <h3 className="mb-5 text-sm font-semibold text-heading">Overdue Tasks</h3>
-          {overdueTasks.length > 0 ? (
-            <div className="max-h-[250px] space-y-2 overflow-y-auto">
-              {overdueTasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between rounded-xl border border-red-100 bg-red-50/50 px-4 py-2.5">
-                  <div>
-                    <p className="text-sm font-medium text-heading">{task.title}</p>
-                    <p className="text-xs text-body">{task.projectName}</p>
-                  </div>
-                  <span className="text-xs font-medium text-red-600">Due {formatDate(task.dueDate)}</span>
+      {/* Overdue — a compact list, not another boxed grid tile */}
+      {overdueTasks.length > 0 && (
+        <div className="animate-entrance-4 rounded-3xl border border-[var(--danger-soft)] bg-gradient-to-r from-[var(--danger-soft)] to-transparent p-5">
+          <div className="mb-2 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-[var(--danger)]" />
+            <h3 className="text-[14px] font-semibold text-heading">Overdue ({overdueTasks.length})</h3>
+          </div>
+          <div className="space-y-0.5">
+            {overdueTasks.map((task) => (
+              <div key={task.id} className="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-[var(--danger-soft)]">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-medium text-heading">{task.title}</p>
+                  <p className="text-meta">{task.projectName}</p>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="py-16 text-center text-sm text-dim">No overdue tasks</p>
-          )}
+                <span className="flex-shrink-0 text-[11px] font-medium text-[var(--danger)]">Due {formatDate(task.dueDate)}</span>
+              </div>
+            ))}
+          </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Insight strip stat ──────────────────────────────────────────────────────
+
+function StatInline({
+  label,
+  value,
+  trendPct,
+  tone,
+}: {
+  label: string;
+  value: string | number;
+  trendPct?: number;
+  tone?: "danger";
+}) {
+  return (
+    <div>
+      <p className="text-eyebrow">{label}</p>
+      <div className="mt-1 flex items-baseline gap-1.5">
+        <span className={cnStat(tone, value)}>{value}</span>
+        {!!trendPct && (
+          <span
+            className="flex items-center gap-0.5 text-[11px] font-medium"
+            style={{ color: trendPct > 0 ? "var(--accent)" : "var(--danger)" }}
+          >
+            {trendPct > 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+            {Math.abs(trendPct)}%
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-4 rounded-2xl border border-themed-subtle bg-card p-5 shadow-themed transition-shadow hover:shadow-themed-md">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl accent-bg">
-        {icon}
-      </div>
-      <div>
-        <p className="text-2xl font-bold text-heading">{value}</p>
-        <p className="text-xs font-medium text-body">{label}</p>
-      </div>
-    </div>
-  );
+function cnStat(tone: "danger" | undefined, value: string | number): string {
+  const base = "text-[22px] text-stat";
+  if (tone === "danger" && Number(value) > 0) return `${base} text-[var(--danger)]`;
+  return base;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn, getStatusColor, getStatusLabel } from "@/lib/utils";
 import { ClipboardList, Users, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 
 interface Task {
@@ -18,15 +18,6 @@ interface ProjectData {
   members: Array<{ id: string; role: string; user: { id: string; name: string | null; email: string; imageUrl: string | null } }>;
   tasks: Task[];
 }
-
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  NOT_STARTED: { label: "Not Started", color: "text-body", bg: "bg-hover" },
-  IN_PROGRESS: { label: "In Progress", color: "text-blue-700", bg: "bg-blue-50" },
-  BLOCKED: { label: "Blocked", color: "text-red-700", bg: "bg-red-50" },
-  AWAITING_APPROVAL: { label: "Pending", color: "text-amber-700", bg: "bg-amber-50" },
-  REJECTED: { label: "Rejected", color: "text-orange-700", bg: "bg-orange-50" },
-  COMPLETE: { label: "Done", color: "text-emerald-700", bg: "bg-emerald-50" },
-};
 
 export function OverviewClient({ projects }: { projects: ProjectData[] }) {
   const [selectedId, setSelectedId] = useState(projects[0]?.id || "");
@@ -73,8 +64,8 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
             className={cn(
               "rounded-full px-4 py-1.5 text-[13px] font-medium transition-all",
               selectedId === p.id
-                ? "bg-brand-600 text-white shadow-sm"
-                : "bg-card border border-themed-subtle text-body hover:border-brand-300 hover:accent-color"
+                ? "bg-[var(--accent)] text-white shadow-sm"
+                : "border border-themed-subtle text-body hover:border-[var(--violet-300)] hover:bg-hover hover:accent-color"
             )}
           >
             {p.name}
@@ -82,53 +73,53 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
         ))}
       </div>
 
-      {/* Summary stats */}
+      {/* Summary stats — quiet, border-only tier; the table below is the page's one focal card */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl border border-themed-subtle bg-card p-4">
-          <div className="flex items-center gap-2 mb-1">
+        <div className="panel-quiet p-4 hover-lift">
+          <div className="flex items-center gap-2 mb-1.5">
             <ClipboardList className="h-4 w-4 accent-color" />
-            <span className="text-[11px] font-semibold text-dim uppercase">Total</span>
+            <span className="text-eyebrow">Total</span>
           </div>
-          <p className="text-[24px] font-bold text-heading">{totalTasks}</p>
+          <p className="text-[24px] text-stat">{totalTasks}</p>
         </div>
-        <div className="rounded-xl border border-themed-subtle bg-card p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            <span className="text-[11px] font-semibold text-dim uppercase">Done</span>
+        <div className="panel-quiet p-4 hover-lift">
+          <div className="flex items-center gap-2 mb-1.5">
+            <CheckCircle2 className="h-4 w-4 accent-color" />
+            <span className="text-eyebrow">Done</span>
           </div>
-          <p className="text-[24px] font-bold text-heading">{completed}</p>
+          <p className="text-[24px] text-stat">{completed}</p>
         </div>
-        <div className="rounded-xl border border-themed-subtle bg-card p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Clock className="h-4 w-4 text-blue-500" />
-            <span className="text-[11px] font-semibold text-dim uppercase">Active</span>
+        <div className="panel-quiet p-4 hover-lift">
+          <div className="flex items-center gap-2 mb-1.5">
+            <Clock className="h-4 w-4 accent-color" />
+            <span className="text-eyebrow">Active</span>
           </div>
-          <p className="text-[24px] font-bold text-heading">{inProgress}</p>
+          <p className="text-[24px] text-stat">{inProgress}</p>
         </div>
-        <div className="rounded-xl border border-themed-subtle bg-card p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertCircle className="h-4 w-4 text-red-500" />
-            <span className="text-[11px] font-semibold text-dim uppercase">Blocked</span>
+        <div className="panel-quiet p-4 hover-lift">
+          <div className="flex items-center gap-2 mb-1.5">
+            <AlertCircle className="h-4 w-4 text-[var(--danger)]" />
+            <span className="text-eyebrow">Blocked</span>
           </div>
-          <p className="text-[24px] font-bold text-heading">{blocked}</p>
+          <p className="text-[24px] text-stat">{blocked}</p>
         </div>
       </div>
 
-      {/* Progress bar */}
+      {/* Progress — no container at all, just lives on the background */}
       {totalTasks > 0 && (
-        <div className="rounded-xl border border-themed-subtle bg-card p-4">
+        <div className="px-1">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[13px] font-medium text-heading">Overall Progress</span>
             <span className="text-[13px] font-semibold accent-color">{Math.round((completed / totalTasks) * 100)}%</span>
           </div>
-          <div className="h-2 w-full rounded-full bg-hover">
-            <div className="h-2 rounded-full bg-brand-500 transition-all" style={{ width: `${(completed / totalTasks) * 100}%` }} />
+          <div className="h-1.5 w-full rounded-full bg-hover">
+            <div className="h-1.5 rounded-full bg-[var(--accent)] transition-all" style={{ width: `${(completed / totalTasks) * 100}%` }} />
           </div>
         </div>
       )}
 
       {/* Team member progress */}
-      <div className="rounded-xl border border-themed-subtle bg-card p-5">
+      <div className="panel-quiet p-5">
         <h3 className="text-[14px] font-semibold text-heading mb-4">Team Progress</h3>
         <div className="space-y-3">
           {memberStats.map((m) => (
@@ -137,12 +128,12 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
                 {(m.user.name || m.user.email).charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-heading truncate">{m.user.name || m.user.email}</p>
-                <p className="text-[11px] text-dim">{m.role} · {m.completedTasks}/{m.totalTasks} done</p>
+                <p className="text-item-title truncate">{m.user.name || m.user.email}</p>
+                <p className="text-meta">{m.role} · {m.completedTasks}/{m.totalTasks} done</p>
               </div>
               <div className="w-20">
                 <div className="h-1.5 rounded-full bg-hover">
-                  <div className="h-1.5 rounded-full bg-brand-500" style={{ width: `${m.totalTasks > 0 ? (m.completedTasks / m.totalTasks) * 100 : 0}%` }} />
+                  <div className="h-1.5 rounded-full bg-[var(--accent)]" style={{ width: `${m.totalTasks > 0 ? (m.completedTasks / m.totalTasks) * 100 : 0}%` }} />
                 </div>
               </div>
             </div>
@@ -151,8 +142,8 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
         </div>
       </div>
 
-      {/* Task list */}
-      <div className="rounded-xl border border-themed-subtle bg-card p-5">
+      {/* Task list — the one focal, level-2 card on this page */}
+      <div className="rounded-2xl border border-themed-subtle bg-card p-5 shadow-themed">
         <h3 className="text-[14px] font-semibold text-heading mb-4">All Tasks</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[13px]">
@@ -166,10 +157,9 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
             </thead>
             <tbody>
               {tasks.map((task) => {
-                const status = STATUS_MAP[task.status] || STATUS_MAP.NOT_STARTED;
                 const isOverdue = task.dueDate && new Date(task.dueDate) < now && task.status !== "COMPLETE";
                 return (
-                  <tr key={task.id} className="border-b border-themed-subtle hover:bg-hover">
+                  <tr key={task.id} className="border-b border-themed-subtle transition-colors hover:bg-hover">
                     <td className="py-2.5 pr-4 font-medium text-heading">{task.title}</td>
                     <td className="py-2.5 pr-4 text-body">
                       {task.assignees.length > 0
@@ -178,11 +168,11 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
                       }
                     </td>
                     <td className="py-2.5 pr-4">
-                      <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-medium", status.bg, status.color)}>
-                        {status.label}
+                      <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-medium", getStatusColor(task.status))}>
+                        {getStatusLabel(task.status)}
                       </span>
                     </td>
-                    <td className={cn("py-2.5 text-[12px]", isOverdue ? "text-red-600 font-medium" : "text-body")}>
+                    <td className={cn("py-2.5 text-[12px]", isOverdue ? "font-medium text-[var(--danger)]" : "text-body")}>
                       {task.dueDate ? new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
                     </td>
                   </tr>
@@ -194,15 +184,17 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
         </div>
       </div>
 
-      {/* Overdue alerts */}
+      {/* Overdue alerts — danger-tinted gradient, matching the same treatment used on Dashboard/Analytics */}
       {overdue.length > 0 && (
-        <div className="rounded-xl border border-red-100 bg-red-50/50 p-5">
-          <h3 className="text-[14px] font-semibold text-red-700 mb-3">⚠ Overdue Tasks ({overdue.length})</h3>
+        <div className="rounded-2xl border border-[var(--danger-soft)] bg-gradient-to-r from-[var(--danger-soft)] to-transparent p-5">
+          <h3 className="text-[14px] font-semibold text-[var(--danger)] mb-3 flex items-center gap-1.5">
+            <AlertCircle className="h-4 w-4" /> Overdue Tasks ({overdue.length})
+          </h3>
           <div className="space-y-2">
             {overdue.map((t) => (
               <div key={t.id} className="flex items-center justify-between text-[13px]">
-                <span className="text-red-800 font-medium">{t.title}</span>
-                <span className="text-red-600 text-[11px]">Due {new Date(t.dueDate!).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                <span className="font-medium text-heading">{t.title}</span>
+                <span className="text-[11px] text-[var(--danger)]">Due {new Date(t.dueDate!).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
               </div>
             ))}
           </div>

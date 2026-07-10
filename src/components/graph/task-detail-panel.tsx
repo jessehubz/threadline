@@ -139,7 +139,7 @@ export function TaskDetailPanel({
         <h3 className="text-sm font-semibold text-heading">Task Details</h3>
         <div className="flex items-center gap-1">
           {!isReadOnly && (
-            <button onClick={onDelete} className="rounded-xl p-1.5 text-dim transition-colors hover:bg-red-50 hover:text-red-600" aria-label="Delete">
+            <button onClick={onDelete} className="rounded-xl p-1.5 text-dim transition-colors hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]" aria-label="Delete">
               <Trash2 className="h-4 w-4" />
             </button>
           )}
@@ -152,7 +152,7 @@ export function TaskDetailPanel({
       <div className="space-y-6 p-5">
         {/* Status */}
         <div>
-          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-dim">Status</label>
+          <label className="text-eyebrow mb-2 block">Status</label>
           {isReadOnly ? (
             <Badge className={getStatusColor(status)}>{getStatusLabel(status)}</Badge>
           ) : (
@@ -162,8 +162,8 @@ export function TaskDetailPanel({
                   key={opt.value}
                   onClick={() => handleStatusChange(opt.value)}
                   className={cn(
-                    "rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150",
-                    status === opt.value ? getStatusColor(opt.value) : "bg-hover text-body hover:bg-hover"
+                    "rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 hover:scale-105",
+                    status === opt.value ? getStatusColor(opt.value) : "bg-hover text-body"
                   )}
                 >
                   {opt.label}
@@ -171,25 +171,25 @@ export function TaskDetailPanel({
               ))}
             </div>
           )}
-          {status === "AWAITING_APPROVAL" && <p className="mt-2 text-xs text-amber-600">Awaiting approval</p>}
-          {status === "REJECTED" && <p className="mt-2 flex items-center gap-1 text-xs text-red-600"><AlertCircle className="h-3 w-3" /> Rejected</p>}
+          {status === "AWAITING_APPROVAL" && <p className="mt-2 text-xs text-[var(--violet-600)]">Awaiting approval</p>}
+          {status === "REJECTED" && <p className="mt-2 flex items-center gap-1 text-xs text-[var(--danger)]"><AlertCircle className="h-3 w-3" /> Rejected</p>}
         </div>
 
         {/* Color */}
         {!isReadOnly && (
           <div>
-            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-dim">Color</label>
+            <label className="text-eyebrow mb-2 block">Color</label>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => { setColor(""); updateNode(projectId, node.id, { color: null }); }}
-                className={cn("h-7 w-7 rounded-lg border-2 bg-hover transition-all", !color && "ring-2 ring-brand-500 ring-offset-2")}
+                className={cn("h-7 w-7 rounded-lg border-2 bg-hover transition-all", !color && "ring-2 ring-[var(--accent)] ring-offset-2")}
                 title="Auto (from status)"
               />
               {PRESET_COLORS.map((c) => (
                 <button
                   key={c}
                   onClick={() => { setColor(c); updateNode(projectId, node.id, { color: c }); }}
-                  className={cn("h-7 w-7 rounded-lg border-2 border-transparent transition-all", color === c && "ring-2 ring-brand-500 ring-offset-2")}
+                  className={cn("h-7 w-7 rounded-lg border-2 border-transparent transition-all", color === c && "ring-2 ring-[var(--accent)] ring-offset-2")}
                   style={{ backgroundColor: c }}
                 />
               ))}
@@ -208,7 +208,7 @@ export function TaskDetailPanel({
 
         {/* Assignees */}
         <div>
-          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-dim">Assigned People</label>
+          <label className="text-eyebrow mb-2 block">Assigned People</label>
           <div className="space-y-2">
             {node.assignments.map((assignment) => (
               <div key={assignment.user.id} className="flex items-center justify-between rounded-xl bg-hover px-3 py-2">
@@ -220,7 +220,7 @@ export function TaskDetailPanel({
                   {assignment.isApprover && <Badge variant="info">Approver</Badge>}
                 </div>
                 {!isReadOnly && (
-                  <button onClick={() => handleUnassign(assignment.user.id)} className="text-dim transition-colors hover:text-red-500">
+                  <button onClick={() => handleUnassign(assignment.user.id)} className="text-dim transition-colors hover:text-[var(--danger)]">
                     <X className="h-3 w-3" />
                   </button>
                 )}
@@ -258,17 +258,17 @@ export function TaskDetailPanel({
         {/* Dependencies */}
         {blockedBy.length > 0 && (
           <div>
-            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-red-500">Blocked by ({blockedBy.length})</label>
+            <label className="text-eyebrow mb-2 block text-[var(--danger)]">Blocked by ({blockedBy.length})</label>
             <div className="space-y-1.5">
               {blockedBy.map((dep) => (
-                <div key={dep!.id} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{dep!.title}</div>
+                <div key={dep!.id} className="rounded-xl bg-[var(--danger-soft)] px-3 py-2 text-xs font-medium text-[var(--danger)]">{dep!.title}</div>
               ))}
             </div>
           </div>
         )}
         {blocks.length > 0 && (
           <div>
-            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-dim">Blocks ({blocks.length})</label>
+            <label className="text-eyebrow mb-2 block">Blocks ({blocks.length})</label>
             <div className="space-y-1.5">
               {blocks.map((dep) => (
                 <div key={dep!.id} className="rounded-xl bg-hover px-3 py-2 text-xs font-medium text-body">{dep!.title}</div>
@@ -279,7 +279,7 @@ export function TaskDetailPanel({
 
         {/* Attachments */}
         <div>
-          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-dim">Attachments</label>
+          <label className="text-eyebrow mb-2 block">Attachments</label>
           <FileUpload nodeId={node.id} projectId={projectId} attachments={node.attachments} isReadOnly={isReadOnly} />
         </div>
 

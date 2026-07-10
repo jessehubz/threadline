@@ -10,7 +10,9 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-10">
-        <h1 className="text-2xl font-bold tracking-tight text-heading">Settings</h1>
+        <h1 className="text-[20px] font-light tracking-tight text-heading sm:text-[22px]">
+          <span className="font-semibold">Settings</span>
+        </h1>
         <p className="mt-1.5 text-sm text-body">
           Manage your account preferences
         </p>

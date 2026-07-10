@@ -52,6 +52,28 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
   --ring-color: rgba(139, 92, 246, 0.15);
+
+  /* Violet hierarchy — light mode. Emphasis darkens (inverse of dark mode) to hold contrast on white. */
+  --violet-50: rgba(139, 92, 246, 0.06);
+  --violet-100: rgba(139, 92, 246, 0.10);
+  --violet-200: rgba(139, 92, 246, 0.16);
+  --violet-300: rgba(139, 92, 246, 0.26);
+  --violet-400: rgba(139, 92, 246, 0.42);
+  --violet-500: #8B5CF6;
+  --violet-600: #7C3AED;
+  --violet-700: #6D28D9;
+
+  /* Single negative/warning color — muted coral. The only non-violet hue in the app. */
+  --danger: #DC4C4C;
+  --danger-hover: #C93D3D;
+  --danger-soft: rgba(220, 76, 76, 0.08);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.015);
+  --glass-border: rgba(139, 92, 246, 0.12);
+  --glass-border-subtle: rgba(139, 92, 246, 0.06);
+  --glass-glow: rgba(139, 92, 246, 0.06);
 }
 
 .dark {
@@ -72,6 +94,18 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
   --ring-color: rgba(139, 92, 246, 0.25);
+
+  /* Single negative/warning color — muted coral. The only non-violet hue in the app. */
+  --danger: #E5484D;
+  --danger-hover: #EC6A6E;
+  --danger-soft: rgba(229, 72, 77, 0.14);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.01);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-border-subtle: rgba(255, 255, 255, 0.04);
+  --glass-glow: rgba(139, 92, 246, 0.1);
 
   /* Violet hierarchy — use these for UI chrome, borders, hover states */
   --violet-50: rgba(139, 92, 246, 0.04);
@@ -115,14 +149,14 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[1px] active:translate-y-0 active:shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
+    @apply inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
     background-color: var(--accent);
     &:hover { background-color: var(--accent-hover); }
     &:focus { --tw-ring-color: var(--ring-color); }
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[1px] active:translate-y-0 active:shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
+    @apply inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
     background-color: var(--bg-elevated);
     color: var(--text-primary);
     border: 1px solid var(--border-default);
@@ -143,10 +177,10 @@
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[1px] active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
-    background-color: #DC3545;
-    &:hover { background-color: #C82333; }
-    &:focus { --tw-ring-color: rgba(220, 53, 69, 0.25); }
+    @apply inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-px active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: var(--danger);
+    &:hover { background-color: var(--danger-hover); }
+    &:focus { --tw-ring-color: var(--danger-soft); }
   }
 
   .input-field {
@@ -192,6 +226,17 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -305,7 +350,8 @@ main > * {
     animation: none !important;
   }
 
-  .hover-lift:hover {
+  .hover-lift:hover,
+  .hover-premium:hover {
     transform: none;
   }
 
@@ -359,6 +405,108 @@ main > * {
 .accent-bg { background-color: var(--accent-soft); }
 .shadow-themed { box-shadow: var(--shadow-sm); }
 .shadow-themed-md { box-shadow: var(--shadow-md); }
+
+/* ─── Type Scale, Elevation, Hover, Status (components layer — see below) ── */
+/* Kept inside @layer components (not the unlayered zone above) specifically so
+   these can be combined with one-off Tailwind utility overrides — e.g.
+   cn("text-meta", danger && "text-[var(--danger)]") — and the utility wins,
+   same as any other Tailwind class-on-class override. */
+
+@layer components {
+  /* Type scale: weight is a scarce resource. Bold/semibold is reserved for the
+     1-2 things per screen that are the actual point (a hero number, the
+     current focal panel's header). Everything else — item titles, captions,
+     meta — is medium or regular; hierarchy comes from size/color/tracking. */
+
+  .text-eyebrow {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+  }
+
+  .text-item-title {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--text-primary);
+  }
+
+  .text-stat {
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--text-primary);
+  }
+
+  .text-meta {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  /* Elevation: .card (above) is Level 2 — a genuine raised object; reserve it
+     for one focal panel per section. .panel-quiet is Level 1 — a border-only
+     grouping with no fill, so it doesn't compete with a level-2 neighbor. */
+
+  .panel-quiet {
+    border-radius: 1.25rem;
+    border: 1px solid var(--border-subtle);
+    background: transparent;
+  }
+
+  /* Glassmorphism panels — translucent with backdrop-blur, subtle border glow */
+  .glass-panel {
+    border-radius: 1.5rem;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  }
+
+  .glass-panel-sm {
+    border-radius: 1rem;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px) saturate(1.3);
+    -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  }
+
+  .glass-panel-subtle {
+    border-radius: 1rem;
+    border: 1px solid var(--glass-border-subtle);
+    background: var(--glass-bg-subtle);
+    backdrop-filter: blur(8px) saturate(1.2);
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+  }
+
+  /* Premium hover: for grid-locked focal elements (Health Score, hero stat)
+     where a vertical lift would look like it's escaping its cell — glow +
+     a hairline scale instead of translateY. */
+
+  .hover-premium {
+    transition: border-color 220ms ease-out, box-shadow 220ms ease-out, transform 220ms ease-out;
+  }
+  .hover-premium:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--violet-200), var(--shadow-md);
+    transform: scale(1.012);
+  }
+
+  /* Status tint pill: understated status indication — a soft alpha-tinted
+     pill, not a loud solid-fill block. Background/text color are set inline
+     per-status since they derive from the dynamic status accent. */
+
+  .status-tint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-size: 10px;
+    font-weight: 500;
+  }
+}
 
 /* ─── Scrollbar Hide Utility ──────────────────────────────────────────────── */
 

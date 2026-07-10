@@ -10,10 +10,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", loading, children, disabled, ...props }, ref) => {
     const variants = {
-      primary: "bg-brand-600 text-white hover:bg-brand-700 hover:shadow-md shadow-sm",
+      primary: "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] hover:shadow-md shadow-sm",
       secondary: "border border-themed bg-card text-heading hover:bg-hover hover:border-themed hover:shadow-md shadow-sm",
       ghost: "text-body hover:bg-hover hover:text-heading",
-      danger: "bg-red-600 text-white hover:bg-red-700 hover:shadow-md shadow-sm",
+      danger: "bg-[var(--danger)] text-white hover:bg-[var(--danger-hover)] hover:shadow-md shadow-sm",
     };
 
     const sizes = {
@@ -26,7 +26,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-100 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100",
           variants[variant],
           sizes[size],
           className

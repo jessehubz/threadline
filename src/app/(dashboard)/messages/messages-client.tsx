@@ -11,7 +11,7 @@ import {
   getDirectMessages,
   getTeamMembers,
 } from "@/actions/dm-actions";
-import { cn } from "@/lib/utils";
+import { cn, formatRelativeDate } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface Project {
@@ -249,7 +249,7 @@ function ChannelsPanel({
           <button
             onClick={handleSend}
             disabled={isPending || !input.trim()}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent)] text-white transition-all duration-150 hover:bg-[var(--accent-hover)] hover:scale-[1.05] disabled:opacity-50 disabled:hover:scale-100"
             aria-label="Send message"
           >
             <Send className="h-4 w-4" />
@@ -445,15 +445,16 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
                     selectedConversation?.id === convo.id && "bg-hover"
                   )}
                 >
-                  <div className="relative">
-                    <UserAvatar user={other || { id: "", name: "?", email: "", imageUrl: null }} size="md" />
-                    {/* Unread indicator dot */}
-                    <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-violet-500" />
-                  </div>
+                  <UserAvatar user={other || { id: "", name: "?", email: "", imageUrl: null }} size="md" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-heading">
-                      {other?.name || other?.email || "Unknown"}
-                    </p>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="truncate text-sm font-medium text-heading">
+                        {other?.name || other?.email || "Unknown"}
+                      </p>
+                      {lastMessage && (
+                        <span className="flex-shrink-0 text-[10px] text-dim">{formatRelativeDate(lastMessage.createdAt)}</span>
+                      )}
+                    </div>
                     {lastMessage && (
                       <p className="truncate text-xs text-body">
                         {lastMessage.content}
@@ -533,7 +534,7 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
                 <button
                   onClick={handleSend}
                   disabled={isPending || !input.trim()}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent)] text-white transition-all duration-150 hover:bg-[var(--accent-hover)] hover:scale-[1.05] disabled:opacity-50 disabled:hover:scale-100"
                   aria-label="Send message"
                 >
                   <Send className="h-4 w-4" />
@@ -564,7 +565,7 @@ function MessageBubble({ msg, currentUserId }: { msg: Message; currentUserId: st
         className={cn(
           "max-w-[70%] rounded-2xl px-4 py-2.5",
           isOwn
-            ? "bg-brand-600 text-white"
+            ? "bg-[var(--accent)] text-white"
             : "bg-hover text-heading"
         )}
       >

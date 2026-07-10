@@ -83,9 +83,9 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
       {/* Members list */}
       {project && (
         <div className="rounded-2xl border border-themed-subtle bg-card p-2 shadow-sm">
-          <div className="divide-y divide-surface-100">
+          <div className="divide-y divide-[var(--border-subtle)]">
             {project.members.map((member) => (
-              <div key={member.id} className="flex items-center justify-between px-4 py-3.5">
+              <div key={member.id} className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-hover">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full accent-bg text-sm font-semibold accent-color">
                     {member.user.name?.[0]?.toUpperCase() || member.user.email[0].toUpperCase()}
@@ -111,7 +111,7 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
                       </select>
                       <button
                         onClick={() => handleRemove(member.id)}
-                        className="rounded-lg p-1.5 text-dim transition-colors hover:text-red-600"
+                        className="rounded-lg p-1.5 text-dim transition-colors hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
                         aria-label="Remove member"
                       >
                         <Trash2 className="h-4 w-4" />

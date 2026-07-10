@@ -177,7 +177,7 @@ export function TaskComments({
               className={cn(
                 "rounded-lg border px-3 py-2",
                 comment.isPrivate
-                  ? "border-amber-200 bg-amber-50"
+                  ? "border-[var(--violet-300)] bg-[var(--violet-100)]"
                   : "border-themed bg-page"
               )}
             >
@@ -199,13 +199,13 @@ export function TaskComments({
                     {comment.user.name || comment.user.email}
                   </span>
                   {comment.isPrivate && (
-                    <Lock className="h-3 w-3 text-amber-500" />
+                    <Lock className="h-3 w-3 text-[var(--violet-600)]" />
                   )}
                 </div>
                 {comment.user.id === currentUserId && (
                   <button
                     onClick={() => handleDelete(comment.id)}
-                    className="rounded p-0.5 text-dim hover:text-red-500"
+                    className="rounded p-0.5 text-dim hover:text-[var(--danger)]"
                     aria-label="Delete comment"
                   >
                     <Trash2 className="h-3 w-3" />
@@ -260,7 +260,7 @@ export function TaskComments({
                     <FileText className="h-3 w-3" />
                   )}
                   <span className="max-w-[100px] truncate">{att.fileName}</span>
-                  <button onClick={() => removePendingAttachment(i)} className="text-dim hover:text-red-500">
+                  <button onClick={() => removePendingAttachment(i)} className="text-dim hover:text-[var(--danger)]">
                     <X className="h-3 w-3" />
                   </button>
                 </div>
@@ -274,7 +274,7 @@ export function TaskComments({
               className={cn(
                 "flex h-8 w-8 items-center justify-center rounded-md transition-colors",
                 isPrivate
-                  ? "bg-amber-100 text-amber-600"
+                  ? "bg-[var(--violet-200)] text-[var(--violet-600)]"
                   : "text-dim hover:bg-hover"
               )}
               title={isPrivate ? "Private comment" : "Public comment"}
@@ -306,14 +306,14 @@ export function TaskComments({
               onKeyDown={handleKeyDown}
               placeholder="Add a comment..."
               disabled={isPending}
-              className="flex-1 rounded-md border border-themed px-2.5 py-1.5 text-xs text-heading placeholder-[var(--text-muted)] bg-card focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50"
+              className="flex-1 rounded-md border border-themed px-2.5 py-1.5 text-xs text-heading placeholder-[var(--text-muted)] bg-card focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] disabled:opacity-50"
               aria-label="Comment input"
             />
 
             <button
               onClick={handleSend}
               disabled={isPending || (!input.trim() && pendingAttachments.length === 0)}
-              className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+              className="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--accent)] text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-50"
               aria-label="Send comment"
             >
               <Send className="h-3.5 w-3.5" />

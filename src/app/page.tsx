@@ -15,6 +15,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { FadeIn } from "@/components/marketing/fade-in";
+import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
   const { userId } = await auth();
@@ -26,8 +27,8 @@ export default async function HomePage() {
       <header className="sticky top-0 z-50 h-14 bg-[var(--bg-base)]/80 backdrop-blur-xl border-b border-themed-subtle">
         <div className="mx-auto flex h-full max-w-5xl items-center justify-between px-6">
           <a href="/" className="flex items-center">
-            <span className="text-[17px] font-extrabold tracking-tight text-heading font-[var(--font-logo)]">Thread</span>
-            <span className="text-[17px] font-extrabold tracking-tight accent-color font-[var(--font-logo)]">line</span>
+            <span className="text-[17px] font-extrabold tracking-tight text-heading font-logo">Thread</span>
+            <span className="text-[17px] font-extrabold tracking-tight accent-color font-logo">line</span>
           </a>
           <nav className="hidden items-center gap-7 md:flex">
             <a href="#features" className="text-[14px] font-medium text-body transition-colors hover:text-heading">Features</a>
@@ -43,24 +44,24 @@ export default async function HomePage() {
 
       <main className="flex-1">
         {/* ─── HERO ─── */}
-        <section className="relative overflow-hidden pt-20 pb-10 lg:pt-28 lg:pb-16">
-          <div className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 h-[400px] w-[700px] rounded-full bg-brand-500/10 blur-[120px]" />
+        <section className="relative overflow-hidden pt-24 pb-10 lg:pt-32 lg:pb-16">
+          <div className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 h-[400px] w-[700px] rounded-full bg-[var(--accent)]/10 blur-[120px]" />
 
           <div className="relative mx-auto max-w-5xl px-6">
             <FadeIn>
-              <div className="mx-auto max-w-[680px] text-center">
-                <h1 className="text-[48px] font-extrabold leading-[1.08] tracking-tight text-heading sm:text-[56px]">
+              <div className="mx-auto max-w-[880px] text-center">
+                <h1 className="text-[56px] font-extrabold leading-[1.03] tracking-tight text-heading sm:text-[76px] lg:text-[88px]">
                   See how your<br />work <span className="accent-color">connects.</span>
                 </h1>
               </div>
             </FadeIn>
             <FadeIn delay={100}>
-              <p className="mx-auto mt-5 max-w-[480px] text-center text-[16px] leading-relaxed text-body">
+              <p className="mx-auto mt-7 max-w-[480px] text-center text-[17px] leading-relaxed text-body">
                 Project management that thinks in graphs, not lists. Map dependencies, track progress, and collaborate — all on one canvas.
               </p>
             </FadeIn>
             <FadeIn delay={200}>
-              <div className="mt-8 flex items-center justify-center gap-3">
+              <div className="mt-9 flex items-center justify-center gap-3">
                 <Link href="/sign-up" className="btn-primary text-[14px] px-6 py-2.5 gap-2">
                   Start for free <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -94,17 +95,17 @@ export default async function HomePage() {
                       {/* Left branch */}
                       <div className="flex flex-col items-center">
                         <div className="rounded-xl border border-themed-subtle bg-[var(--bg-elevated)] px-5 py-3 shadow-sm">
-                          <div className="h-[6px] w-20 rounded-full bg-brand-500 mb-2" />
+                          <div className="h-[6px] w-20 rounded-full bg-[var(--accent)] mb-2" />
                           <div className="h-[5px] w-28 rounded-full bg-[var(--border-default)]" />
                         </div>
                         <div className="h-7 w-px bg-[var(--border-default)]" />
                         <div className="flex gap-3">
                           <div className="rounded-lg border border-themed-subtle bg-[var(--bg-elevated)] px-4 py-2.5 shadow-sm">
-                            <div className="h-[5px] w-14 rounded-full bg-emerald-400 mb-1.5" />
+                            <div className="h-[5px] w-14 rounded-full bg-[var(--accent)] mb-1.5" style={{ opacity: 0.7 }} />
                             <div className="h-[4px] w-20 rounded-full bg-[var(--border-default)]" />
                           </div>
                           <div className="rounded-lg border border-themed-subtle bg-[var(--bg-elevated)] px-4 py-2.5 shadow-sm">
-                            <div className="h-[5px] w-16 rounded-full bg-amber-400 mb-1.5" />
+                            <div className="h-[5px] w-16 rounded-full bg-[var(--accent)] mb-1.5" style={{ opacity: 0.35 }} />
                             <div className="h-[4px] w-12 rounded-full bg-[var(--border-default)]" />
                           </div>
                         </div>
@@ -117,16 +118,16 @@ export default async function HomePage() {
                       {/* Right branch */}
                       <div className="hidden sm:flex flex-col items-center pt-4">
                         <div className="rounded-xl border border-themed-subtle bg-[var(--bg-elevated)] px-5 py-3 shadow-sm">
-                          <div className="h-[6px] w-16 rounded-full bg-brand-400 mb-2" />
+                          <div className="h-[6px] w-16 rounded-full bg-[var(--accent)] mb-2" style={{ opacity: 0.55 }} />
                           <div className="h-[5px] w-24 rounded-full bg-[var(--border-default)]" />
                         </div>
                         <div className="h-7 w-px bg-[var(--border-default)]" />
-                        <div className="rounded-xl border border-emerald-800/60 bg-emerald-950/30 px-5 py-3 shadow-sm">
-                          <div className="h-[5px] w-14 rounded-full bg-emerald-500 mb-2" />
-                          <div className="h-[4px] w-20 rounded-full bg-emerald-800/50" />
+                        <div className="rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-5 py-3 shadow-sm">
+                          <div className="h-[5px] w-14 rounded-full bg-[var(--accent)] mb-2" />
+                          <div className="h-[4px] w-20 rounded-full bg-[var(--accent)]/25" />
                           <div className="mt-2.5 flex items-center gap-1">
-                            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                            <span className="text-[8px] font-semibold text-emerald-400">Done</span>
+                            <CheckCircle2 className="h-3 w-3 accent-color" />
+                            <span className="text-[8px] font-semibold accent-color">Done</span>
                           </div>
                         </div>
                       </div>
@@ -158,13 +159,28 @@ export default async function HomePage() {
                 <p className="mt-3 text-[16px] text-body max-w-md mx-auto">Not another list app. A visual system for managing complex, interconnected work.</p>
               </div>
             </FadeIn>
-            <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              <Card icon={<GitBranch className="h-5 w-5" />} title="Dependency Graphs" desc="See what blocks what. Map relationships visually instead of guessing from a flat list." delay={0} />
-              <Card icon={<Users className="h-5 w-5" />} title="Live Collaboration" desc="Work in real-time. See who's online, who's editing what — instantly synced." delay={60} />
-              <Card icon={<Zap className="h-5 w-5" />} title="AI Generation" desc="Describe your project in words. Get a structured dependency graph in seconds." delay={120} />
-              <Card icon={<Shield className="h-5 w-5" />} title="Approval Workflows" desc="Submit for review. Approvers get notified, approve or reject with one click." delay={180} />
-              <Card icon={<BarChart3 className="h-5 w-5" />} title="Analytics" desc="Track completion rates, spot bottlenecks, balance workloads across teams." delay={240} />
-              <Card icon={<Layers className="h-5 w-5" />} title="Nested Graphs" desc="Folders with sub-graphs inside. Organize at any scale without losing context." delay={300} />
+            <div className="mt-14 space-y-4">
+              {/* Row 1: hero feature (the core differentiator) + one supporting feature */}
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <FadeIn delay={0} className="lg:col-span-2">
+                  <div className="animate-entrance group relative overflow-hidden rounded-3xl border border-themed-subtle bg-card p-8 transition-all duration-200 ease-out hover-lift hover:shadow-themed-md sm:p-10">
+                    <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-[var(--accent)]/10 blur-3xl transition-opacity group-hover:opacity-150" />
+                    <div className="relative mb-5 flex h-12 w-12 items-center justify-center rounded-2xl accent-bg accent-color">
+                      <GitBranch className="h-6 w-6" />
+                    </div>
+                    <h3 className="relative text-[24px] font-semibold text-heading">Dependency Graphs</h3>
+                    <p className="relative mt-2 max-w-md text-[15px] leading-relaxed text-body">See what blocks what. Map relationships visually instead of guessing from a flat list — the core idea Threadline is built around.</p>
+                  </div>
+                </FadeIn>
+                <Card icon={<Users className="h-5 w-5" />} title="Live Collaboration" desc="Work in real-time. See who's online, who's editing what — instantly synced." delay={60} />
+              </div>
+              {/* Row 2: supporting features */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Card icon={<Zap className="h-5 w-5" />} title="AI Generation" desc="Describe your project in words. Get a structured dependency graph in seconds." delay={120} compact />
+                <Card icon={<Shield className="h-5 w-5" />} title="Approval Workflows" desc="Submit for review. Approvers get notified, approve or reject with one click." delay={180} compact />
+                <Card icon={<BarChart3 className="h-5 w-5" />} title="Analytics" desc="Track completion rates, spot bottlenecks, balance workloads across teams." delay={240} compact />
+                <Card icon={<Layers className="h-5 w-5" />} title="Nested Graphs" desc="Folders with sub-graphs inside. Organize at any scale without losing context." delay={300} compact />
+              </div>
             </div>
           </div>
         </section>
@@ -226,9 +242,9 @@ export default async function HomePage() {
                   </Link>
                 </div>
                 <div className="mt-5 flex items-center justify-center gap-5 text-[12px] text-dim">
-                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />Free for 5 users</span>
-                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />No credit card</span>
-                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />Cancel anytime</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 accent-color" />Free for 5 users</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 accent-color" />No credit card</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 accent-color" />Cancel anytime</span>
                 </div>
               </div>
             </FadeIn>
@@ -242,8 +258,8 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center">
-                <span className="text-[17px] font-extrabold text-heading font-[var(--font-logo)]">Thread</span>
-                <span className="text-[17px] font-extrabold accent-color font-[var(--font-logo)]">line</span>
+                <span className="text-[17px] font-extrabold text-heading font-logo">Thread</span>
+                <span className="text-[17px] font-extrabold accent-color font-logo">line</span>
               </div>
               <p className="mt-3 text-[13px] leading-relaxed text-dim max-w-[180px]">Visual project management for teams who think in systems.</p>
             </div>
@@ -266,15 +282,21 @@ export default async function HomePage() {
 
 /* ─── COMPONENTS ─── */
 
-function Card({ icon, title, desc, delay }: { icon: React.ReactNode; title: string; desc: string; delay: number }) {
+function Card({ icon, title, desc, delay, compact }: { icon: React.ReactNode; title: string; desc: string; delay: number; compact?: boolean }) {
   return (
     <FadeIn delay={delay}>
-      <div className="animate-entrance group rounded-2xl border border-themed-subtle bg-card p-7 transition-all duration-200 ease-out hover-lift hover:shadow-themed-md hover:-translate-y-[2px]">
-        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl accent-bg accent-color transition-colors duration-200">
+      <div className={cn(
+        "animate-entrance group rounded-2xl border border-themed-subtle bg-card transition-all duration-200 ease-out hover-lift hover:shadow-themed-md hover:-translate-y-[2px]",
+        compact ? "p-5" : "p-7"
+      )}>
+        <div className={cn(
+          "flex items-center justify-center rounded-xl accent-bg accent-color transition-colors duration-200",
+          compact ? "mb-3 h-8 w-8" : "mb-4 h-10 w-10"
+        )}>
           {icon}
         </div>
-        <h3 className="text-[18px] font-semibold text-heading">{title}</h3>
-        <p className="mt-1.5 text-[14px] leading-relaxed text-body">{desc}</p>
+        <h3 className={cn("font-semibold text-heading", compact ? "text-[15px]" : "text-[18px]")}>{title}</h3>
+        <p className={cn("leading-relaxed text-body", compact ? "mt-1 text-[12.5px]" : "mt-1.5 text-[14px]")}>{desc}</p>
       </div>
     </FadeIn>
   );

@@ -34,7 +34,7 @@ export async function getProjects() {
       graphs: {
         include: {
           nodes: {
-            select: { id: true, status: true },
+            select: { id: true, status: true, dueDate: true },
           },
         },
       },
@@ -43,10 +43,15 @@ export async function getProjects() {
     orderBy: { updatedAt: "desc" },
   });
 
+  const now = new Date();
+
   return projects.map((project) => {
     const allNodes = project.graphs.flatMap((g) => g.nodes);
     const totalTasks = allNodes.length;
     const completedTasks = allNodes.filter((n) => n.status === "COMPLETE").length;
+    const needsAttention = allNodes.some(
+      (n) => n.status === "BLOCKED" || (n.dueDate && n.dueDate < now && n.status !== "COMPLETE")
+    );
 
     return {
       id: project.id,
@@ -56,6 +61,7 @@ export async function getProjects() {
       memberCount: project.members.length,
       totalTasks,
       completedTasks,
+      needsAttention,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
       role: project.members.find((m) => m.userId === user.id)?.role || "MEMBER",
