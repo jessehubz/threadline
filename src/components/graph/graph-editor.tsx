@@ -330,7 +330,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             fitView
             fitViewOptions={{ padding: 0.4, maxZoom: 1 }}
             deleteKeyCode={isReadOnly ? null : "Delete"}
-            className="bg-[#FAFAF8]"
+            className="bg-page"
           >
             <Background variant={BackgroundVariant.Dots} gap={22} size={1.8} color="#B0B0B0" />
             <Panel position="top-left" className="space-y-2">

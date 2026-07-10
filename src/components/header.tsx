@@ -1,26 +1,83 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Menu } from "lucide-react";
+import { Menu, Search, LayoutDashboard, CalendarDays, BarChart3, MessageSquare, ClipboardList, Users, Settings, Calendar } from "lucide-react";
 import { NotificationDropdown } from "@/components/notification-dropdown";
 import { ChatPopup } from "@/components/chat-popup";
 import { useState } from "react";
 import { MobileSidebar } from "@/components/mobile-sidebar";
+import { cn } from "@/lib/utils";
+
+const navItems = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Overview", href: "/overview", icon: ClipboardList },
+  { name: "Tasks", href: "/my-tasks", icon: CalendarDays },
+  { name: "Messages", href: "/messages", icon: MessageSquare },
+  { name: "Analytics", href: "/analytics", icon: BarChart3 },
+  { name: "Calendar", href: "/calendar", icon: Calendar },
+  { name: "Team", href: "/team", icon: Users },
+  { name: "Settings", href: "/settings", icon: Settings },
+];
 
 export function Header({ currentUserId }: { currentUserId: string }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
   return (
     <>
-      <header className="flex h-16 items-center justify-between border-b border-surface-200/80 bg-white px-6 lg:px-10">
-        <button onClick={() => setMobileMenuOpen(true)} className="rounded-xl p-2 text-[#6B7280] transition-colors hover:bg-surface-100 hover:text-surface-700 lg:hidden" aria-label="Open menu"><Menu className="h-5 w-5" /></button>
-        <div className="flex-1" />
-        <div className="flex items-center gap-2">
-          <ChatPopup currentUserId={currentUserId} />
-          <NotificationDropdown />
-          <div className="ml-1 h-8 w-px bg-surface-200" />
-          <div className="ml-2"><UserButton appearance={{ elements: { avatarBox: "h-8 w-8" } }} /></div>
-        </div>
-      </header>
+      <div className="flex items-center justify-center px-4 pt-4 pb-2 lg:px-6">
+        {/* Floating pill navbar */}
+        <nav className="flex w-full max-w-5xl items-center justify-between rounded-full border border-themed-subtle bg-[var(--bg-surface)] px-3 py-1.5 shadow-themed-md">
+          {/* Left: Logo + Name */}
+          <Link href="/dashboard" className="flex items-center gap-0 pl-2 hover:opacity-80 transition-opacity">
+            <span className="text-[15px] font-bold tracking-tight text-heading font-[var(--font-logo)]">Thread</span>
+            <span className="text-[15px] font-bold tracking-tight accent-color">line</span>
+          </Link>
+
+          {/* Center: Nav items as pills */}
+          <div className="hidden items-center gap-0.5 md:flex">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-all duration-150",
+                    isActive
+                      ? "bg-white/90 dark:bg-white/10 text-heading shadow-sm"
+                      : "text-body hover:text-heading hover:bg-white/5"
+                  )}
+                >
+                  <item.icon className={cn("h-3.5 w-3.5", isActive && "accent-color")} />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Right: Icons */}
+          <div className="flex items-center gap-1 pr-1">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="rounded-full p-2 text-body transition-colors hover:bg-white/5 hover:text-heading md:hidden"
+              aria-label="Open menu"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
+
+            <ChatPopup currentUserId={currentUserId} />
+            <NotificationDropdown />
+            <div className="ml-0.5 h-6 w-px bg-[var(--border-default)] opacity-50" />
+            <div className="ml-1">
+              <UserButton appearance={{ elements: { avatarBox: "h-7 w-7" } }} />
+            </div>
+          </div>
+        </nav>
+      </div>
       <MobileSidebar open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
     </>
   );

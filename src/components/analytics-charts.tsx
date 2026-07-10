@@ -43,7 +43,7 @@ export function AnalyticsCharts({
       {/* Stats cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={<CheckCircle2 className="h-5 w-5 text-green-500" />} label="Completion Rate" value={`${completionRate}%`} />
-        <StatCard icon={<TrendingUp className="h-5 w-5 text-brand-500" />} label="Total Tasks" value={String(totalTasks)} />
+        <StatCard icon={<TrendingUp className="h-5 w-5 accent-color" />} label="Total Tasks" value={String(totalTasks)} />
         <StatCard icon={<Clock className="h-5 w-5 text-amber-500" />} label="Completed" value={String(completedCount)} />
         <StatCard icon={<AlertCircle className="h-5 w-5 text-red-500" />} label="Overdue" value={String(overdueTasks.length)} />
       </div>
@@ -51,8 +51,8 @@ export function AnalyticsCharts({
       {/* Charts grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Completion over time */}
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
-          <h3 className="mb-5 text-sm font-semibold text-[#1A1A1A]">Completions Over Time</h3>
+        <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
+          <h3 className="mb-5 text-sm font-semibold text-heading">Completions Over Time</h3>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={completionTimeline}>
               <defs>
@@ -71,8 +71,8 @@ export function AnalyticsCharts({
         </div>
 
         {/* Status breakdown */}
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
-          <h3 className="mb-5 text-sm font-semibold text-[#1A1A1A]">Status Breakdown</h3>
+        <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
+          <h3 className="mb-5 text-sm font-semibold text-heading">Status Breakdown</h3>
           {statusBreakdown.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
@@ -85,13 +85,13 @@ export function AnalyticsCharts({
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <p className="py-16 text-center text-sm text-surface-400">No tasks yet</p>
+            <p className="py-16 text-center text-sm text-dim">No tasks yet</p>
           )}
         </div>
 
         {/* Workload */}
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
-          <h3 className="mb-5 text-sm font-semibold text-[#1A1A1A]">Workload per Person</h3>
+        <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
+          <h3 className="mb-5 text-sm font-semibold text-heading">Workload per Person</h3>
           {workload.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={workload}>
@@ -105,27 +105,27 @@ export function AnalyticsCharts({
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="py-16 text-center text-sm text-surface-400">No assignments yet</p>
+            <p className="py-16 text-center text-sm text-dim">No assignments yet</p>
           )}
         </div>
 
         {/* Overdue tasks */}
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
-          <h3 className="mb-5 text-sm font-semibold text-[#1A1A1A]">Overdue Tasks</h3>
+        <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
+          <h3 className="mb-5 text-sm font-semibold text-heading">Overdue Tasks</h3>
           {overdueTasks.length > 0 ? (
             <div className="max-h-[250px] space-y-2 overflow-y-auto">
               {overdueTasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between rounded-xl border border-red-100 bg-red-50/50 px-4 py-2.5900950/50">
+                <div key={task.id} className="flex items-center justify-between rounded-xl border border-red-100 bg-red-50/50 px-4 py-2.5">
                   <div>
-                    <p className="text-sm font-medium text-[#1A1A1A]">{task.title}</p>
-                    <p className="text-xs text-[#6B7280]">{task.projectName}</p>
+                    <p className="text-sm font-medium text-heading">{task.title}</p>
+                    <p className="text-xs text-body">{task.projectName}</p>
                   </div>
                   <span className="text-xs font-medium text-red-600">Due {formatDate(task.dueDate)}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="py-16 text-center text-sm text-surface-400">No overdue tasks</p>
+            <p className="py-16 text-center text-sm text-dim">No overdue tasks</p>
           )}
         </div>
       </div>
@@ -135,13 +135,13 @@ export function AnalyticsCharts({
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-surface-200/60 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-md">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50">
+    <div className="flex items-center gap-4 rounded-2xl border border-themed-subtle bg-card p-5 shadow-themed transition-shadow hover:shadow-themed-md">
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl accent-bg">
         {icon}
       </div>
       <div>
-        <p className="text-2xl font-bold text-[#1A1A1A]">{value}</p>
-        <p className="text-xs font-medium text-[#6B7280]">{label}</p>
+        <p className="text-2xl font-bold text-heading">{value}</p>
+        <p className="text-xs font-medium text-body">{label}</p>
       </div>
     </div>
   );

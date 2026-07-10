@@ -71,12 +71,12 @@ export function ProfileForm({ user }: { user: User }) {
   }
 
   return (
-    <div className="rounded-2xl border border-surface-200/80 bg-white p-8 shadow-sm">
+    <div className="rounded-2xl border border-themed-subtle bg-card p-8 shadow-sm">
       <div className="space-y-8">
         {/* Avatar with upload */}
         <div className="flex items-center gap-5">
           <div className="relative">
-            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-brand-100 text-2xl font-bold text-brand-700">
+            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl accent-bg text-2xl font-bold accent-color">
               {imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -91,7 +91,7 @@ export function ProfileForm({ user }: { user: User }) {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-white bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:opacity-50900"
+              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-card bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
               aria-label="Upload profile picture"
             >
               <Camera className="h-4 w-4" />
@@ -105,12 +105,12 @@ export function ProfileForm({ user }: { user: User }) {
             />
           </div>
           <div>
-            <p className="text-base font-semibold text-[#1A1A1A]">
+            <p className="text-base font-semibold text-heading">
               {name || "Set your name"}
             </p>
-            <p className="text-sm text-[#6B7280]">{user.email}</p>
+            <p className="text-sm text-body">{user.email}</p>
             {uploading && (
-              <p className="mt-1 text-xs text-brand-600">Uploading...</p>
+              <p className="mt-1 text-xs accent-color">Uploading...</p>
             )}
           </div>
         </div>

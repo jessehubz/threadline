@@ -10,10 +10,10 @@ interface GraphBreadcrumbsProps {
 
 export function GraphBreadcrumbs({ breadcrumbs, projectId, currentPath }: GraphBreadcrumbsProps) {
   return (
-    <nav className="flex items-center gap-1 rounded-xl border border-surface-200/80 bg-white/95 px-3 py-2 text-sm shadow-sm backdrop-blur-md">
+    <nav className="flex items-center gap-1 rounded-xl border border-themed-subtle bg-card/95 px-3 py-2 text-sm shadow-sm backdrop-blur-md">
       <a
         href={`/graph/${projectId}`}
-        className="flex items-center gap-1 text-surface-400 transition-colors hover:text-brand-600"
+        className="flex items-center gap-1 text-dim transition-colors hover:accent-color"
       >
         <Home className="h-3.5 w-3.5" />
       </a>
@@ -28,13 +28,13 @@ export function GraphBreadcrumbs({ breadcrumbs, projectId, currentPath }: GraphB
 
         return (
           <span key={crumb.id} className="flex items-center gap-1">
-            <ChevronRight className="h-3 w-3 text-surface-300" />
+            <ChevronRight className="h-3 w-3 text-dim" />
             {isLast ? (
-              <span className="font-medium text-[#1A1A1A]">
+              <span className="font-medium text-heading">
                 {crumb.name}
               </span>
             ) : (
-              <a href={href} className="text-surface-400 transition-colors hover:text-brand-600">
+              <a href={href} className="text-dim transition-colors hover:accent-color">
                 {crumb.name}
               </a>
             )}

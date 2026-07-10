@@ -33,9 +33,9 @@ function TaskNodeInner({ data, selected }: NodeProps & { data: TaskNodeData }) {
   return (
     <div
       className={cn(
-        "min-w-[200px] max-w-[280px] rounded-2xl border bg-white shadow-sm transition-all duration-200",
+        "min-w-[200px] max-w-[280px] rounded-2xl border bg-card shadow-sm transition-all duration-200",
         selected
-          ? "shadow-lg ring-2 ring-brand-300/50700/50"
+          ? "shadow-lg ring-2 ring-brand-300/50"
           : "hover:shadow-md"
       )}
       style={{ borderColor: selected ? accentColor : `${accentColor}30`, borderLeftWidth: "4px", borderLeftColor: accentColor }}
@@ -44,13 +44,13 @@ function TaskNodeInner({ data, selected }: NodeProps & { data: TaskNodeData }) {
       <Handle
         type="source"
         position={Position.Right}
-        className="!h-3 !w-3 !rounded-full !border-2 !border-white !bg-surface-400900500"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-card !bg-[var(--border-default)]"
       />
       {/* Target Handle (left) */}
       <Handle
         type="target"
         position={Position.Left}
-        className="!h-3 !w-3 !rounded-full !border-2 !border-white !bg-surface-400900500"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-card !bg-[var(--border-default)]"
       />
 
       <div className="p-3.5">
@@ -65,23 +65,23 @@ function TaskNodeInner({ data, selected }: NodeProps & { data: TaskNodeData }) {
         </div>
 
         {/* Title */}
-        <h4 className="text-[13px] font-semibold leading-tight text-[#1A1A1A] line-clamp-2">
+        <h4 className="text-[13px] font-semibold leading-tight text-heading line-clamp-2">
           {nodeData.title}
         </h4>
 
         {/* Sub-graph progress */}
         {nodeData.hasSubGraph && nodeData.subGraphProgress && (
           <div className="mt-2.5 flex items-center gap-1.5">
-            <div className="h-1.5 flex-1 rounded-full bg-surface-100">
+            <div className="h-1.5 flex-1 rounded-full bg-hover">
               <div
                 className="h-1.5 rounded-full transition-all duration-500"
                 style={{ width: `${nodeData.subGraphProgress.total > 0 ? (nodeData.subGraphProgress.completed / nodeData.subGraphProgress.total) * 100 : 0}%`, backgroundColor: accentColor }}
               />
             </div>
-            <span className="text-[10px] font-medium text-[#6B7280]">
+            <span className="text-[10px] font-medium text-body">
               {nodeData.subGraphProgress.completed}/{nodeData.subGraphProgress.total}
             </span>
-            <ChevronRight className="h-3 w-3 text-surface-400" />
+            <ChevronRight className="h-3 w-3 text-dim" />
           </div>
         )}
 
@@ -93,20 +93,20 @@ function TaskNodeInner({ data, selected }: NodeProps & { data: TaskNodeData }) {
                 {nodeData.assignees.slice(0, 3).map((assignee) => (
                   <div
                     key={assignee.id}
-                    className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-brand-100 text-[9px] font-semibold text-brand-700900"
+                    className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-card accent-bg text-[9px] font-semibold accent-color"
                     title={assignee.name || ""}
                   >
                     {assignee.name?.[0]?.toUpperCase() || "?"}
                   </div>
                 ))}
                 {nodeData.assignees.length > 3 && (
-                  <span className="ml-1 text-[10px] text-[#6B7280]">+{nodeData.assignees.length - 3}</span>
+                  <span className="ml-1 text-[10px] text-body">+{nodeData.assignees.length - 3}</span>
                 )}
               </div>
             )}
           </div>
 
-          <div className="flex items-center gap-2 text-surface-400">
+          <div className="flex items-center gap-2 text-dim">
             {nodeData.attachmentCount > 0 && (
               <span className="flex items-center gap-0.5 text-[10px]">
                 <Paperclip className="h-3 w-3" /> {nodeData.attachmentCount}

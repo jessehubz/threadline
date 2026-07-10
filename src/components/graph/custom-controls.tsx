@@ -16,28 +16,28 @@ export function CustomControls() {
   }, [getZoom]);
 
   return (
-    <div className="absolute bottom-4 right-4 z-10 flex items-center gap-1 rounded-xl border border-surface-200/60 bg-white px-2.5 py-1.5 shadow-sm">
+    <div className="absolute bottom-4 right-4 z-10 flex items-center gap-1 rounded-xl border border-themed-subtle bg-card px-2.5 py-1.5 shadow-sm">
       <button
         onClick={() => zoomOut()}
-        className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-700"
+        className="rounded-lg p-1.5 text-dim transition-colors hover:bg-hover hover:text-body"
         aria-label="Zoom out"
       >
         <ZoomOut className="h-4 w-4" />
       </button>
-      <span className="min-w-[2.5rem] text-center text-xs font-medium text-[#6B7280]">
+      <span className="min-w-[2.5rem] text-center text-xs font-medium text-body">
         {zoom}%
       </span>
       <button
         onClick={() => zoomIn()}
-        className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-700"
+        className="rounded-lg p-1.5 text-dim transition-colors hover:bg-hover hover:text-body"
         aria-label="Zoom in"
       >
         <ZoomIn className="h-4 w-4" />
       </button>
-      <div className="mx-1 h-4 w-px bg-surface-200" />
+      <div className="mx-1 h-4 w-px bg-hover" />
       <button
         onClick={() => fitView({ padding: 0.3, duration: 300 })}
-        className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-700"
+        className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-dim transition-colors hover:bg-hover hover:text-body"
         aria-label="Recenter"
       >
         <LocateFixed className="h-4 w-4" />

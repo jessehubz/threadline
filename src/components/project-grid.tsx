@@ -44,20 +44,20 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
     <div>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
-          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search projects..." className="w-full rounded-xl border border-surface-200/60 bg-white py-2.5 pl-9 pr-4 text-sm text-[#1A1A1A] placeholder-surface-400 shadow-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-dim" />
+          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search projects..." className="w-full rounded-xl border border-themed-subtle bg-card py-2.5 pl-9 pr-4 text-sm text-heading placeholder-surface-400 shadow-themed focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
         </div>
         {allLabels.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            <button onClick={() => setActiveLabel(null)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${!activeLabel ? "bg-[#1A1A1A] text-white" : "bg-surface-100 text-[#6B7280] hover:bg-surface-200"}`}>All</button>
+            <button onClick={() => setActiveLabel(null)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${!activeLabel ? "bg-[var(--text-primary)] text-[var(--bg-base)]" : "bg-[var(--bg-muted)] text-body hover:bg-hover"}`}>All</button>
             {allLabels.map((l) => (
-              <button key={l.name} onClick={() => setActiveLabel(activeLabel === l.name ? null : l.name)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${activeLabel === l.name ? "text-white" : "bg-surface-100 text-[#6B7280] hover:bg-surface-200"}`} style={activeLabel === l.name ? { backgroundColor: l.color } : undefined}>{l.name}</button>
+              <button key={l.name} onClick={() => setActiveLabel(activeLabel === l.name ? null : l.name)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${activeLabel === l.name ? "text-white" : "bg-[var(--bg-muted)] text-body hover:bg-hover"}`} style={activeLabel === l.name ? { backgroundColor: l.color } : undefined}>{l.name}</button>
             ))}
           </div>
         )}
       </div>
       {filtered.length === 0 ? (
-        <p className="py-8 text-center text-sm text-[#6B7280]">No projects found</p>
+        <p className="py-8 text-center text-sm text-body">No projects found</p>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((project) => (<ProjectCard key={project.id} project={project} />))}
@@ -94,10 +94,10 @@ function ProjectCard({ project }: { project: Project }) {
 
   return (
     <>
-      <div className="group relative rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-surface-300 hover:shadow-md hover:-translate-y-[1px]">
+      <div className="group relative rounded-2xl border border-themed-subtle bg-card p-5 shadow-themed transition-all duration-200 ease-out hover-lift hover:border-themed hover:shadow-themed-md">
         <div className="flex items-start justify-between">
           <Link href={`/graph/${project.id}`} className="flex-1">
-            <h3 className="text-[15px] font-semibold text-[#1A1A1A] transition-colors group-hover:text-brand-600">
+            <h3 className="text-[15px] font-semibold text-heading transition-colors group-hover:accent-color">
               {project.name}
             </h3>
           </Link>
@@ -105,7 +105,7 @@ function ProjectCard({ project }: { project: Project }) {
             {/* Invite collaborator button */}
             <button
               onClick={() => setInviteOpen(true)}
-              className="rounded-lg p-1.5 text-surface-300 opacity-0 transition-all hover:bg-surface-100 hover:text-surface-600 group-hover:opacity-100"
+              className="rounded-lg p-1.5 text-dim opacity-0 transition-all hover:bg-hover hover:text-body group-hover:opacity-100"
               aria-label="Invite collaborators"
             >
               <UserPlus className="h-4 w-4" />
@@ -114,7 +114,7 @@ function ProjectCard({ project }: { project: Project }) {
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="rounded-lg p-1.5 text-surface-300 opacity-0 transition-all hover:bg-surface-100 hover:text-surface-600 group-hover:opacity-100"
+                className="rounded-lg p-1.5 text-dim opacity-0 transition-all hover:bg-hover hover:text-body group-hover:opacity-100"
                 aria-label="More options"
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -122,18 +122,18 @@ function ProjectCard({ project }: { project: Project }) {
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full z-20 mt-1 w-40 rounded-xl border border-surface-200 bg-white py-1.5 shadow-xl">
-                    <button onClick={() => { setEditOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-[#1A1A1A] transition-colors hover:bg-surface-50">
-                      <Pencil className="h-3.5 w-3.5 text-surface-400" /> Edit
+                  <div className="absolute right-0 top-full z-20 mt-1 w-40 rounded-xl border border-themed-subtle bg-card py-1.5 shadow-xl">
+                    <button onClick={() => { setEditOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-heading transition-colors hover:bg-hover">
+                      <Pencil className="h-3.5 w-3.5 text-dim" /> Edit
                     </button>
-                    <button onClick={() => { setInviteOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-[#1A1A1A] transition-colors hover:bg-surface-50">
-                      <UserPlus className="h-3.5 w-3.5 text-surface-400" /> Invite People
+                    <button onClick={() => { setInviteOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-heading transition-colors hover:bg-hover">
+                      <UserPlus className="h-3.5 w-3.5 text-dim" /> Invite People
                     </button>
-                    <button onClick={() => { setLabelOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-[#1A1A1A] transition-colors hover:bg-surface-50">
-                      <Tag className="h-3.5 w-3.5 text-surface-400" /> Add Label
+                    <button onClick={() => { setLabelOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-heading transition-colors hover:bg-hover">
+                      <Tag className="h-3.5 w-3.5 text-dim" /> Add Label
                     </button>
-                    <div className="my-1 border-t border-surface-100" />
-                    <button onClick={() => { setDeleteConfirm(true); setMenuOpen(false); }} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-red-600 transition-colors hover:bg-red-50">
+                    <div className="my-1 border-t border-themed-subtle" />
+                    <button onClick={() => { setDeleteConfirm(true); setMenuOpen(false); }} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10">
                       <Trash2 className="h-3.5 w-3.5" /> Delete
                     </button>
                   </div>
@@ -145,7 +145,7 @@ function ProjectCard({ project }: { project: Project }) {
 
         <Link href={`/graph/${project.id}`}>
           {project.description && (
-            <p className="mt-0.5 line-clamp-1 text-[12px] text-[#9CA3AF]">
+            <p className="mt-0.5 line-clamp-1 text-[12px] text-dim">
               {project.description}
             </p>
           )}
@@ -158,7 +158,7 @@ function ProjectCard({ project }: { project: Project }) {
             </div>
           )}
 
-          <div className="mt-3 flex items-center gap-3 text-[11px] text-[#9CA3AF]">
+          <div className="mt-3 flex items-center gap-3 text-[11px] text-dim">
             <span className="flex items-center gap-1">
               <Users className="h-3 w-3" /> {project.memberCount}
             </span>
@@ -167,7 +167,7 @@ function ProjectCard({ project }: { project: Project }) {
 
           {project.totalTasks > 0 && (
             <div className="mt-2.5">
-              <div className="h-1 w-full rounded-full bg-brand-100">
+              <div className="h-1 w-full rounded-full accent-bg">
                 <div
                   className="h-1 rounded-full bg-brand-500 transition-all duration-500"
                   style={{ width: `${progress}%` }}
@@ -176,7 +176,7 @@ function ProjectCard({ project }: { project: Project }) {
             </div>
           )}
 
-          <p className="mt-3 text-[11px] text-surface-400">
+          <p className="mt-3 text-[11px] text-dim">
             Updated {formatRelativeDate(project.updatedAt)}
           </p>
         </Link>
@@ -193,7 +193,7 @@ function ProjectCard({ project }: { project: Project }) {
 
       {/* Delete Confirm */}
       <Dialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)} title="Delete Project">
-        <p className="text-sm text-[#6B7280]">
+        <p className="text-sm text-body">
           Are you sure you want to delete &quot;{project.name}&quot;? This action cannot be undone
           and will delete all tasks, graphs, and attachments.
         </p>
@@ -305,7 +305,7 @@ function LabelDialog({ open, onClose, projectId, labels, onLabelsChange }: { ope
         </div>
         <div className="flex flex-wrap gap-1.5">
           {["Urgent", "In Progress", "Review", "Design", "Backend"].map((p) => (
-            <button key={p} onClick={() => setNewLabel(p)} className="rounded-full border border-surface-200 px-2.5 py-1 text-[11px] text-[#6B7280] hover:border-brand-300 hover:text-brand-600">{p}</button>
+            <button key={p} onClick={() => setNewLabel(p)} className="rounded-full border border-themed-subtle px-2.5 py-1 text-[11px] text-body hover:border-brand-300 hover:accent-color">{p}</button>
           ))}
         </div>
       </div>
@@ -366,11 +366,11 @@ function InviteDialog({ open, onClose, projectId }: { open: boolean; onClose: ()
         </div>
         {teams.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-[#6B7280] mb-2">Or invite a team</p>
+            <p className="text-xs font-medium text-body mb-2">Or invite a team</p>
             <div className="space-y-2">
               {teams.map((t) => (
-                <div key={t.id} className="flex items-center justify-between rounded-xl border border-surface-200 bg-white px-3 py-2">
-                  <div><p className="text-sm font-medium text-[#1A1A1A]">{t.name}</p><p className="text-[11px] text-[#6B7280]">{t.members.length} members</p></div>
+                <div key={t.id} className="flex items-center justify-between rounded-xl border border-themed-subtle bg-card px-3 py-2">
+                  <div><p className="text-sm font-medium text-heading">{t.name}</p><p className="text-[11px] text-body">{t.members.length} members</p></div>
                   <Button size="sm" variant="secondary" onClick={() => handleInviteTeam(t.id)}>Invite All</Button>
                 </div>
               ))}
@@ -379,11 +379,11 @@ function InviteDialog({ open, onClose, projectId }: { open: boolean; onClose: ()
         )}
         {invited.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-[#6B7280]">Invited:</p>
+            <p className="text-xs font-medium text-body">Invited:</p>
             {invited.map((inv) => (
               <div key={inv.email} className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
                 {inv.email}
-                {inv.link && <input readOnly value={inv.link} className="mt-1 w-full rounded border border-emerald-200 bg-white px-2 py-1 text-[11px] text-[#6B7280]" onClick={(e) => { (e.target as HTMLInputElement).select(); navigator.clipboard.writeText(inv.link!); toast.success("Copied!"); }} />}
+                {inv.link && <input readOnly value={inv.link} className="mt-1 w-full rounded border border-emerald-200 bg-card px-2 py-1 text-[11px] text-body" onClick={(e) => { (e.target as HTMLInputElement).select(); navigator.clipboard.writeText(inv.link!); toast.success("Copied!"); }} />}
               </div>
             ))}
           </div>

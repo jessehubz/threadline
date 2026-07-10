@@ -134,16 +134,16 @@ export function TaskDetailPanel({
   }
 
   return (
-    <div ref={scrollRef} className="w-[400px] shrink-0 overflow-y-auto border-l border-surface-200/80 bg-white">
-      <div className="flex items-center justify-between border-b border-surface-100 px-5 py-4">
-        <h3 className="text-sm font-semibold text-[#1A1A1A]">Task Details</h3>
+    <div ref={scrollRef} className="w-[400px] shrink-0 overflow-y-auto border-l border-themed-subtle bg-card">
+      <div className="flex items-center justify-between border-b border-themed-subtle px-5 py-4">
+        <h3 className="text-sm font-semibold text-heading">Task Details</h3>
         <div className="flex items-center gap-1">
           {!isReadOnly && (
-            <button onClick={onDelete} className="rounded-xl p-1.5 text-surface-400 transition-colors hover:bg-red-50 hover:text-red-600950" aria-label="Delete">
+            <button onClick={onDelete} className="rounded-xl p-1.5 text-dim transition-colors hover:bg-red-50 hover:text-red-600" aria-label="Delete">
               <Trash2 className="h-4 w-4" />
             </button>
           )}
-          <button onClick={onClose} className="rounded-xl p-1.5 text-surface-400 transition-colors hover:bg-surface-100" aria-label="Close">
+          <button onClick={onClose} className="rounded-xl p-1.5 text-dim transition-colors hover:bg-hover" aria-label="Close">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -152,7 +152,7 @@ export function TaskDetailPanel({
       <div className="space-y-6 p-5">
         {/* Status */}
         <div>
-          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-surface-400">Status</label>
+          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-dim">Status</label>
           {isReadOnly ? (
             <Badge className={getStatusColor(status)}>{getStatusLabel(status)}</Badge>
           ) : (
@@ -163,7 +163,7 @@ export function TaskDetailPanel({
                   onClick={() => handleStatusChange(opt.value)}
                   className={cn(
                     "rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150",
-                    status === opt.value ? getStatusColor(opt.value) : "bg-surface-100 text-[#6B7280] hover:bg-surface-200"
+                    status === opt.value ? getStatusColor(opt.value) : "bg-hover text-body hover:bg-hover"
                   )}
                 >
                   {opt.label}
@@ -178,11 +178,11 @@ export function TaskDetailPanel({
         {/* Color */}
         {!isReadOnly && (
           <div>
-            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-surface-400">Color</label>
+            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-dim">Color</label>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => { setColor(""); updateNode(projectId, node.id, { color: null }); }}
-                className={cn("h-7 w-7 rounded-lg border-2 bg-surface-200 transition-all700", !color && "ring-2 ring-brand-500 ring-offset-2")}
+                className={cn("h-7 w-7 rounded-lg border-2 bg-hover transition-all", !color && "ring-2 ring-brand-500 ring-offset-2")}
                 title="Auto (from status)"
               />
               {PRESET_COLORS.map((c) => (
@@ -208,19 +208,19 @@ export function TaskDetailPanel({
 
         {/* Assignees */}
         <div>
-          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-surface-400">Assigned People</label>
+          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-dim">Assigned People</label>
           <div className="space-y-2">
             {node.assignments.map((assignment) => (
-              <div key={assignment.user.id} className="flex items-center justify-between rounded-xl bg-surface-50 px-3 py-2">
+              <div key={assignment.user.id} className="flex items-center justify-between rounded-xl bg-hover px-3 py-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full accent-bg text-xs font-semibold accent-color">
                     {assignment.user.name?.[0]?.toUpperCase() || "?"}
                   </div>
-                  <span className="text-[13px] text-surface-700">{assignment.user.name || "Unknown"}</span>
+                  <span className="text-[13px] text-body">{assignment.user.name || "Unknown"}</span>
                   {assignment.isApprover && <Badge variant="info">Approver</Badge>}
                 </div>
                 {!isReadOnly && (
-                  <button onClick={() => handleUnassign(assignment.user.id)} className="text-surface-400 transition-colors hover:text-red-500">
+                  <button onClick={() => handleUnassign(assignment.user.id)} className="text-dim transition-colors hover:text-red-500">
                     <X className="h-3 w-3" />
                   </button>
                 )}
@@ -231,19 +231,19 @@ export function TaskDetailPanel({
             <div className="relative mt-3">
               <button
                 onClick={() => setShowMemberPicker(!showMemberPicker)}
-                className="flex items-center gap-1.5 rounded-xl border border-dashed border-surface-300 px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors hover:border-brand-400 hover:text-brand-600600"
+                className="flex items-center gap-1.5 rounded-xl border border-dashed border-themed px-3 py-2 text-xs font-medium text-body transition-colors hover:border-[var(--accent)] hover:accent-color"
               >
                 <UserPlus className="h-3.5 w-3.5" /> Assign member
               </button>
               {showMemberPicker && unassignedMembers.length > 0 && (
-                <div className="absolute left-0 top-full z-10 mt-1 w-56 rounded-xl border border-surface-200 bg-white py-1 shadow-xl">
+                <div className="absolute left-0 top-full z-10 mt-1 w-56 rounded-xl border border-themed bg-card py-1 shadow-themed-md">
                   {unassignedMembers.map((m) => (
                     <button
                       key={m.user.id}
                       onClick={() => handleAssign(m.user.id)}
-                      className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-surface-700 hover:bg-surface-50"
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-body hover:bg-hover"
                     >
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-100 text-[10px] font-semibold text-brand-700">
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full accent-bg text-[10px] font-semibold accent-color">
                         {m.user.name?.[0]?.toUpperCase() || m.user.email[0].toUpperCase()}
                       </div>
                       {m.user.name || m.user.email}
@@ -261,17 +261,17 @@ export function TaskDetailPanel({
             <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-red-500">Blocked by ({blockedBy.length})</label>
             <div className="space-y-1.5">
               {blockedBy.map((dep) => (
-                <div key={dep!.id} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-700950300">{dep!.title}</div>
+                <div key={dep!.id} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{dep!.title}</div>
               ))}
             </div>
           </div>
         )}
         {blocks.length > 0 && (
           <div>
-            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-surface-400">Blocks ({blocks.length})</label>
+            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-dim">Blocks ({blocks.length})</label>
             <div className="space-y-1.5">
               {blocks.map((dep) => (
-                <div key={dep!.id} className="rounded-xl bg-surface-50 px-3 py-2 text-xs font-medium text-surface-600">{dep!.title}</div>
+                <div key={dep!.id} className="rounded-xl bg-hover px-3 py-2 text-xs font-medium text-body">{dep!.title}</div>
               ))}
             </div>
           </div>
@@ -279,7 +279,7 @@ export function TaskDetailPanel({
 
         {/* Attachments */}
         <div>
-          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-surface-400">Attachments</label>
+          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-dim">Attachments</label>
           <FileUpload nodeId={node.id} projectId={projectId} attachments={node.attachments} isReadOnly={isReadOnly} />
         </div>
 
@@ -289,7 +289,7 @@ export function TaskDetailPanel({
         </div>
 
         {/* Sub-graph */}
-        <div className="border-t border-surface-100 pt-5">
+        <div className="border-t border-themed-subtle pt-5">
           <Button variant="secondary" size="sm" onClick={handleOpenSubGraph} className="w-full gap-1.5">
             <ChevronRight className="h-4 w-4" />
             {node.subGraph ? "Open Sub-Graph" : "Create Sub-Graph"}

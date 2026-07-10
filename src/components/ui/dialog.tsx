@@ -43,16 +43,16 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
       />
       <div
         className={cn(
-          "relative z-10 w-full max-w-lg rounded-2xl border border-surface-200/60 bg-white p-6 shadow-2xl",
+          "relative z-10 w-full max-w-lg rounded-2xl border border-themed-subtle bg-card p-6 shadow-2xl",
           "animate-[fadeInUp_0.2s_ease-out]",
           className
         )}
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-[16px] font-semibold text-[#1A1A1A]">{title}</h2>
+          <h2 className="text-[16px] font-semibold text-heading">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-surface-400 transition-all duration-150 hover:bg-surface-100 hover:text-surface-600"
+            className="rounded-lg p-1.5 text-dim transition-all duration-150 hover:bg-hover hover:text-body"
             aria-label="Close"
           >
             <X className="h-4.5 w-4.5" />

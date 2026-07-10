@@ -27,10 +27,10 @@ export function TeamsGrid({ teams }: { teams: Team[] }) {
       </div>
 
       {teams.length === 0 ? (
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-12 text-center">
-          <Users className="h-10 w-10 text-surface-300 mx-auto mb-3" />
-          <p className="text-sm font-medium text-[#1A1A1A]">No teams yet</p>
-          <p className="text-xs text-[#6B7280] mt-1">Create a team to group collaborators together.</p>
+        <div className="rounded-2xl border border-themed-subtle bg-card p-12 text-center">
+          <Users className="h-10 w-10 text-dim mx-auto mb-3" />
+          <p className="text-sm font-medium text-heading">No teams yet</p>
+          <p className="text-xs text-body mt-1">Create a team to group collaborators together.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -38,20 +38,20 @@ export function TeamsGrid({ teams }: { teams: Team[] }) {
             <button
               key={team.id}
               onClick={() => setSelectedTeam(team)}
-              className="group rounded-2xl border border-surface-200/60 bg-white p-5 text-left shadow-sm transition-all hover:border-brand-200 hover:shadow-md"
+              className="group rounded-2xl border border-themed-subtle bg-card p-5 text-left shadow-sm transition-all hover:border-themed hover:shadow-themed-md"
             >
               <div className="flex items-start justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
-                  <Users className="h-5 w-5 text-brand-600" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl accent-bg">
+                  <Users className="h-5 w-5 accent-color" />
                 </div>
                 <Badge variant="default">{team.members.length}</Badge>
               </div>
-              <h3 className="mt-3 text-[14px] font-semibold text-[#1A1A1A] group-hover:text-brand-600">{team.name}</h3>
+              <h3 className="mt-3 text-[14px] font-semibold text-heading group-hover:accent-color">{team.name}</h3>
               <div className="mt-2 flex flex-wrap gap-1">
                 {team.members.slice(0, 3).map((m) => (
-                  <span key={m.id} className="rounded-full bg-surface-100 px-2 py-0.5 text-[10px] text-[#6B7280]">{m.email.split("@")[0]}</span>
+                  <span key={m.id} className="rounded-full bg-hover px-2 py-0.5 text-[10px] text-body">{m.email.split("@")[0]}</span>
                 ))}
-                {team.members.length > 3 && <span className="rounded-full bg-surface-100 px-2 py-0.5 text-[10px] text-[#6B7280]">+{team.members.length - 3}</span>}
+                {team.members.length > 3 && <span className="rounded-full bg-hover px-2 py-0.5 text-[10px] text-body">+{team.members.length - 3}</span>}
               </div>
             </button>
           ))}
@@ -99,9 +99,9 @@ function CreateTeamDialog({ open, onClose }: { open: boolean; onClose: () => voi
         {members.length > 0 && (
           <div className="space-y-1.5">
             {members.map((e) => (
-              <div key={e} className="flex items-center justify-between rounded-xl bg-surface-50 px-3 py-2 text-sm text-[#1A1A1A]">
+              <div key={e} className="flex items-center justify-between rounded-xl bg-page px-3 py-2 text-sm text-heading">
                 {e}
-                <button onClick={() => setMembers((p) => p.filter((x) => x !== e))} className="text-surface-400 hover:text-red-500"><X className="h-3.5 w-3.5" /></button>
+                <button onClick={() => setMembers((p) => p.filter((x) => x !== e))} className="text-dim hover:text-red-500"><X className="h-3.5 w-3.5" /></button>
               </div>
             ))}
           </div>
@@ -149,7 +149,7 @@ function TeamDetailDialog({ team, onClose }: { team: Team; onClose: () => void }
         </div>
         <div className="space-y-1.5 max-h-48 overflow-y-auto">
           {members.map((m) => (
-            <div key={m.id} className="flex items-center justify-between rounded-xl bg-surface-50 px-3 py-2 text-sm">{m.email}<button onClick={() => handleRemove(m.id)} className="text-surface-400 hover:text-red-500"><X className="h-3.5 w-3.5" /></button></div>
+            <div key={m.id} className="flex items-center justify-between rounded-xl bg-page px-3 py-2 text-sm">{m.email}<button onClick={() => handleRemove(m.id)} className="text-dim hover:text-red-500"><X className="h-3.5 w-3.5" /></button></div>
           ))}
         </div>
         <button onClick={handleDelete} className="text-xs text-red-500 hover:text-red-600">Delete team</button>

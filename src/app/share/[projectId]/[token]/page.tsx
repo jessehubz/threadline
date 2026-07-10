@@ -39,10 +39,10 @@ export default async function SharePage({ params }: SharePageProps) {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6800900">
-        <h1 className="text-lg font-semibold text-gray-900">
+      <header className="flex h-14 items-center justify-between border-b border-themed bg-card px-6">
+        <h1 className="text-lg font-semibold text-heading">
           {project.name}
-          <span className="ml-2 text-sm font-normal text-gray-500">(View Only)</span>
+          <span className="ml-2 text-sm font-normal text-dim">(View Only)</span>
         </h1>
         <a href="/sign-up" className="btn-primary text-sm">
           Sign up to edit

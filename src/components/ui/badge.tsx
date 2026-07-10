@@ -7,7 +7,7 @@ interface BadgeProps {
 }
 
 const variants = {
-  default: "bg-surface-100 text-surface-600",
+  default: "bg-hover text-body",
   success: "bg-green-50 text-green-700900300",
   warning: "bg-amber-50 text-amber-700900300",
   danger: "bg-red-50 text-red-700900300",

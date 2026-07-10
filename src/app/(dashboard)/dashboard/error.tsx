@@ -30,8 +30,8 @@ export default function DashboardError({
   if (error.message?.includes("ChunkLoadError") || error.message?.includes("Failed to load chunk")) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
-        <p className="mt-4 text-sm text-gray-500">Loading...</p>
+        <RefreshCw className="h-8 w-8 animate-spin text-dim" />
+        <p className="mt-4 text-sm text-dim">Loading...</p>
       </div>
     );
   }
@@ -39,10 +39,10 @@ export default function DashboardError({
   return (
     <div className="flex flex-col items-center justify-center py-16">
       <AlertCircle className="h-12 w-12 text-red-500" />
-      <h2 className="mt-4 text-xl font-semibold text-gray-900">
+      <h2 className="mt-4 text-xl font-semibold text-heading">
         Something went wrong
       </h2>
-      <p className="mt-2 text-sm text-gray-600400">
+      <p className="mt-2 text-sm text-body">
         {error.message || "Failed to load dashboard"}
       </p>
       <Button onClick={reset} className="mt-4">

@@ -38,7 +38,7 @@ export function MyTasksList({ tasks }: { tasks: Task[] }) {
         <TaskGroup title="Upcoming (7 days)" icon={<Calendar className="h-4 w-4 text-blue-500" />} tasks={upcoming} variant="info" />
       )}
       {later.length > 0 && (
-        <TaskGroup title="Later" icon={<Calendar className="h-4 w-4 text-surface-400" />} tasks={later} variant="default" />
+        <TaskGroup title="Later" icon={<Calendar className="h-4 w-4 text-dim" />} tasks={later} variant="default" />
       )}
       {completed.length > 0 && (
         <TaskGroup title="Completed" icon={<Calendar className="h-4 w-4 text-green-500" />} tasks={completed} variant="success" />
@@ -52,7 +52,7 @@ function TaskGroup({ title, icon, tasks, variant }: { title: string; icon: React
     <div>
       <div className="mb-3 flex items-center gap-2.5">
         {icon}
-        <h3 className="text-sm font-semibold text-[#1A1A1A]">{title}</h3>
+        <h3 className="text-sm font-semibold text-heading">{title}</h3>
         <Badge variant={variant}>{tasks.length}</Badge>
       </div>
       <div className="space-y-2">
@@ -60,15 +60,15 @@ function TaskGroup({ title, icon, tasks, variant }: { title: string; icon: React
           <Link
             key={task.id}
             href={`/graph/${task.projectId}?nodeId=${task.id}`}
-            className="flex items-center justify-between rounded-xl border border-surface-200/80 bg-white p-4 transition-all duration-150 hover:border-surface-300 hover:shadow-sm"
+            className="flex items-center justify-between rounded-xl border border-themed-subtle bg-card p-4 transition-all duration-150 hover:border-themed hover:shadow-sm"
           >
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-[#1A1A1A]">{task.title}</p>
-              <p className="mt-0.5 text-xs text-[#6B7280]">{task.projectName}</p>
+              <p className="truncate text-sm font-medium text-heading">{task.title}</p>
+              <p className="mt-0.5 text-xs text-body">{task.projectName}</p>
             </div>
             <div className="ml-4 flex items-center gap-3">
               {task.dueDate && (
-                <span className="text-xs text-surface-400">{formatDate(task.dueDate)}</span>
+                <span className="text-xs text-dim">{formatDate(task.dueDate)}</span>
               )}
               <span className={`inline-flex rounded-lg px-2 py-0.5 text-[10px] font-semibold ${getStatusColor(task.status)}`}>
                 {getStatusLabel(task.status)}

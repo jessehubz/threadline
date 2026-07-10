@@ -16,8 +16,8 @@ export default async function TeamPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-8">
-        <h1 className="text-[22px] font-bold tracking-tight text-[#1A1A1A]">Teams</h1>
-        <p className="mt-0.5 text-[13px] text-[#6B7280]">
+        <h1 className="text-[22px] font-bold tracking-tight text-heading">Teams</h1>
+        <p className="mt-0.5 text-[13px] text-body">
           Create teams and invite them to projects in one click.
         </p>
       </div>

@@ -22,7 +22,7 @@ function FolderNodeInner({ data, selected }: NodeProps & { data: FolderNodeData 
   return (
     <div
       className={cn(
-        "min-w-[220px] max-w-[300px] rounded-2xl border-2 border-dashed bg-white/95 shadow-sm transition-all duration-200/95",
+        "min-w-[220px] max-w-[300px] rounded-2xl border-2 border-dashed bg-card/95 shadow-sm transition-all duration-200/95",
         selected
           ? "shadow-lg ring-2 ring-purple-300/50700/50"
           : "hover:shadow-md hover:border-solid"
@@ -46,21 +46,21 @@ function FolderNodeInner({ data, selected }: NodeProps & { data: FolderNodeData 
             <Folder className="h-4.5 w-4.5" style={{ color: accentColor }} />
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="truncate text-[13px] font-semibold text-[#1A1A1A]">
+            <h4 className="truncate text-[13px] font-semibold text-heading">
               {nodeData.title}
             </h4>
             {progress && (
-              <p className="text-[10px] text-[#6B7280]">
+              <p className="text-[10px] text-body">
                 {progress.completed}/{progress.total} tasks
               </p>
             )}
           </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-surface-400" />
+          <ChevronRight className="h-4 w-4 shrink-0 text-dim" />
         </div>
 
         {progress && progress.total > 0 && (
           <div className="mt-3">
-            <div className="h-1.5 w-full rounded-full bg-surface-100">
+            <div className="h-1.5 w-full rounded-full bg-hover">
               <div
                 className="h-1.5 rounded-full transition-all duration-500"
                 style={{ width: `${pct}%`, backgroundColor: accentColor }}

@@ -74,7 +74,7 @@ export function ShareGraphViewer({ graph }: ShareGraphViewerProps) {
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
-        className="bg-gray-50950"
+        className="bg-page"
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#e5e7eb" />
         <Controls />

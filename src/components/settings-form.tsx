@@ -6,6 +6,7 @@ import { updateSettings } from "@/actions/user-actions";
 import { toast } from "sonner";
 import { Moon, Sun, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/theme-provider";
 
 interface User {
   id: string;
@@ -18,7 +19,8 @@ interface User {
 }
 
 export function SettingsForm({ user }: { user: User }) {
-  const [theme, setTheme] = useState(user.theme);
+  const [theme, setThemeLocal] = useState(user.theme);
+  const { setTheme: applyTheme } = useTheme();
   const [emailNotifications, setEmailNotifications] = useState(user.emailNotifications);
   const [notifyAssigned, setNotifyAssigned] = useState(user.notifyAssigned);
   const [notifyApproval, setNotifyApproval] = useState(user.notifyApproval);
@@ -39,13 +41,8 @@ export function SettingsForm({ user }: { user: User }) {
     if (result.error) toast.error(result.error);
     else {
       toast.success("Settings saved");
-      // Apply theme
-      if (theme === "dark") document.documentElement.classList.add("dark");
-      else if (theme === "light") document.documentElement.classList.remove("dark");
-      else {
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        document.documentElement.classList.toggle("dark", prefersDark);
-      }
+      // Apply theme via provider
+      applyTheme(theme as "light" | "dark" | "system");
     }
     setSaving(false);
   }
@@ -59,18 +56,21 @@ export function SettingsForm({ user }: { user: User }) {
   return (
     <div className="space-y-8">
       {/* Theme */}
-      <div className="rounded-2xl border border-surface-200/80 bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-sm font-semibold text-[#1A1A1A]">Appearance</h3>
+      <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
+        <h3 className="mb-4 text-sm font-semibold text-heading">Appearance</h3>
         <div className="flex gap-3">
           {themes.map((t) => (
             <button
               key={t.value}
-              onClick={() => setTheme(t.value)}
+              onClick={() => {
+                setThemeLocal(t.value);
+                applyTheme(t.value as "light" | "dark" | "system");
+              }}
               className={cn(
                 "flex items-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-150",
                 theme === t.value
-                  ? "border-brand-500 bg-brand-50 text-brand-700 shadow-sm"
-                  : "border-surface-200 text-[#6B7280] hover:border-surface-300 hover:text-surface-700"
+                  ? "border-[var(--accent)] accent-bg accent-color shadow-sm"
+                  : "border-themed text-body hover:bg-hover"
               )}
             >
               <t.icon className="h-4 w-4" />
@@ -81,8 +81,8 @@ export function SettingsForm({ user }: { user: User }) {
       </div>
 
       {/* Notifications */}
-      <div className="rounded-2xl border border-surface-200/80 bg-white p-6 shadow-sm">
-        <h3 className="mb-5 text-sm font-semibold text-[#1A1A1A]">
+      <div className="rounded-2xl border border-themed-subtle bg-card p-6 shadow-themed">
+        <h3 className="mb-5 text-sm font-semibold text-heading">
           Email Notifications
         </h3>
         <div className="space-y-4">
@@ -92,7 +92,7 @@ export function SettingsForm({ user }: { user: User }) {
             onChange={setEmailNotifications}
           />
           {emailNotifications && (
-            <div className="ml-6 space-y-4 border-l-2 border-surface-200 pl-5">
+            <div className="ml-6 space-y-4 border-l-2 border-themed pl-5">
               <Toggle label="Task assigned to me" checked={notifyAssigned} onChange={setNotifyAssigned} />
               <Toggle label="Approval requests" checked={notifyApproval} onChange={setNotifyApproval} />
               <Toggle label="Due date reminders" checked={notifyDueSoon} onChange={setNotifyDueSoon} />
@@ -120,14 +120,14 @@ function Toggle({
 }) {
   return (
     <label className="flex cursor-pointer items-center justify-between">
-      <span className="text-sm text-surface-600">{label}</span>
+      <span className="text-sm text-body">{label}</span>
       <button
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={cn(
           "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
-          checked ? "bg-brand-600" : "bg-surface-300600"
+          checked ? "bg-brand-600" : "bg-[var(--border-default)]"
         )}
       >
         <span

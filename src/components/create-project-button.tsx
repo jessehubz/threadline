@@ -67,8 +67,8 @@ export function CreateProjectButton() {
 
           {/* Add Members */}
           <div>
-            <label className="block text-sm font-medium text-[#1A1A1A] mb-1.5">
-              <span className="flex items-center gap-1.5"><UserPlus className="h-4 w-4 text-brand-600" /> Invite Members</span>
+            <label className="block text-sm font-medium text-heading mb-1.5">
+              <span className="flex items-center gap-1.5"><UserPlus className="h-4 w-4 accent-color" /> Invite Members</span>
             </label>
             <div className="flex gap-2">
               <input type="email" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddMember(); } }} placeholder="Email address" className="input-field flex-1" />
@@ -77,7 +77,7 @@ export function CreateProjectButton() {
             {teams.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {teams.map((t) => (
-                  <button key={t.id} type="button" onClick={() => handleAddTeam(t.id)} className="inline-flex items-center gap-1.5 rounded-full border border-surface-200 bg-white px-3 py-1 text-xs font-medium text-[#6B7280] hover:border-brand-300 hover:text-brand-600">
+                  <button key={t.id} type="button" onClick={() => handleAddTeam(t.id)} className="inline-flex items-center gap-1.5 rounded-full border border-themed bg-card px-3 py-1 text-xs font-medium text-body hover:border-[var(--accent)] hover:accent-color">
                     <Users className="h-3 w-3" /> {t.name} ({t.members.length})
                   </button>
                 ))}
@@ -86,9 +86,9 @@ export function CreateProjectButton() {
             {members.length > 0 && (
               <div className="mt-2 space-y-1 max-h-28 overflow-y-auto">
                 {members.map((m) => (
-                  <div key={m.email} className="flex items-center justify-between rounded-lg bg-surface-50 px-3 py-1.5 text-[12px] text-[#1A1A1A]">
+                  <div key={m.email} className="flex items-center justify-between rounded-lg bg-page px-3 py-1.5 text-[12px] text-heading">
                     {m.email}
-                    <button type="button" onClick={() => setMembers((p) => p.filter((x) => x.email !== m.email))} className="text-surface-400 hover:text-red-500"><X className="h-3 w-3" /></button>
+                    <button type="button" onClick={() => setMembers((p) => p.filter((x) => x.email !== m.email))} className="text-dim hover:text-red-500"><X className="h-3 w-3" /></button>
                   </div>
                 ))}
               </div>

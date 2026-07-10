@@ -63,14 +63,14 @@ export function MessagesClient({
   return (
     <div>
       {/* Tabs */}
-      <div className="mb-6 flex gap-1 rounded-xl border border-surface-200/80 bg-surface-50 p-1">
+      <div className="mb-6 flex gap-1 rounded-xl border border-themed-subtle bg-page p-1">
         <button
           onClick={() => setActiveTab("channels")}
           className={cn(
             "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150",
             activeTab === "channels"
-              ? "bg-white text-[#1A1A1A] shadow-sm"
-              : "text-[#6B7280] hover:text-surface-700300"
+              ? "bg-card text-heading shadow-sm"
+              : "text-body hover:text-heading"
           )}
         >
           <Users className="h-4 w-4" />
@@ -81,8 +81,8 @@ export function MessagesClient({
           className={cn(
             "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150",
             activeTab === "dms"
-              ? "bg-white text-[#1A1A1A] shadow-sm"
-              : "text-[#6B7280] hover:text-surface-700300"
+              ? "bg-card text-heading shadow-sm"
+              : "text-body hover:text-heading"
           )}
         >
           <MessageSquare className="h-4 w-4" />
@@ -163,8 +163,8 @@ function ChannelsPanel({
 
   if (projects.length === 0) {
     return (
-      <div className="rounded-2xl border border-surface-200/80 bg-white p-12 text-center shadow-sm">
-        <p className="text-sm text-[#6B7280]">
+      <div className="rounded-2xl border border-themed-subtle bg-card p-12 text-center shadow-sm">
+        <p className="text-sm text-body">
           Join or create a project to start messaging.
         </p>
       </div>
@@ -172,9 +172,9 @@ function ChannelsPanel({
   }
 
   return (
-    <div className="flex h-[calc(100vh-280px)] flex-col overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-sm">
+    <div className="flex h-[calc(100vh-280px)] flex-col overflow-hidden rounded-2xl border border-themed-subtle bg-card shadow-sm">
       {/* Project selector */}
-      <div className="border-b border-surface-100 px-4 py-3">
+      <div className="border-b border-themed px-4 py-3">
         <select
           value={selectedProjectId}
           onChange={(e) => setSelectedProjectId(e.target.value)}
@@ -193,11 +193,11 @@ function ChannelsPanel({
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {loading ? (
           <div className="flex h-full items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-surface-200 border-t-brand-600" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-themed border-t-[var(--accent)]" />
           </div>
         ) : messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <p className="text-sm text-surface-400500">
+            <p className="text-sm text-dim">
               No messages yet. Start the conversation!
             </p>
           </div>
@@ -212,7 +212,7 @@ function ChannelsPanel({
       </div>
 
       {/* Input area */}
-      <div className="border-t border-surface-100 px-4 py-3">
+      <div className="border-t border-themed px-4 py-3">
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -350,14 +350,14 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-280px)] overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-sm">
+    <div className="flex h-[calc(100vh-280px)] overflow-hidden rounded-2xl border border-themed-subtle bg-card shadow-sm">
       {/* Conversation list */}
-      <div className="w-64 flex-shrink-0 border-r border-surface-100">
-        <div className="flex items-center justify-between border-b border-surface-100 px-4 py-3">
-          <h3 className="text-sm font-semibold text-[#1A1A1A]">Conversations</h3>
+      <div className="w-64 flex-shrink-0 border-r border-themed">
+        <div className="flex items-center justify-between border-b border-themed px-4 py-3">
+          <h3 className="text-sm font-semibold text-heading">Conversations</h3>
           <button
             onClick={handleNewDM}
-            className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600800"
+            className="rounded-lg p-1.5 text-dim transition-colors hover:bg-hover hover:text-body"
             aria-label="New conversation"
           >
             <Plus className="h-4 w-4" />
@@ -367,19 +367,19 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
         <div className="overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-surface-200 border-t-brand-600" />
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-themed border-t-[var(--accent)]" />
             </div>
           ) : showNewDM ? (
             <div className="p-2">
-              <p className="mb-2 px-2 text-xs font-medium text-[#6B7280]">Select a team member</p>
+              <p className="mb-2 px-2 text-xs font-medium text-body">Select a team member</p>
               {teammates.length === 0 ? (
-                <p className="px-2 text-xs text-surface-400">No team members found</p>
+                <p className="px-2 text-xs text-dim">No team members found</p>
               ) : (
                 teammates.map((member) => (
                   <button
                     key={member.id}
                     onClick={() => handleStartConversation(member.id)}
-                    className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-surface-700 hover:bg-surface-50300800"
+                    className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-body hover:bg-hover hover:text-heading"
                   >
                     <UserAvatar user={member} size="sm" />
                     <span className="truncate">{member.name || member.email}</span>
@@ -388,17 +388,17 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
               )}
               <button
                 onClick={() => setShowNewDM(false)}
-                className="mt-2 w-full rounded-lg px-2 py-1.5 text-xs text-[#6B7280] hover:bg-surface-100800"
+                className="mt-2 w-full rounded-lg px-2 py-1.5 text-xs text-body hover:bg-hover"
               >
                 Cancel
               </button>
             </div>
           ) : conversations.length === 0 ? (
             <div className="p-4 text-center">
-              <p className="text-xs text-surface-400500">No conversations yet</p>
+              <p className="text-xs text-dim">No conversations yet</p>
               <button
                 onClick={handleNewDM}
-                className="mt-2 text-xs text-brand-600 hover:underline"
+                className="mt-2 text-xs accent-color hover:underline"
               >
                 Start a conversation
               </button>
@@ -412,17 +412,17 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
                   key={convo.id}
                   onClick={() => setSelectedConversation(convo)}
                   className={cn(
-                    "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-50800",
-                    selectedConversation?.id === convo.id && "bg-surface-50"
+                    "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-hover",
+                    selectedConversation?.id === convo.id && "bg-hover"
                   )}
                 >
                   <UserAvatar user={other || { id: "", name: "?", email: "", imageUrl: null }} size="md" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[#1A1A1A]">
+                    <p className="truncate text-sm font-medium text-heading">
                       {other?.name || other?.email || "Unknown"}
                     </p>
                     {lastMessage && (
-                      <p className="truncate text-xs text-[#6B7280]">
+                      <p className="truncate text-xs text-body">
                         {lastMessage.content}
                       </p>
                     )}
@@ -439,8 +439,8 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
         {!selectedConversation ? (
           <div className="flex h-full items-center justify-center">
             <div className="text-center">
-              <MessageSquare className="mx-auto h-8 w-8 text-surface-300600" />
-              <p className="mt-2 text-sm text-[#6B7280]">
+              <MessageSquare className="mx-auto h-8 w-8 text-dim" />
+              <p className="mt-2 text-sm text-body">
                 Select a conversation or start a new one
               </p>
             </div>
@@ -448,13 +448,13 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
         ) : (
           <>
             {/* Header */}
-            <div className="border-b border-surface-100 px-4 py-3">
+            <div className="border-b border-themed px-4 py-3">
               <div className="flex items-center gap-2">
                 <UserAvatar
                   user={getOtherParticipant(selectedConversation) || { id: "", name: "?", email: "", imageUrl: null }}
                   size="sm"
                 />
-                <p className="text-sm font-medium text-[#1A1A1A]">
+                <p className="text-sm font-medium text-heading">
                   {getOtherParticipant(selectedConversation)?.name ||
                     getOtherParticipant(selectedConversation)?.email ||
                     "Unknown"}
@@ -466,11 +466,11 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
             <div className="flex-1 overflow-y-auto px-4 py-4">
               {messagesLoading ? (
                 <div className="flex h-full items-center justify-center">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-surface-200 border-t-brand-600" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-themed border-t-[var(--accent)]" />
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
-                  <p className="text-sm text-surface-400500">
+                  <p className="text-sm text-dim">
                     No messages yet. Say hello!
                   </p>
                 </div>
@@ -485,7 +485,7 @@ function DMsPanel({ currentUserId }: { currentUserId: string }) {
             </div>
 
             {/* Input */}
-            <div className="border-t border-surface-100 px-4 py-3">
+            <div className="border-t border-themed px-4 py-3">
               <div className="flex items-center gap-2">
                 <input
                   type="text"
@@ -532,11 +532,11 @@ function MessageBubble({ msg, currentUserId }: { msg: Message; currentUserId: st
           "max-w-[70%] rounded-2xl px-4 py-2.5",
           isOwn
             ? "bg-brand-600 text-white"
-            : "bg-surface-100 text-[#1A1A1A]"
+            : "bg-hover text-heading"
         )}
       >
         {!isOwn && (
-          <p className="mb-0.5 text-xs font-medium text-[#6B7280]">
+          <p className="mb-0.5 text-xs font-medium text-body">
             {msg.user.name || msg.user.email}
           </p>
         )}
@@ -544,7 +544,7 @@ function MessageBubble({ msg, currentUserId }: { msg: Message; currentUserId: st
         <p
           className={cn(
             "mt-1 text-[11px]",
-            isOwn ? "text-brand-200" : "text-surface-400500"
+            isOwn ? "text-[var(--accent)]" : "text-dim"
           )}
         >
           {formatTime(msg.createdAt)}
@@ -560,7 +560,7 @@ function UserAvatar({ user, size }: { user: MessageUser; size: "sm" | "md" }) {
   return (
     <div
       className={cn(
-        "flex flex-shrink-0 items-center justify-center rounded-full bg-brand-100 font-medium text-brand-700900300",
+        "flex flex-shrink-0 items-center justify-center rounded-full accent-bg font-medium accent-color",
         sizeClasses
       )}
     >

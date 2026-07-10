@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,6 +13,21 @@ export const metadata: Metadata = {
   },
 };
 
+// Inline script to prevent FOUC - sets dark class before paint
+const themeScript = `
+(function() {
+  try {
+    var theme = localStorage.getItem('theme') || 'dark';
+    var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,8 +35,9 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
+      <html lang="en" className="dark" suppressHydrationWarning>
         <head>
+          <script dangerouslySetInnerHTML={{ __html: themeScript }} />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link
             rel="preconnect"
@@ -28,12 +45,14 @@ export default function RootLayout({
             crossOrigin="anonymous"
           />
           <link
-            href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&family=Outfit:wght@600;700;800&display=swap"
             rel="stylesheet"
           />
         </head>
-        <body className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] antialiased">
-          {children}
+        <body className="min-h-screen antialiased">
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
           <Toaster position="bottom-right" richColors />
         </body>
       </html>

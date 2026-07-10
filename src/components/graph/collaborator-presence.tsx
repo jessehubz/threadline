@@ -36,14 +36,14 @@ export function CollaboratorPresence({ graphId }: { graphId: string }) {
   if (members.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm700900">
+    <div className="flex items-center gap-1 rounded-lg border border-themed bg-card px-3 py-2 shadow-sm">
       <div className="flex -space-x-2">
         {members.slice(0, 5).map((member) => (
           <div
             key={member.id}
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-xs font-medium900",
-              "bg-brand-100 text-brand-700"
+              "flex h-7 w-7 items-center justify-center rounded-full border-2 border-card text-xs font-medium",
+              "accent-bg accent-color"
             )}
             title={member.name}
           >
@@ -52,7 +52,7 @@ export function CollaboratorPresence({ graphId }: { graphId: string }) {
         ))}
       </div>
       {members.length > 5 && (
-        <span className="ml-1 text-xs text-gray-500">+{members.length - 5}</span>
+        <span className="ml-1 text-xs text-dim">+{members.length - 5}</span>
       )}
       <div className="ml-1 h-2 w-2 rounded-full bg-green-500" title="Live" />
     </div>

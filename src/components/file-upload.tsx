@@ -82,21 +82,21 @@ export function FileUpload({ nodeId, projectId, attachments, isReadOnly }: FileU
       {files.map((file) => (
         <div
           key={file.id}
-          className="flex items-center gap-2 rounded-lg border border-gray-200 p-2700"
+          className="flex items-center gap-2 rounded-lg border border-themed p-2"
         >
           {isImage(file.fileType) ? (
-            <ImageIcon className="h-4 w-4 text-brand-500" />
+            <ImageIcon className="h-4 w-4 accent-color" />
           ) : (
-            <FileText className="h-4 w-4 text-gray-500" />
+            <FileText className="h-4 w-4 text-dim" />
           )}
-          <span className="flex-1 truncate text-xs text-gray-700300">
+          <span className="flex-1 truncate text-xs text-body">
             {file.fileName}
           </span>
           <a
             href={file.fileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded p-1 text-gray-400 hover:text-brand-600"
+            className="rounded p-1 text-dim hover:accent-color"
             aria-label="Download"
           >
             <Download className="h-3.5 w-3.5" />
@@ -104,7 +104,7 @@ export function FileUpload({ nodeId, projectId, attachments, isReadOnly }: FileU
           {!isReadOnly && (
             <button
               onClick={() => handleDelete(file.id)}
-              className="rounded p-1 text-gray-400 hover:text-red-600"
+              className="rounded p-1 text-dim hover:text-red-600"
               aria-label="Remove"
             >
               <X className="h-3.5 w-3.5" />
@@ -116,7 +116,7 @@ export function FileUpload({ nodeId, projectId, attachments, isReadOnly }: FileU
       {!isReadOnly && (
         <label
           className={cn(
-            "flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 p-3 text-sm text-gray-500 transition-colors hover:border-brand-500 hover:text-brand-600700500",
+            "flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-themed p-3 text-sm text-dim transition-colors hover:border-brand-500 hover:accent-color",
             uploading && "pointer-events-none opacity-50"
           )}
         >

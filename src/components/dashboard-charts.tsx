@@ -20,11 +20,12 @@ import { cn } from "@/lib/utils";
 // ─── Shared tooltip style ────────────────────────────────────────────────────
 
 const tooltipContentStyle = {
-  backgroundColor: "white",
-  border: "1px solid #E5E7EB",
+  backgroundColor: "var(--bg-elevated)",
+  border: "1px solid var(--border-default)",
   borderRadius: "12px",
   fontSize: "12px",
-  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+  boxShadow: "var(--shadow-md)",
+  color: "var(--text-primary)",
 };
 
 // ─── 1. HealthGauge ──────────────────────────────────────────────────────────
@@ -69,7 +70,7 @@ export function HealthGauge({ score }: HealthGaugeProps) {
         <path
           d={arcPath}
           fill="none"
-          stroke="#F3F4F6"
+          stroke="var(--border-default)"
           strokeWidth="10"
           strokeLinecap="round"
         />
@@ -88,7 +89,7 @@ export function HealthGauge({ score }: HealthGaugeProps) {
           x={cx}
           y={cy - 10}
           textAnchor="middle"
-          className="fill-[#1A1A1A] text-[24px] font-bold"
+          className="fill-[var(--text-primary)] text-[24px] font-bold"
           style={{ fontSize: "24px", fontWeight: 700 }}
         >
           {clampedScore}
@@ -98,7 +99,7 @@ export function HealthGauge({ score }: HealthGaugeProps) {
           x={cx}
           y={cy + 8}
           textAnchor="middle"
-          className="fill-[#6B7280] text-[10px]"
+          className="fill-[var(--text-secondary)] text-[10px]"
           style={{ fontSize: "10px" }}
         >
           Health Score
@@ -125,11 +126,11 @@ export function CompletionTrendChart({ data }: CompletionTrendChartProps) {
               <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="#F3F4F6" strokeDasharray="3 3" vertical={false} />
+          <CartesianGrid stroke="var(--border-default)" strokeDasharray="3 3" vertical={false} />
           <XAxis
             dataKey="date"
-            stroke="#E5E7EB"
-            tick={{ fontSize: 10, fill: "#9CA3AF" }}
+            stroke="var(--border-default)"
+            tick={{ fontSize: 10, fill: "var(--text-muted)" }}
             tickFormatter={(d: string) => {
               const date = new Date(d);
               return `${date.getMonth() + 1}/${date.getDate()}`;
@@ -138,8 +139,8 @@ export function CompletionTrendChart({ data }: CompletionTrendChartProps) {
             tickLine={false}
           />
           <YAxis
-            stroke="#E5E7EB"
-            tick={{ fontSize: 10, fill: "#9CA3AF" }}
+            stroke="var(--border-default)"
+            tick={{ fontSize: 10, fill: "var(--text-muted)" }}
             axisLine={false}
             tickLine={false}
             allowDecimals={false}
@@ -180,7 +181,7 @@ export function StatusDonutChart({ data, totalTasks }: StatusDonutChartProps) {
             outerRadius={75}
             dataKey="value"
             strokeWidth={2}
-            stroke="#fff"
+            stroke="var(--bg-elevated)"
           >
             {data.map((entry, i) => (
               <Cell key={i} fill={entry.color} />
@@ -193,7 +194,7 @@ export function StatusDonutChart({ data, totalTasks }: StatusDonutChartProps) {
             y="42%"
             textAnchor="middle"
             dominantBaseline="middle"
-            className="fill-[#1A1A1A]"
+            className="fill-[var(--text-primary)]"
             style={{ fontSize: "20px", fontWeight: 700 }}
           >
             {totalTasks}
@@ -203,7 +204,7 @@ export function StatusDonutChart({ data, totalTasks }: StatusDonutChartProps) {
             y="52%"
             textAnchor="middle"
             dominantBaseline="middle"
-            className="fill-[#6B7280]"
+            className="fill-[var(--text-secondary)]"
             style={{ fontSize: "11px" }}
           >
             tasks
@@ -218,7 +219,7 @@ export function StatusDonutChart({ data, totalTasks }: StatusDonutChartProps) {
               className="inline-block h-2.5 w-2.5 rounded-full"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-[11px] text-[#6B7280]">{entry.name}</span>
+            <span className="text-[11px] text-body">{entry.name}</span>
           </div>
         ))}
       </div>
@@ -243,11 +244,11 @@ export function WorkloadChart({ data }: WorkloadChartProps) {
           layout="vertical"
           margin={{ top: 0, right: 10, left: 0, bottom: 0 }}
         >
-          <CartesianGrid stroke="#F3F4F6" strokeDasharray="3 3" horizontal={false} />
+          <CartesianGrid stroke="var(--border-default)" strokeDasharray="3 3" horizontal={false} />
           <XAxis
             type="number"
-            stroke="#E5E7EB"
-            tick={{ fontSize: 10, fill: "#9CA3AF" }}
+            stroke="var(--border-default)"
+            tick={{ fontSize: 10, fill: "var(--text-muted)" }}
             axisLine={false}
             tickLine={false}
             allowDecimals={false}
@@ -255,8 +256,8 @@ export function WorkloadChart({ data }: WorkloadChartProps) {
           <YAxis
             type="category"
             dataKey="name"
-            stroke="#E5E7EB"
-            tick={{ fontSize: 11, fill: "#6B7280" }}
+            stroke="var(--border-default)"
+            tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
             axisLine={false}
             tickLine={false}
             width={80}
@@ -265,7 +266,7 @@ export function WorkloadChart({ data }: WorkloadChartProps) {
           <Legend
             iconType="circle"
             iconSize={8}
-            wrapperStyle={{ fontSize: "11px", color: "#6B7280" }}
+            wrapperStyle={{ fontSize: "11px", color: "var(--text-secondary)" }}
           />
           <Bar
             dataKey="active"
@@ -277,7 +278,7 @@ export function WorkloadChart({ data }: WorkloadChartProps) {
           <Bar
             dataKey="completed"
             stackId="workload"
-            fill="#EDE9FE"
+            fill="rgba(139, 92, 246, 0.3)"
             name="Completed"
             radius={[0, 4, 4, 0]}
           />
@@ -320,7 +321,7 @@ export function ProgressRing({
           cy={center}
           r={radius}
           fill="none"
-          stroke="#F3F4F6"
+          stroke="var(--border-default)"
           strokeWidth={strokeWidth}
         />
         {/* Progress ring */}
@@ -339,7 +340,7 @@ export function ProgressRing({
       </svg>
       {/* Center percentage */}
       <span
-        className="absolute font-semibold text-[#1A1A1A]"
+        className="absolute font-semibold text-heading"
         style={{ fontSize: "9px" }}
       >
         {Math.round(clampedProgress)}%

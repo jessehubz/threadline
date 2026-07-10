@@ -13,7 +13,7 @@ export default function Loading() {
       </div>
 
       {/* Content area */}
-      <div className="rounded-2xl border border-surface-200/60 bg-white p-6">
+      <div className="rounded-2xl border border-themed-subtle bg-card p-6">
         <Skeleton className="h-5 w-24 mb-5" />
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => (

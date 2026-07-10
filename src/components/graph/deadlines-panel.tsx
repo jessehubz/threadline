@@ -26,20 +26,20 @@ export function DeadlinesPanel({ tasks, onSelectNode, onClose }: DeadlinesPanelP
   const upcoming = tasksWithDates.filter((t) => new Date(t.dueDate!) >= now);
 
   return (
-    <div className="absolute left-4 top-16 z-10 w-72 overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-xl shadow-surface-900/5">
-      <div className="flex items-center justify-between border-b border-surface-100 px-4 py-3">
+    <div className="absolute left-4 top-16 z-10 w-72 overflow-hidden rounded-2xl border border-themed bg-card shadow-themed-md">
+      <div className="flex items-center justify-between border-b border-themed-subtle px-4 py-3">
         <div className="flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-brand-500" />
-          <h3 className="text-sm font-semibold text-[#1A1A1A]">Deadlines</h3>
+          <CalendarDays className="h-4 w-4 accent-color" />
+          <h3 className="text-sm font-semibold text-heading">Deadlines</h3>
         </div>
-        <button onClick={onClose} className="rounded-lg p-1 text-surface-400 hover:bg-surface-100">
+        <button onClick={onClose} className="rounded-lg p-1 text-dim hover:bg-hover">
           <X className="h-4 w-4" />
         </button>
       </div>
 
       <div className="max-h-80 overflow-y-auto p-2">
         {tasksWithDates.length === 0 ? (
-          <p className="px-2 py-6 text-center text-xs text-[#6B7280]">No upcoming deadlines</p>
+          <p className="px-2 py-6 text-center text-xs text-body">No upcoming deadlines</p>
         ) : (
           <>
             {overdue.length > 0 && (
@@ -54,7 +54,7 @@ export function DeadlinesPanel({ tasks, onSelectNode, onClose }: DeadlinesPanelP
             )}
             {upcoming.length > 0 && (
               <div>
-                <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-surface-400">Upcoming</p>
+                <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-dim">Upcoming</p>
                 {upcoming.map((task) => (
                   <TaskRow key={task.id} task={task} onSelect={onSelectNode} />
                 ))}
@@ -71,11 +71,11 @@ function TaskRow({ task, onSelect, isOverdue }: { task: DeadlineTask; onSelect: 
   return (
     <button
       onClick={() => onSelect(task.id)}
-      className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-surface-50"
+      className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-hover"
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-medium text-[#1A1A1A]">{task.title}</p>
-        <p className={`text-[10px] ${isOverdue ? "text-red-500" : "text-[#6B7280]"}`}>
+        <p className="truncate text-xs font-medium text-heading">{task.title}</p>
+        <p className={`text-[10px] ${isOverdue ? "text-red-500" : "text-body"}`}>
           {formatDate(task.dueDate!)}
         </p>
       </div>

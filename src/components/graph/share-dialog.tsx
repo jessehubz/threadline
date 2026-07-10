@@ -57,7 +57,7 @@ export function ShareDialog({ open, onClose, projectId, shareToken, members }: S
       <div className="space-y-5">
         {/* Link sharing */}
         <div>
-          <label className="mb-2 block text-xs font-medium text-gray-500400">
+          <label className="mb-2 block text-xs font-medium text-dim">
             Share link
           </label>
           <div className="flex gap-2 mb-2">
@@ -65,8 +65,8 @@ export function ShareDialog({ open, onClose, projectId, shareToken, members }: S
               onClick={() => setLinkType("view")}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                 linkType === "view"
-                  ? "bg-brand-100 text-brand-700"
-                  : "bg-gray-100 text-gray-600800400"
+                  ? "accent-bg accent-color"
+                  : "bg-hover text-body"
               }`}
             >
               <Globe className="h-3 w-3" /> View only
@@ -75,8 +75,8 @@ export function ShareDialog({ open, onClose, projectId, shareToken, members }: S
               onClick={() => setLinkType("edit")}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                 linkType === "edit"
-                  ? "bg-brand-100 text-brand-700"
-                  : "bg-gray-100 text-gray-600800400"
+                  ? "accent-bg accent-color"
+                  : "bg-hover text-body"
               }`}
             >
               <Lock className="h-3 w-3" /> Can edit
@@ -93,13 +93,13 @@ export function ShareDialog({ open, onClose, projectId, shareToken, members }: S
             </Button>
           </div>
           {linkType === "edit" && (
-            <p className="mt-1 text-[10px] text-gray-500">Requires sign-in to edit</p>
+            <p className="mt-1 text-[10px] text-dim">Requires sign-in to edit</p>
           )}
         </div>
 
         {/* Invite by email */}
         <div>
-          <label className="mb-2 block text-xs font-medium text-gray-500400">
+          <label className="mb-2 block text-xs font-medium text-dim">
             <UserPlus className="inline h-3 w-3 mr-1" /> Invite people
           </label>
           <div className="flex gap-2">
@@ -125,17 +125,17 @@ export function ShareDialog({ open, onClose, projectId, shareToken, members }: S
 
         {/* Current members */}
         <div>
-          <label className="mb-2 block text-xs font-medium text-gray-500400">
+          <label className="mb-2 block text-xs font-medium text-dim">
             People with access
           </label>
           <div className="max-h-40 space-y-2 overflow-y-auto">
             {members.map((member) => (
               <div key={member.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-xs font-medium text-brand-700">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full accent-bg text-xs font-medium accent-color">
                     {member.user.name?.[0]?.toUpperCase() || member.user.email[0].toUpperCase()}
                   </div>
-                  <span className="text-sm text-gray-700300">
+                  <span className="text-sm text-body">
                     {member.user.name || member.user.email}
                   </span>
                 </div>

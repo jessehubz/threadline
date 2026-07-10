@@ -56,7 +56,7 @@ export function NotificationDropdown() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative rounded-xl p-2 text-[#6B7280] transition-colors hover:bg-surface-100 hover:text-surface-700"
+        className="relative rounded-xl p-2 text-body transition-colors hover:bg-hover hover:text-heading"
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />
@@ -68,13 +68,13 @@ export function NotificationDropdown() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-surface-200/60 bg-white shadow-xl animate-[fadeInUp_0.15s_ease-out]">
-          <div className="flex items-center justify-between border-b border-surface-100 px-4 py-3">
-            <h3 className="text-sm font-semibold text-[#1A1A1A]">Notifications</h3>
+        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-themed-subtle bg-card shadow-xl animate-[fadeInUp_0.15s_ease-out]">
+          <div className="flex items-center justify-between border-b border-themed-subtle px-4 py-3">
+            <h3 className="text-sm font-semibold text-heading">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllRead}
-                className="text-xs font-medium text-brand-600 transition-colors hover:text-brand-700"
+                className="text-xs font-medium accent-color transition-colors hover:accent-color"
               >
                 Mark all read
               </button>
@@ -82,7 +82,7 @@ export function NotificationDropdown() {
           </div>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="px-4 py-10 text-center text-sm text-surface-400">
+              <div className="px-4 py-10 text-center text-sm text-dim">
                 No notifications yet
               </div>
             ) : (
@@ -90,14 +90,14 @@ export function NotificationDropdown() {
                 <div
                   key={notification.id}
                   className={cn(
-                    "border-b border-surface-50 px-4 py-3.5 last:border-0",
-                    !notification.read && "bg-brand-50/40/20"
+                    "border-b border-themed-subtle px-4 py-3.5 last:border-0",
+                    !notification.read && "accent-bg"
                   )}
                 >
-                  <p className="text-[13px] text-surface-700">
+                  <p className="text-[13px] text-heading">
                     {notification.message}
                   </p>
-                  <p className="mt-1 text-[11px] text-surface-400">
+                  <p className="mt-1 text-[11px] text-dim">
                     {formatRelativeDate(notification.createdAt)}
                   </p>
                 </div>

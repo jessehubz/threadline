@@ -19,14 +19,14 @@ export default function DashboardLoading() {
       {/* Health Score + KPI Stats */}
       <div className="mb-6 flex flex-col gap-4 lg:flex-row">
         {/* Health Gauge */}
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-surface-200/60 bg-white p-6 lg:w-[200px]">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-themed-subtle bg-card p-6 lg:w-[200px]">
           <Skeleton className="h-[90px] w-[140px] rounded-full" />
           <Skeleton className="mt-2 h-4 w-16" />
         </div>
         {/* KPI Grid */}
         <div className="grid flex-1 grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-surface-200/60 bg-white p-4">
+            <div key={i} className="rounded-2xl border border-themed-subtle bg-card p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Skeleton className="h-7 w-7 rounded-lg" />
                 <Skeleton className="h-3 w-16" />
@@ -39,11 +39,11 @@ export default function DashboardLoading() {
       </div>
 
       {/* Attention Required */}
-      <div className="mb-6 rounded-2xl border border-surface-200/30 bg-surface-50/50 p-5">
+      <div className="mb-6 rounded-2xl border border-themed-subtle bg-page p-5">
         <Skeleton className="mb-3 h-5 w-36" />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-lg bg-white/80 px-3 py-2">
+            <div key={i} className="rounded-lg bg-card px-3 py-2">
               <Skeleton className="mb-1 h-3 w-16" />
               <Skeleton className="h-3 w-full" />
             </div>
@@ -53,12 +53,12 @@ export default function DashboardLoading() {
 
       {/* Charts */}
       <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5">
+        <div className="rounded-2xl border border-themed-subtle bg-card p-5">
           <Skeleton className="mb-1 h-4 w-32" />
           <Skeleton className="mb-4 h-3 w-20" />
           <Skeleton className="h-[200px] w-full rounded-lg" />
         </div>
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5">
+        <div className="rounded-2xl border border-themed-subtle bg-card p-5">
           <Skeleton className="mb-4 h-4 w-32" />
           <Skeleton className="h-[200px] w-full rounded-lg" />
         </div>
@@ -67,7 +67,7 @@ export default function DashboardLoading() {
       {/* Three-column panels */}
       <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="rounded-2xl border border-surface-200/60 bg-white p-5">
+          <div key={i} className="rounded-2xl border border-themed-subtle bg-card p-5">
             <Skeleton className="mb-4 h-4 w-24" />
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, j) => (
@@ -82,11 +82,11 @@ export default function DashboardLoading() {
       </div>
 
       {/* Recent Activity */}
-      <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-5">
+      <div className="mb-6 rounded-2xl border border-themed-subtle bg-card p-5">
         <Skeleton className="mb-4 h-4 w-28" />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="rounded-lg border border-surface-200/40 bg-surface-50/50 p-3">
+            <div key={i} className="rounded-lg border border-themed-subtle bg-page p-3">
               <div className="flex items-start gap-2.5">
                 <Skeleton className="h-7 w-7 rounded-full" />
                 <div className="flex-1">
@@ -103,7 +103,7 @@ export default function DashboardLoading() {
       <Skeleton className="mb-4 h-5 w-20" />
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="rounded-2xl border border-surface-200/60 bg-white p-5">
+          <div key={i} className="rounded-2xl border border-themed-subtle bg-card p-5">
             <Skeleton className="h-5 w-3/4 mb-2" />
             <Skeleton className="h-3 w-full mb-4" />
             <Skeleton className="h-1.5 w-full rounded-full" />

@@ -18,10 +18,10 @@ export default async function MessagesPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-10">
-        <h1 className="text-2xl font-bold tracking-tight text-[#1A1A1A]">
+        <h1 className="text-2xl font-bold tracking-tight text-heading">
           Messages
         </h1>
-        <p className="mt-1.5 text-sm text-[#6B7280]">
+        <p className="mt-1.5 text-sm text-body">
           Chat with your team in project channels or direct messages
         </p>
       </div>

@@ -70,7 +70,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
       {/* Toggle bar */}
       <button
         onClick={onToggle}
-        className="mx-auto flex items-center gap-2 rounded-t-xl border border-b-0 border-surface-200/80 bg-white/95 px-4 py-2 text-xs font-medium text-surface-600 shadow-sm backdrop-blur-md transition-colors hover:bg-surface-50/80/95"
+        className="mx-auto flex items-center gap-2 rounded-t-xl border border-b-0 border-themed-subtle bg-card/95 px-4 py-2 text-xs font-medium text-body shadow-sm backdrop-blur-md transition-colors hover:bg-hover"
         style={{ marginLeft: "50%", transform: "translateX(-50%)" }}
       >
         <Sparkles className="h-3.5 w-3.5 text-purple-500" />
@@ -80,10 +80,10 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
 
       {/* Panel */}
       {open && (
-        <div className="border-t border-surface-200/80 bg-white p-5 shadow-xl">
+        <div className="border-t border-themed-subtle bg-card p-5 shadow-themed-md">
           <div className="mx-auto max-w-3xl space-y-4">
             <div className="flex items-center gap-3">
-              <p className="text-sm font-semibold text-[#1A1A1A]">
+              <p className="text-sm font-semibold text-heading">
                 Generate a dependency graph
               </p>
               <BadgeLabel text="No API key needed" />
@@ -115,7 +115,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
             )}
 
             {selectedTemplate && (
-              <p className="text-sm text-[#6B7280]">
+              <p className="text-sm text-body">
                 Will generate {templates.find((t) => t.name === selectedTemplate)?.nodes.length || 0} tasks with dependencies
               </p>
             )}
@@ -138,7 +138,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
 
 function BadgeLabel({ text }: { text: string }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] font-semibold text-purple-700900300">
+    <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] font-semibold text-purple-700">
       {text}
     </span>
   );

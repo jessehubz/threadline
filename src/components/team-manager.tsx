@@ -82,19 +82,19 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
 
       {/* Members list */}
       {project && (
-        <div className="rounded-2xl border border-surface-200/80 bg-white p-2 shadow-sm">
-          <div className="divide-y divide-surface-100800">
+        <div className="rounded-2xl border border-themed-subtle bg-card p-2 shadow-sm">
+          <div className="divide-y divide-surface-100">
             {project.members.map((member) => (
               <div key={member.id} className="flex items-center justify-between px-4 py-3.5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full accent-bg text-sm font-semibold accent-color">
                     {member.user.name?.[0]?.toUpperCase() || member.user.email[0].toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-[#1A1A1A]">
+                    <p className="text-sm font-medium text-heading">
                       {member.user.name || member.user.email}
                     </p>
-                    <p className="text-xs text-[#6B7280]">{member.user.email}</p>
+                    <p className="text-xs text-body">{member.user.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5">
@@ -111,7 +111,7 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
                       </select>
                       <button
                         onClick={() => handleRemove(member.id)}
-                        className="rounded-lg p-1.5 text-surface-400 transition-colors hover:text-red-600"
+                        className="rounded-lg p-1.5 text-dim transition-colors hover:text-red-600"
                         aria-label="Remove member"
                       >
                         <Trash2 className="h-4 w-4" />
