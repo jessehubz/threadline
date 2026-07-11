@@ -45,12 +45,10 @@ export default async function HomePage() {
       <main className="flex-1">
         {/* ─── HERO ─── */}
         <section className="relative overflow-hidden pt-24 pb-10 lg:pt-32 lg:pb-16">
-          <div className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 h-[400px] w-[700px] rounded-full bg-[var(--accent)]/10 blur-[120px]" />
-
           <div className="relative mx-auto max-w-5xl px-6">
             <FadeIn>
               <div className="mx-auto max-w-[880px] text-center">
-                <h1 className="text-[56px] font-extrabold leading-[1.03] tracking-tight text-heading sm:text-[76px] lg:text-[88px]">
+                <h1 className="text-[48px] sm:text-[64px] lg:text-[72px] text-display">
                   See how your<br />work <span className="accent-color">connects.</span>
                 </h1>
               </div>
@@ -155,7 +153,7 @@ export default async function HomePage() {
           <div className="mx-auto max-w-5xl px-6">
             <FadeIn>
               <div className="text-center">
-                <h2 className="text-[36px] font-bold tracking-tight text-heading">Built for how teams actually work.</h2>
+                <h2 className="text-[36px] text-headline">Built for how teams actually work.</h2>
                 <p className="mt-3 text-[16px] text-body max-w-md mx-auto">Not another list app. A visual system for managing complex, interconnected work.</p>
               </div>
             </FadeIn>
@@ -163,13 +161,12 @@ export default async function HomePage() {
               {/* Row 1: hero feature (the core differentiator) + one supporting feature */}
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <FadeIn delay={0} className="lg:col-span-2">
-                  <div className="animate-entrance group relative overflow-hidden rounded-3xl border border-themed-subtle bg-card p-8 transition-all duration-200 ease-out hover-lift hover:shadow-themed-md sm:p-10">
-                    <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-[var(--accent)]/10 blur-3xl transition-opacity group-hover:opacity-150" />
-                    <div className="relative mb-5 flex h-12 w-12 items-center justify-center rounded-2xl accent-bg accent-color">
+                  <div className="animate-entrance group rounded-xl border border-themed-subtle bg-card p-8 transition-all duration-200 ease-out hover-lift sm:p-10">
+                    <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl accent-bg accent-color">
                       <GitBranch className="h-6 w-6" />
                     </div>
-                    <h3 className="relative text-[24px] font-semibold text-heading">Dependency Graphs</h3>
-                    <p className="relative mt-2 max-w-md text-[15px] leading-relaxed text-body">See what blocks what. Map relationships visually instead of guessing from a flat list — the core idea Threadline is built around.</p>
+                    <h3 className="text-[24px] text-card-title">Dependency Graphs</h3>
+                    <p className="mt-2 max-w-md text-[15px] leading-relaxed text-body">See what blocks what. Map relationships visually instead of guessing from a flat list — the core idea Threadline is built around.</p>
                   </div>
                 </FadeIn>
                 <Card icon={<Users className="h-5 w-5" />} title="Live Collaboration" desc="Work in real-time. See who's online, who's editing what — instantly synced." delay={60} />
@@ -190,7 +187,7 @@ export default async function HomePage() {
           <div className="mx-auto max-w-5xl px-6">
             <FadeIn>
               <div className="text-center">
-                <h2 className="text-[36px] font-bold tracking-tight text-heading">Three steps to clarity.</h2>
+                <h2 className="text-[36px] text-headline">Three steps to clarity.</h2>
                 <p className="mt-3 text-[16px] text-body max-w-md mx-auto">From idea to structured execution in under a minute.</p>
               </div>
             </FadeIn>
@@ -209,7 +206,7 @@ export default async function HomePage() {
           <div className="mx-auto max-w-5xl px-6">
             <FadeIn>
               <div className="text-center">
-                <h2 className="text-[36px] font-bold tracking-tight text-heading">Teams ship faster with Threadline.</h2>
+                <h2 className="text-[36px] text-headline">Teams ship faster with Threadline.</h2>
               </div>
             </FadeIn>
             <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -234,7 +231,7 @@ export default async function HomePage() {
           <div className="mx-auto max-w-5xl px-6">
             <FadeIn>
               <div className="mx-auto max-w-lg text-center">
-                <h2 className="text-[36px] font-bold tracking-tight text-heading">Ready to see clearly?</h2>
+                <h2 className="text-[36px] text-headline">Ready to see clearly?</h2>
                 <p className="mt-3 text-[16px] text-body">Start free. Set up in 60 seconds. No credit card required.</p>
                 <div className="mt-8">
                   <Link href="/sign-up" className="btn-primary text-[14px] px-7 py-3 gap-2">
@@ -286,7 +283,7 @@ function Card({ icon, title, desc, delay, compact }: { icon: React.ReactNode; ti
   return (
     <FadeIn delay={delay}>
       <div className={cn(
-        "animate-entrance group rounded-2xl border border-themed-subtle bg-card transition-all duration-200 ease-out hover-lift hover:shadow-themed-md hover:-translate-y-[2px]",
+        "animate-entrance group rounded-xl border border-themed-subtle bg-card transition-all duration-200 ease-out hover-lift",
         compact ? "p-5" : "p-7"
       )}>
         <div className={cn(
@@ -295,7 +292,7 @@ function Card({ icon, title, desc, delay, compact }: { icon: React.ReactNode; ti
         )}>
           {icon}
         </div>
-        <h3 className={cn("font-semibold text-heading", compact ? "text-[15px]" : "text-[18px]")}>{title}</h3>
+        <h3 className={cn("text-card-title", compact ? "text-[15px]" : "text-[18px]")}>{title}</h3>
         <p className={cn("leading-relaxed text-body", compact ? "mt-1 text-[12.5px]" : "mt-1.5 text-[14px]")}>{desc}</p>
       </div>
     </FadeIn>
@@ -306,7 +303,7 @@ function Step({ num, title, desc }: { num: string; title: string; desc: string }
   return (
     <div className="text-center">
       <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full text-[14px] font-bold text-white" style={{ backgroundColor: 'var(--accent)' }}>{num}</div>
-      <h3 className="text-[18px] font-semibold text-heading">{title}</h3>
+      <h3 className="text-[18px] text-card-title">{title}</h3>
       <p className="mt-1.5 text-[14px] leading-relaxed text-body">{desc}</p>
     </div>
   );
@@ -315,15 +312,15 @@ function Step({ num, title, desc }: { num: string; title: string; desc: string }
 function Quote({ text, author, role, delay }: { text: string; author: string; role: string; delay: number }) {
   return (
     <FadeIn delay={delay}>
-      <div className="animate-entrance rounded-2xl border border-themed-subtle bg-card p-7">
+      <div className="animate-entrance rounded-xl border border-themed-subtle bg-card p-7">
         <div className="flex gap-0.5 mb-4">
-          {[...Array(5)].map((_, i) => (<Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />))}
+          {[...Array(5)].map((_, i) => (<Star key={i} className="h-4 w-4 fill-[var(--accent)] text-[var(--accent)]" />))}
         </div>
         <p className="text-[14px] leading-relaxed text-body">&ldquo;{text}&rdquo;</p>
         <div className="mt-5 flex items-center gap-3">
           <div className="h-8 w-8 rounded-full accent-bg" />
           <div>
-            <p className="text-[13px] font-semibold text-heading">{author}</p>
+            <p className="text-item-title">{author}</p>
             <p className="text-[11px] text-dim">{role}</p>
           </div>
         </div>
@@ -335,7 +332,7 @@ function Quote({ text, author, role, delay }: { text: string; author: string; ro
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="text-center">
-      <p className="text-[32px] font-bold tracking-tight text-heading">{value}</p>
+      <p className="text-[32px] text-stat">{value}</p>
       <p className="text-[12px] text-dim mt-0.5">{label}</p>
     </div>
   );
@@ -344,7 +341,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 function FooterCol({ title, links }: { title: string; links: string[] }) {
   return (
     <div>
-      <h4 className="text-[12px] font-semibold uppercase tracking-wider text-dim">{title}</h4>
+      <h4 className="text-eyebrow">{title}</h4>
       <ul className="mt-3 space-y-2">
         {links.map((link) => (
           <li key={link}><a href="#" className="text-[13px] text-body hover:text-heading transition-colors">{link}</a></li>

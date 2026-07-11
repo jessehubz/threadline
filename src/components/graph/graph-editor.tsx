@@ -103,8 +103,8 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
     source: edge.sourceNodeId,
     target: edge.targetNodeId,
     animated: true,
-    style: { strokeWidth: 2, stroke: "#6366f1" },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#6366f1", width: 20, height: 20 },
+    style: { strokeWidth: 2, stroke: "#8B5CF6" },
+    markerEnd: { type: MarkerType.ArrowClosed, color: "#8B5CF6", width: 20, height: 20 },
   }));
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -145,7 +145,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
       const edge = data as { id: string; sourceNodeId: string; targetNodeId: string };
       setEdges((eds) => {
         if (eds.find((e) => e.id === edge.id)) return eds;
-        return [...eds, { id: edge.id, source: edge.sourceNodeId, target: edge.targetNodeId, animated: true, style: { strokeWidth: 2, stroke: "#6366f1" }, markerEnd: { type: MarkerType.ArrowClosed, color: "#6366f1", width: 20, height: 20 } }];
+        return [...eds, { id: edge.id, source: edge.sourceNodeId, target: edge.targetNodeId, animated: true, style: { strokeWidth: 2, stroke: "#8B5CF6" }, markerEnd: { type: MarkerType.ArrowClosed, color: "#8B5CF6", width: 20, height: 20 } }];
       });
     },
     onEdgeDeleted: (data: unknown) => {
@@ -184,7 +184,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
       const result = await createEdge(projectId, graph.id, connection.source, connection.target);
       if ("error" in result) { toast.error(result.error); return; }
       if (result.edge) {
-        setEdges((eds) => addEdge({ ...connection, id: result.edge.id, animated: true, style: { strokeWidth: 2, stroke: "#6366f1" }, markerEnd: { type: MarkerType.ArrowClosed, color: "#6366f1", width: 20, height: 20 } }, eds));
+        setEdges((eds) => addEdge({ ...connection, id: result.edge.id, animated: true, style: { strokeWidth: 2, stroke: "#8B5CF6" }, markerEnd: { type: MarkerType.ArrowClosed, color: "#8B5CF6", width: 20, height: 20 } }, eds));
       }
     },
     [edges, graph.id, isReadOnly, projectId, setEdges]

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { FloatingThemeToggle } from "@/components/floating-theme-toggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -56,6 +57,7 @@ export default function RootLayout({
         <body className="min-h-screen antialiased">
           <ThemeProvider>
             {children}
+            <FloatingThemeToggle />
           </ThemeProvider>
           <Toaster position="bottom-right" richColors />
         </body>

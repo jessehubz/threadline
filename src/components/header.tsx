@@ -3,36 +3,41 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Menu, Search, LayoutDashboard, CalendarDays, BarChart3, MessageSquare, ClipboardList, Users, UserPlus, Settings, Calendar, User } from "lucide-react";
+import { Menu, Search, LayoutDashboard, CalendarDays, BarChart3, MessageSquare, ClipboardList, Users, UserPlus, Settings, Calendar, User, MoreHorizontal } from "lucide-react";
 import { NotificationDropdown } from "@/components/notification-dropdown";
 import { ChatPopup } from "@/components/chat-popup";
 import { useEffect, useRef, useState } from "react";
 import { MobileSidebar } from "@/components/mobile-sidebar";
 import { cn } from "@/lib/utils";
 
-// Primary workflow nav — lives in the center pill.
+// Primary workflow nav — lives in the center pill (kept lean: max 4-5 items).
 const primaryNavItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Overview", href: "/overview", icon: ClipboardList },
   { name: "Tasks", href: "/my-tasks", icon: CalendarDays },
   { name: "Messages", href: "/messages", icon: MessageSquare },
+];
+
+// Secondary nav — accessible via the "More" button or mobile sidebar.
+const moreNavItems = [
   { name: "Calendar", href: "/calendar", icon: Calendar },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Team", href: "/team", icon: Users },
 ];
 
-// Secondary/account nav — lives in the profile menu (and the mobile sidebar).
+// Account nav — lives in the profile menu (and the mobile sidebar).
 const secondaryNavItems = [
   { name: "Friends", href: "/friends", icon: UserPlus },
   { name: "Settings", href: "/settings", icon: Settings },
   { name: "Profile", href: "/profile", icon: User },
 ];
 
-const allNavItems = [...primaryNavItems, ...secondaryNavItems];
+const allNavItems = [...primaryNavItems, ...moreNavItems, ...secondaryNavItems];
 
 export function Header({ currentUserId }: { currentUserId: string }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pathname = usePathname();
@@ -96,6 +101,54 @@ export function Header({ currentUserId }: { currentUserId: string }) {
                 </Link>
               );
             })}
+            {/* More dropdown for secondary nav */}
+            <div className="relative">
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                title="More"
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full px-2.5 py-1.5 lg:px-3.5 text-[12px] font-medium transition-all duration-150 hover:scale-[1.02]",
+                  moreNavItems.some((item) => pathname === item.href || pathname.startsWith(item.href + "/"))
+                    ? "bg-white/90 dark:bg-white/10 text-heading shadow-sm"
+                    : "text-body hover:text-heading hover:bg-white/5"
+                )}
+              >
+                <MoreHorizontal className={cn("h-3.5 w-3.5 shrink-0", moreNavItems.some((item) => pathname === item.href) && "accent-color")} />
+                <span className="hidden lg:inline">More</span>
+              </button>
+              {moreOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
+                  <div
+                    className="absolute left-1/2 top-full z-50 mt-2 w-44 -translate-x-1/2 py-1.5 animate-[fadeInUp_0.15s_ease-out_both]"
+                    style={{
+                      borderRadius: "var(--radius-md)",
+                      border: "1px solid var(--border-default)",
+                      backgroundColor: "var(--bg-elevated)",
+                      boxShadow: "var(--shadow-md)",
+                    }}
+                  >
+                    {moreNavItems.map((item) => {
+                      const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMoreOpen(false)}
+                          className={cn(
+                            "flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium transition-colors hover:bg-[var(--bg-muted)]",
+                            isActive ? "text-[var(--accent)]" : "text-[var(--text-primary)]"
+                          )}
+                        >
+                          <item.icon className="h-3.5 w-3.5" />
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Right: utility icons */}

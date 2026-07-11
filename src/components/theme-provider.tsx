@@ -71,7 +71,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     const resolved = newTheme === "system" ? getSystemTheme() : newTheme;
     setResolvedTheme(resolved);
+
+    // Enable crossfade transition, then apply theme
+    document.documentElement.classList.add("theme-transition");
     applyTheme(resolved);
+
+    // Remove transition class after animation completes
+    setTimeout(() => {
+      document.documentElement.classList.remove("theme-transition");
+    }, 350);
   }, []);
 
   return (

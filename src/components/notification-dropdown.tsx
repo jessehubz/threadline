@@ -70,7 +70,7 @@ export function NotificationDropdown() {
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-themed-subtle bg-card shadow-xl animate-[fadeInUp_0.15s_ease-out]">
           <div className="flex items-center justify-between border-b border-themed-subtle px-4 py-3">
-            <h3 className="text-sm font-semibold text-heading">Notifications</h3>
+            <h3 className="text-card-title">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllRead}

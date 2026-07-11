@@ -34,10 +34,8 @@ export default async function MyTasksPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-10">
-        <h1 className="text-[20px] font-light tracking-tight text-heading sm:text-[22px]">
-          <span className="font-semibold">My Tasks</span>
-        </h1>
-        <p className="mt-1.5 text-sm text-body">
+        <h1 className="text-headline">My <span className="font-bold">Tasks</span></h1>
+        <p className="mt-1.5 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
           All tasks assigned to you across projects
         </p>
       </div>

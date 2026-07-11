@@ -103,7 +103,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-heading">
+          <h2 className="text-card-title text-[18px]">
             {monthLabel}
           </h2>
           <button
@@ -123,7 +123,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
       </div>
 
       {/* Calendar grid */}
-      <div className="overflow-hidden rounded-2xl border border-themed-subtle bg-card shadow-sm">
+      <div className="overflow-hidden bg-card" style={{ borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
         {/* Day headers */}
         <div className="grid grid-cols-7 border-b border-themed">
           {DAYS_OF_WEEK.map((day) => (
@@ -186,7 +186,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
                       />
                     ))}
                     {dayTasks.length > 3 && (
-                      <span className="text-[10px] leading-none text-body">
+                      <span className="text-meta leading-none">
                         +{dayTasks.length - 3}
                       </span>
                     )}
@@ -201,7 +201,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
       {/* Selected date detail */}
       {selectedDate && (
         <div className="panel-quiet p-5">
-          <h3 className="text-sm font-semibold text-heading">
+          <h3 className="text-card-title">
             {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
               weekday: "long",
               month: "long",

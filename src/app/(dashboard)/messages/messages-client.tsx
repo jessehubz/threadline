@@ -185,7 +185,7 @@ function ChannelsPanel({
 
   if (projects.length === 0) {
     return (
-      <div className="rounded-2xl border border-themed-subtle bg-card p-12 text-center shadow-sm">
+      <div className="card p-12 text-center">
         <p className="text-sm text-body">
           Join or create a project to start messaging.
         </p>
@@ -194,7 +194,7 @@ function ChannelsPanel({
   }
 
   return (
-    <div className="flex h-[calc(100vh-280px)] flex-col overflow-hidden rounded-2xl border border-themed-subtle bg-card shadow-sm">
+    <div className="flex h-[calc(100vh-280px)] flex-col overflow-hidden bg-card" style={{ borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
       {/* Project selector */}
       <div className="border-b border-themed px-4 py-3">
         <select
@@ -372,11 +372,11 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
   }
 
   return (
-    <div className="flex h-[calc(100vh-280px)] overflow-hidden rounded-2xl border border-themed-subtle bg-card shadow-sm">
+    <div className="flex h-[calc(100vh-280px)] overflow-hidden bg-card" style={{ borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
       {/* Conversation list */}
       <div className="w-64 flex-shrink-0 border-r border-themed">
         <div className="flex items-center justify-between border-b border-themed px-4 py-3">
-          <h3 className="text-sm font-semibold text-heading">Conversations</h3>
+          <h3 className="text-card-title">Conversations</h3>
           <button
             onClick={handleNewDM}
             className="rounded-lg p-1.5 text-dim transition-colors hover:bg-hover hover:text-body"
@@ -448,7 +448,7 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
                   <UserAvatar user={other || { id: "", name: "?", email: "", imageUrl: null }} size="md" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="truncate text-sm font-medium text-heading">
+                      <p className="truncate text-item-title">
                         {other?.name || other?.email || "Unknown"}
                       </p>
                       {lastMessage && (
@@ -488,7 +488,7 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
                   user={getOtherParticipant(selectedConversation) || { id: "", name: "?", email: "", imageUrl: null }}
                   size="sm"
                 />
-                <p className="text-sm font-medium text-heading">
+                <p className="text-item-title">
                   {getOtherParticipant(selectedConversation)?.name ||
                     getOtherParticipant(selectedConversation)?.email ||
                     "Unknown"}

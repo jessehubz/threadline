@@ -7,9 +7,7 @@ export default async function ProfilePage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-10">
-        <h1 className="text-[20px] font-light tracking-tight text-heading sm:text-[22px]">
-          <span className="font-semibold">Profile</span>
-        </h1>
+        <h1 className="text-[20px] sm:text-[22px] text-headline">Profile</h1>
         <p className="mt-1.5 text-sm text-body">
           Manage your personal information
         </p>

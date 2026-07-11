@@ -14,7 +14,7 @@ interface GraphToolbarProps {
 export function GraphToolbar({ onAddNode, onAddFolder, onToggleDeadlines, onToggleAI, showDeadlines }: GraphToolbarProps) {
   return (
     <div className="absolute bottom-16 left-1/2 z-10 -translate-x-1/2">
-      <div className="flex items-center gap-1.5 rounded-2xl border border-themed-subtle bg-card/95 px-4 py-2.5 shadow-xl shadow-themed backdrop-blur-md/80/95">
+      <div className="flex items-center gap-1.5 rounded-2xl border border-themed-subtle bg-card/95 px-4 py-2.5 shadow-themed-md backdrop-blur-md">
         <Button onClick={onAddNode} size="sm" variant="ghost" className="gap-1.5 rounded-xl">
           <Plus className="h-4 w-4" />
           Task
@@ -34,7 +34,7 @@ export function GraphToolbar({ onAddNode, onAddFolder, onToggleDeadlines, onTogg
           <CalendarDays className="h-4 w-4" />
         </Button>
         <Button onClick={onToggleAI} size="sm" variant="ghost" className="rounded-xl">
-          <Sparkles className="h-4 w-4 text-purple-500" />
+          <Sparkles className="h-4 w-4 text-[var(--accent)]" />
         </Button>
       </div>
     </div>

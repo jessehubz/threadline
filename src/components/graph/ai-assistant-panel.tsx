@@ -73,7 +73,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
         className="mx-auto flex items-center gap-2 rounded-t-xl border border-b-0 border-themed-subtle bg-card/95 px-4 py-2 text-xs font-medium text-body shadow-sm backdrop-blur-md transition-colors hover:bg-hover"
         style={{ marginLeft: "50%", transform: "translateX(-50%)" }}
       >
-        <Sparkles className="h-3.5 w-3.5 text-purple-500" />
+        <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
         AI Assistant
         {open ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
       </button>
@@ -83,7 +83,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
         <div className="border-t border-themed-subtle bg-card p-5 shadow-themed-md">
           <div className="mx-auto max-w-3xl space-y-4">
             <div className="flex items-center gap-3">
-              <p className="text-sm font-semibold text-heading">
+              <p className="text-card-title">
                 Generate a dependency graph
               </p>
               <BadgeLabel text="No API key needed" />
@@ -138,7 +138,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
 
 function BadgeLabel({ text }: { text: string }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] font-semibold text-purple-700">
+    <span className="inline-flex items-center rounded-full accent-bg accent-color px-2.5 py-0.5 text-[10px] font-semibold">
       {text}
     </span>
   );

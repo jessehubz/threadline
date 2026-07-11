@@ -78,9 +78,9 @@ export function RecentlyDeleted({ projects }: { projects: DeletedProject[] }) {
                 className={`flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-150 hover:translate-x-0.5 hover:bg-hover animate-entrance-${Math.min(i + 1, 6)}`}
               >
                 <div>
-                  <p className="text-sm font-medium text-heading">{project.name}</p>
+                  <p className="text-item-title">{project.name}</p>
                   {days !== null && (
-                    <p className="text-xs text-[var(--danger)]">
+                    <p className="text-meta text-[var(--danger)]">
                       {days === 0 ? "Expires today" : `Expires in ${days} day${days === 1 ? "" : "s"}`}
                     </p>
                   )}

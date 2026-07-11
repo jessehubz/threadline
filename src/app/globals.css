@@ -35,23 +35,29 @@
 /* ─── Theme CSS Custom Properties ─────────────────────────────────────────── */
 
 :root {
-  --bg-base: #FFFFFF;
+  --bg-base: #F5F5F6;
   --bg-elevated: #FFFFFF;
   --bg-surface: #FFFFFF;
   --bg-muted: #F7F7F8;
   --bg-sunken: #F0F0F2;
-  --border-default: #E5E5E5;
-  --border-subtle: rgba(229, 229, 229, 0.6);
-  --text-primary: #1A1A1A;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
+  --border-default: rgba(20, 20, 25, 0.08);
+  --border-subtle: rgba(20, 20, 25, 0.05);
+  --text-primary: #17171A;
+  --text-secondary: #75757C;
+  --text-muted: #A6A6AD;
   --accent: #8B5CF6;
   --accent-hover: #7C5CFF;
   --accent-soft: #F5F3FF;
   --accent-soft-hover: #EDE9FE;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05), 0 6px 14px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 18px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --ring-color: rgba(139, 92, 246, 0.15);
+
+  /* Radius scale */
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
 
   /* Violet hierarchy — light mode. Emphasis darkens (inverse of dark mode) to hold contrast on white. */
   --violet-50: rgba(139, 92, 246, 0.06);
@@ -67,45 +73,37 @@
   --danger: #DC4C4C;
   --danger-hover: #C93D3D;
   --danger-soft: rgba(220, 76, 76, 0.08);
-
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.015);
-  --glass-border: rgba(139, 92, 246, 0.12);
-  --glass-border-subtle: rgba(139, 92, 246, 0.06);
-  --glass-glow: rgba(139, 92, 246, 0.06);
 }
 
 .dark {
-  --bg-base: #0A0A0C;
-  --bg-elevated: #17171A;
-  --bg-surface: #131316;
-  --bg-muted: #1A1820;
-  --bg-sunken: #0A0A0C;
-  --border-default: #28282C;
-  --border-subtle: rgba(40, 40, 44, 0.6);
-  --text-primary: #F5F5F7;
-  --text-secondary: #8E8E93;
-  --text-muted: #5A5A63;
+  --bg-base: #0A0A0B;
+  --bg-elevated: #151517;
+  --bg-surface: #151517;
+  --bg-muted: #1C1C1F;
+  --bg-sunken: #0A0A0B;
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --text-primary: #F2F2F4;
+  --text-secondary: #98989F;
+  --text-muted: #626268;
   --accent: #8B5CF6;
   --accent-hover: #A78BFA;
   --accent-soft: rgba(139, 92, 246, 0.12);
   --accent-soft-hover: rgba(139, 92, 246, 0.2);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 14px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4), 0 8px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --ring-color: rgba(139, 92, 246, 0.25);
+
+  /* Radius scale */
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
 
   /* Single negative/warning color — muted coral. The only non-violet hue in the app. */
   --danger: #E5484D;
   --danger-hover: #EC6A6E;
   --danger-soft: rgba(229, 72, 77, 0.14);
-
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.02);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.01);
-  --glass-border: rgba(255, 255, 255, 0.07);
-  --glass-border-subtle: rgba(255, 255, 255, 0.04);
-  --glass-glow: rgba(139, 92, 246, 0.1);
 
   /* Violet hierarchy — use these for UI chrome, borders, hover states */
   --violet-50: rgba(139, 92, 246, 0.04);
@@ -142,21 +140,36 @@
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--bg-base);
     color: var(--text-primary);
+    transition: background-color 300ms ease, color 300ms ease;
   }
+}
+
+/* Theme crossfade: only activates during theme switch via JS class */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, box-shadow 300ms ease !important;
 }
 
 /* ─── Component Classes ───────────────────────────────────────────────────── */
 
 @layer components {
+  /* Buttons follow the Linear-derived rule: CTAs are 8px-radius rectangles,
+     never pills. Pills are reserved for status/tag/tab chips (see
+     .status-tint below and the nav pill, which is untouched). No shadow on
+     any button variant — hover reads via background-color + a hairline lift,
+     not elevation. */
+
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:-translate-y-px active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
     background-color: var(--accent);
     &:hover { background-color: var(--accent-hover); }
     &:focus { --tw-ring-color: var(--ring-color); }
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 ease-out hover:-translate-y-px active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
     background-color: var(--bg-elevated);
     color: var(--text-primary);
     border: 1px solid var(--border-default);
@@ -168,7 +181,7 @@
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-150 ease-out focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150 ease-out focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
     color: var(--text-secondary);
     &:hover {
       background-color: var(--bg-muted);
@@ -177,14 +190,14 @@
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-px active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:-translate-y-px active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
     background-color: var(--danger);
     &:hover { background-color: var(--danger-hover); }
     &:focus { --tw-ring-color: var(--danger-soft); }
   }
 
   .input-field {
-    @apply block w-full rounded-xl px-4 py-2.5 text-sm shadow-sm transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:shadow-md disabled:cursor-not-allowed disabled:opacity-50;
+    @apply block w-full rounded-lg px-4 py-2.5 text-sm transition-all duration-150 ease-out focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50;
     background-color: var(--bg-elevated);
     color: var(--text-primary);
     border: 1px solid var(--border-default);
@@ -195,10 +208,13 @@
     }
   }
 
+  /* Cards carry depth via a background step + hairline border + inset shadow —
+     surface-ladder logic from sample3. */
   .card {
-    @apply rounded-2xl p-6 transition-all duration-200 ease-out;
+    @apply p-6 transition-all duration-200 ease-out;
+    border-radius: var(--radius-xl);
     background-color: var(--bg-elevated);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-default);
     box-shadow: var(--shadow-sm);
   }
 
@@ -300,7 +316,7 @@ main > * {
   transition: transform 180ms ease-out, box-shadow 180ms ease-out;
 }
 .hover-lift:hover {
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-md);
 }
 
@@ -445,39 +461,43 @@ main > * {
     color: var(--text-muted);
   }
 
+  /* Display/headline/card-title: the negative-tracking-scales-with-size
+     logic from DESIGN.md. Pair with a Tailwind text-[Npx] size (sizes vary
+     per context/breakpoint) — these classes only fix weight + tracking +
+     line-height so every heading tier reads consistently. */
+
+  .text-display {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+    color: var(--text-primary);
+  }
+
+  .text-headline {
+    font-size: 32px;
+    font-weight: 300;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+
+  .text-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    color: var(--text-primary);
+  }
+
   /* Elevation: .card (above) is Level 2 — a genuine raised object; reserve it
      for one focal panel per section. .panel-quiet is Level 1 — a border-only
      grouping with no fill, so it doesn't compete with a level-2 neighbor. */
 
   .panel-quiet {
-    border-radius: 1.25rem;
-    border: 1px solid var(--border-subtle);
-    background: transparent;
-  }
-
-  /* Glassmorphism panels — translucent with backdrop-blur, subtle border glow */
-  .glass-panel {
-    border-radius: 1.5rem;
-    border: 1px solid var(--glass-border);
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  }
-
-  .glass-panel-sm {
-    border-radius: 1rem;
-    border: 1px solid var(--glass-border);
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px) saturate(1.3);
-    -webkit-backdrop-filter: blur(12px) saturate(1.3);
-  }
-
-  .glass-panel-subtle {
-    border-radius: 1rem;
-    border: 1px solid var(--glass-border-subtle);
-    background: var(--glass-bg-subtle);
-    backdrop-filter: blur(8px) saturate(1.2);
-    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-default);
+    background-color: var(--bg-muted);
+    box-shadow: var(--shadow-sm);
   }
 
   /* Premium hover: for grid-locked focal elements (Health Score, hero stat)

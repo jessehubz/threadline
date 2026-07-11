@@ -1,11 +1,9 @@
 import { getProjects } from "@/actions/project-actions";
-import { ProjectGrid } from "@/components/project-grid";
 import { CreateProjectButton } from "@/components/create-project-button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LayoutDashboard, Sparkles, TrendingUp, AlertTriangle, Clock, CheckCircle2, Zap } from "lucide-react";
+import { LayoutDashboard, Sparkles } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 import { DashboardClient } from "@/components/dashboard-client";
 
 export default async function DashboardPage() {
@@ -98,6 +96,14 @@ export default async function DashboardPage() {
 
   if (insights.length === 0 && totalTasks > 0) {
     insights.push({ type: "positive", message: `All clear! ${inProgressTasks} in progress, nothing urgent.` });
+  }
+
+  // ─── Health score (0-100) ──────────────────────────────────────────────────
+  let healthScore = 100;
+  if (totalTasks > 0) {
+    const overdueRatio = overdueCount / totalTasks;
+    const blockedRatio = blockedTasksCount / totalTasks;
+    healthScore = Math.max(0, Math.min(100, Math.round(100 - overdueRatio * 60 - blockedRatio * 40)));
   }
 
   // ─── Task items for DashboardClient ────────────────────────────────────────
@@ -193,74 +199,203 @@ export default async function DashboardPage() {
     workloadByProject[projectId] = Array.from(memberMap.values()).sort((a, b) => b.total - a.total).slice(0, 10);
   }
 
-  const projectList = projects.map((p) => ({ id: p.id, name: p.name }));
+  const projectList = projects.map((p) => ({
+    id: p.id,
+    name: p.name,
+    totalTasks: p.totalTasks,
+    completedTasks: p.completedTasks,
+    memberCount: p.memberCount,
+  }));
+
+  // Top AI insight for the overview panel
+  const topInsight = insights[0] || null;
+
+  // Active tasks = not completed
+  const activeTasks = totalTasks - completedTasks;
 
   return (
     <div className="mx-auto max-w-5xl animate-[fadeIn_0.3s_ease-out]">
-      {/* ─── Header with greeting + stats inline ─── */}
-      <div className="mb-10">
-        <div className="flex items-center justify-between">
-          <h1 className="text-[26px] sm:text-[32px] font-light tracking-tight text-heading">
-            {greeting}, <span className="font-semibold">{firstName}</span>
+      {/* ─── Page Header ─── */}
+      <div className="mb-10 flex items-start justify-between">
+        <div>
+          <h1 style={{ fontSize: "32px", fontWeight: 300, letterSpacing: "-0.02em", lineHeight: 1.2, color: "var(--text-primary)" }}>
+            {greeting}, <span style={{ fontWeight: 700 }}>{firstName}</span>
           </h1>
-          <CreateProjectButton />
+          <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", marginTop: "6px" }}>
+            Here&apos;s what&apos;s happening across your projects today.
+          </p>
         </div>
+        <CreateProjectButton />
+      </div>
 
-        {/* Stats as inline flowing numbers — no boxes, no containers */}
-        <div className="mt-5 flex flex-wrap items-baseline gap-x-8 gap-y-2 sm:gap-x-12">
-          <span className="inline-flex items-baseline gap-1.5">
-            <span className="text-[28px] sm:text-[34px] font-bold tracking-tight text-heading">{totalTasks}</span>
-            <span className="text-[11px] font-medium text-dim">tasks</span>
-          </span>
-          <span className="inline-flex items-baseline gap-1.5">
-            <span className="text-[28px] sm:text-[34px] font-bold tracking-tight text-[var(--accent)]">{completedTasks}</span>
-            <span className="text-[11px] font-medium text-dim">done</span>
-          </span>
-          <span className="inline-flex items-baseline gap-1.5">
-            <span className="text-[28px] sm:text-[34px] font-bold tracking-tight text-heading">{inProgressTasks}</span>
-            <span className="text-[11px] font-medium text-dim">in progress</span>
-          </span>
-          {blockedTasksCount > 0 && (
-            <span className="inline-flex items-baseline gap-1.5">
-              <span className="text-[28px] sm:text-[34px] font-bold tracking-tight text-[var(--danger)]">{blockedTasksCount}</span>
-              <span className="text-[11px] font-medium text-[var(--danger)]">blocked</span>
-            </span>
-          )}
-          {overdueCount > 0 && (
-            <span className="inline-flex items-baseline gap-1.5">
-              <span className="text-[28px] sm:text-[34px] font-bold tracking-tight text-[var(--danger)]">{overdueCount}</span>
-              <span className="text-[11px] font-medium text-[var(--danger)]">overdue</span>
-            </span>
-          )}
-        </div>
-
-        {/* Thin progress line — shows completion visually without a box */}
-        {totalTasks > 0 && (
-          <div className="mt-4 h-[3px] w-full overflow-hidden rounded-full bg-[var(--border-subtle)]">
+      {/* ─── Overview Panel (panel-outer-tinted) ─── */}
+      <div
+        style={{
+          background: "var(--bg-elevated)",
+          border: "1px solid var(--border-default)",
+          borderRadius: "var(--radius-xl)",
+          boxShadow: "var(--shadow-sm)",
+          padding: "24px",
+          marginBottom: "32px",
+        }}
+      >
+        {/* Well frame */}
+        <div
+          style={{
+            background: "var(--bg-base)",
+            borderRadius: "var(--radius-lg)",
+            padding: "8px",
+          }}
+        >
+          {/* 2-col grid of nested cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+            {/* Health Score card */}
             <div
-              className="h-full rounded-full bg-[var(--accent)] transition-all duration-700"
-              style={{ width: `${completionRate}%` }}
-            />
+              style={{
+                background: "var(--bg-muted)",
+                border: "1px solid var(--border-default)",
+                borderRadius: "var(--radius-md)",
+                boxShadow: "var(--shadow-md)",
+                padding: "24px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                {/* Ring SVG */}
+                <svg width="56" height="56" viewBox="0 0 56 56" style={{ flexShrink: 0 }}>
+                  <circle
+                    cx="28" cy="28" r="24"
+                    fill="none"
+                    stroke="var(--border-default)"
+                    strokeWidth="4"
+                  />
+                  <circle
+                    cx="28" cy="28" r="24"
+                    fill="none"
+                    stroke="var(--accent)"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(healthScore / 100) * 150.8} 150.8`}
+                    transform="rotate(-90 28 28)"
+                  />
+                </svg>
+                <div>
+                  <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
+                    Health Score
+                  </div>
+                  <div style={{ fontSize: "40px", fontWeight: 200, letterSpacing: "-0.02em", color: "var(--text-primary)", lineHeight: 1 }}>
+                    {healthScore}
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginTop: "12px" }}>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    borderRadius: "999px",
+                    padding: "3px 10px",
+                    fontSize: "11px",
+                    fontWeight: 500,
+                    background: healthScore >= 70 ? "var(--accent-soft)" : "var(--danger-soft)",
+                    color: healthScore >= 70 ? "var(--accent)" : "var(--danger)",
+                  }}
+                >
+                  {healthScore >= 70 ? "On Track" : "Needs Attention"}
+                </span>
+              </div>
+            </div>
+
+            {/* Active Tasks card */}
+            <div
+              style={{
+                background: "var(--bg-muted)",
+                border: "1px solid var(--border-default)",
+                borderRadius: "var(--radius-md)",
+                boxShadow: "var(--shadow-md)",
+                padding: "24px",
+              }}
+            >
+              <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
+                Active Tasks
+              </div>
+              <div style={{ fontSize: "40px", fontWeight: 200, letterSpacing: "-0.02em", color: "var(--text-primary)", lineHeight: 1 }}>
+                {activeTasks}
+              </div>
+              <div style={{ marginTop: "12px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {inProgressTasks > 0 && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      borderRadius: "999px",
+                      padding: "3px 10px",
+                      fontSize: "11px",
+                      fontWeight: 500,
+                      background: "var(--accent-soft)",
+                      color: "var(--accent)",
+                    }}
+                  >
+                    {inProgressTasks} in progress
+                  </span>
+                )}
+                {blockedTasksCount > 0 && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      borderRadius: "999px",
+                      padding: "3px 10px",
+                      fontSize: "11px",
+                      fontWeight: 500,
+                      background: "var(--danger-soft)",
+                      color: "var(--danger)",
+                    }}
+                  >
+                    {blockedTasksCount} blocked
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* AI Insight strip */}
+        {topInsight && (
+          <div
+            style={{
+              borderTop: "1px solid var(--border-default)",
+              marginTop: "20px",
+              paddingTop: "16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                borderRadius: "999px",
+                padding: "3px 8px",
+                fontSize: "10.5px",
+                fontWeight: 700,
+                background: "var(--accent-soft)",
+                color: "var(--accent)",
+              }}
+            >
+              <Sparkles style={{ width: "10px", height: "10px" }} />
+              AI
+            </span>
+            <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+              {topInsight.message}
+            </span>
           </div>
         )}
       </div>
 
-      {/* ─── AI Insights — no container box, just rows ─── */}
-      {insights.length > 0 && (
-        <section className="mb-10">
-          <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
-            <span className="text-[12px] font-semibold uppercase tracking-wider text-dim">Insights</span>
-          </div>
-          <div className="space-y-2">
-            {insights.slice(0, 4).map((insight, i) => (
-              <InsightRow key={i} type={insight.type} message={insight.message} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ─── Main dashboard content ─── */}
+      {/* ─── Main dashboard content (client component) ─── */}
       <DashboardClient
         projects={projectList}
         needsAttention={needsAttention}
@@ -271,40 +406,17 @@ export default async function DashboardPage() {
         workloadByProject={workloadByProject}
       />
 
-      {/* ─── Projects section ─── */}
-      <div className="mt-14 mb-4">
-        <h2 className="text-[15px] font-semibold text-heading">Projects</h2>
-      </div>
-
-      {projects.length === 0 ? (
-        <EmptyState
-          icon={<LayoutDashboard className="h-8 w-8" />}
-          title="No projects yet"
-          description="Create your first project to start organizing tasks as dependency graphs."
-          action={<CreateProjectButton />}
-        />
-      ) : (
-        <ProjectGrid projects={projects} />
+      {/* ─── Empty state fallback ─── */}
+      {projects.length === 0 && (
+        <div className="mt-14">
+          <EmptyState
+            icon={<LayoutDashboard className="h-8 w-8" />}
+            title="No projects yet"
+            description="Create your first project to start organizing tasks as dependency graphs."
+            action={<CreateProjectButton />}
+          />
+        </div>
       )}
-    </div>
-  );
-}
-
-// ─── AI Insight row — no box, just icon + text ───────────────────────────────
-
-function InsightRow({ type, message }: { type: "urgent" | "warning" | "tip" | "positive"; message: string }) {
-  const config = {
-    urgent: { icon: AlertTriangle, color: "text-[var(--danger)]" },
-    warning: { icon: Clock, color: "text-amber-500" },
-    tip: { icon: Zap, color: "text-[var(--accent)]" },
-    positive: { icon: TrendingUp, color: "text-emerald-500" },
-  }[type];
-  const Icon = config.icon;
-
-  return (
-    <div className="flex items-start gap-2.5 py-1">
-      <Icon className={cn("h-3.5 w-3.5 mt-0.5 flex-shrink-0", config.color)} />
-      <p className="text-[13px] leading-relaxed text-body">{message}</p>
     </div>
   );
 }

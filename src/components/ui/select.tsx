@@ -21,7 +21,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           id={id}
           className={cn(
             "input-field",
-            error && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+            error && "border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]/20",
             className
           )}
           {...props}

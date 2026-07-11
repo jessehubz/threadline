@@ -72,11 +72,11 @@ export function AnalyticsCharts({
 
       {/* Hero: one focal panel — trend chart + completion radial share the same card
           instead of standing as two equal-weight boxes. */}
-      <div className="animate-entrance-1 rounded-3xl border border-themed-subtle bg-card p-5 shadow-themed sm:p-6">
+      <div className="animate-entrance-1 card">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto]">
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline justify-between gap-1">
-              <h3 className="text-[15px] font-semibold text-heading">Completions over time</h3>
+              <h3 className="text-card-title">Completions over time</h3>
               <span className="text-meta">Last 30 days</span>
             </div>
             <p className="mb-4 text-[13px] text-body">{completedCount} of {totalTasks} tasks complete</p>
@@ -100,7 +100,7 @@ export function AnalyticsCharts({
       {/* Second row: quieter, border-only supporting panels — not a repeat of the hero's card. */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_1fr]">
         <div className="animate-entrance-2 panel-quiet p-5">
-          <h3 className="mb-1 text-[13px] font-semibold text-heading">Status breakdown</h3>
+          <h3 className="mb-1 text-card-title">Status breakdown</h3>
           {statusBreakdown.length > 0 ? (
             <StatusDonutChart data={statusBreakdown} totalTasks={totalTasks} />
           ) : (
@@ -109,7 +109,7 @@ export function AnalyticsCharts({
         </div>
 
         <div className="animate-entrance-3 panel-quiet p-5">
-          <h3 className="mb-1 text-[13px] font-semibold text-heading">Workload per person</h3>
+          <h3 className="mb-1 text-card-title">Workload per person</h3>
           {workload.length > 0 ? (
             <WorkloadChart data={workloadChartData} />
           ) : (
@@ -120,10 +120,10 @@ export function AnalyticsCharts({
 
       {/* Overdue — a compact list, not another boxed grid tile */}
       {overdueTasks.length > 0 && (
-        <div className="animate-entrance-4 rounded-3xl border border-[var(--danger-soft)] bg-gradient-to-r from-[var(--danger-soft)] to-transparent p-5">
+        <div className="animate-entrance-4 rounded-xl border border-[var(--danger-soft)] bg-[var(--danger-soft)] p-5">
           <div className="mb-2 flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-[var(--danger)]" />
-            <h3 className="text-[14px] font-semibold text-heading">Overdue ({overdueTasks.length})</h3>
+            <h3 className="text-card-title">Overdue ({overdueTasks.length})</h3>
           </div>
           <div className="space-y-0.5">
             {overdueTasks.map((task) => (

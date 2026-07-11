@@ -40,10 +40,8 @@ export default async function CalendarPage() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-10">
-        <h1 className="text-[20px] font-light tracking-tight text-heading sm:text-[22px]">
-          <span className="font-semibold">Calendar</span>
-        </h1>
-        <p className="mt-1.5 text-sm text-body">
+        <h1 className="text-headline"><span className="font-bold">Calendar</span></h1>
+        <p className="mt-1.5 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
           View tasks by their due dates
         </p>
       </div>

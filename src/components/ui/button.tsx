@@ -10,10 +10,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", loading, children, disabled, ...props }, ref) => {
     const variants = {
-      primary: "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] hover:shadow-md shadow-sm",
-      secondary: "border border-themed bg-card text-heading hover:bg-hover hover:border-themed hover:shadow-md shadow-sm",
+      primary: "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]",
+      secondary: "border border-themed bg-card text-heading hover:bg-hover hover:border-themed",
       ghost: "text-body hover:bg-hover hover:text-heading",
-      danger: "bg-[var(--danger)] text-white hover:bg-[var(--danger-hover)] hover:shadow-md shadow-sm",
+      danger: "bg-[var(--danger)] text-white hover:bg-[var(--danger-hover)]",
     };
 
     const sizes = {
@@ -26,7 +26,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-100 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100",
+          "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-all duration-200 hover:-translate-y-px active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0",
           variants[variant],
           sizes[size],
           className

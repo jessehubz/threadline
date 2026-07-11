@@ -71,7 +71,7 @@ export function ProfileForm({ user }: { user: User }) {
   }
 
   return (
-    <div className="rounded-2xl border border-themed-subtle bg-card p-8 shadow-sm">
+    <div className="card p-8">
       <div className="space-y-8">
         {/* Avatar with upload */}
         <div className="flex items-center gap-5">
@@ -105,7 +105,7 @@ export function ProfileForm({ user }: { user: User }) {
             />
           </div>
           <div>
-            <p className="text-base font-semibold text-heading">
+            <p className="text-card-title text-[16px]">
               {name || "Set your name"}
             </p>
             <p className="text-sm text-body">{user.email}</p>

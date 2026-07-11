@@ -29,7 +29,7 @@ interface WorkloadMember {
 }
 
 interface DashboardClientProps {
-  projects: Array<{ id: string; name: string }>;
+  projects: Array<{ id: string; name: string; totalTasks: number; completedTasks: number; memberCount: number }>;
   needsAttention: TaskItem[];
   dueToday: TaskItem[];
   dueThisWeek: TaskItem[];
@@ -56,10 +56,11 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const [activeProject, setActiveProject] = useState<string | null>(null);
   const [workloadProject, setWorkloadProject] = useState<string | null>(null);
-  const [openSection, setOpenSection] = useState<'today' | 'week' | 'later' | null>(() => {
-    if (dueToday.length > 0) return 'today';
-    if (dueThisWeek.length > 0) return 'week';
-    if (dueLater.length > 0) return 'later';
+  const [projectStatusFilter, setProjectStatusFilter] = useState<string>("all");
+  const [openSection, setOpenSection] = useState<"today" | "week" | "later" | null>(() => {
+    if (dueToday.length > 0) return "today";
+    if (dueThisWeek.length > 0) return "week";
+    if (dueLater.length > 0) return "later";
     return null;
   });
 
@@ -76,21 +77,25 @@ export function DashboardClient({
     ? workloadByProject[workloadProject] || []
     : workload;
 
-  const WORKLOAD_THRESHOLD = 8;
-
   return (
-    <div className="space-y-10">
-      {/* ─── Filter Chips ─── */}
+    <div>
+      {/* ─── Filter Chips Row ─── */}
       {projects.length > 1 && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px", marginBottom: "32px" }}>
           <button
             onClick={() => setActiveProject(null)}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-[11px] font-medium transition-colors duration-150",
-              !activeProject
-                ? "text-[var(--accent)] border border-[var(--glass-border)] bg-[var(--glass-bg)]"
-                : "text-body hover:text-heading"
-            )}
+            style={{
+              padding: "8px 15px",
+              borderRadius: "999px",
+              fontSize: "13px",
+              fontWeight: 500,
+              border: "1px solid",
+              borderColor: !activeProject ? "var(--accent)" : "var(--border-default)",
+              background: !activeProject ? "var(--accent)" : "transparent",
+              color: !activeProject ? "#fff" : "var(--text-secondary)",
+              cursor: "pointer",
+              transition: "all 150ms ease-out",
+            }}
           >
             All Projects
           </button>
@@ -98,50 +103,331 @@ export function DashboardClient({
             <button
               key={p.id}
               onClick={() => setActiveProject(activeProject === p.id ? null : p.id)}
-              className={cn(
-                "rounded-full px-3 py-1.5 text-[11px] font-medium transition-colors duration-150",
-                activeProject === p.id
-                  ? "text-[var(--accent)] border border-[var(--glass-border)] bg-[var(--glass-bg)]"
-                  : "text-body hover:text-heading"
-              )}
+              style={{
+                padding: "8px 15px",
+                borderRadius: "999px",
+                fontSize: "13px",
+                fontWeight: 500,
+                border: "1px solid",
+                borderColor: activeProject === p.id ? "var(--accent)" : "var(--border-default)",
+                background: activeProject === p.id ? "var(--accent)" : "transparent",
+                color: activeProject === p.id ? "#fff" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 150ms ease-out",
+              }}
             >
-              <span className="inline-block h-2 w-2 rounded-full mr-1.5" style={{ backgroundColor: projectColor(p.name) }} />
               {p.name}
             </button>
           ))}
         </div>
       )}
 
-      {/* ─── Needs Attention ─── */}
-      {filteredAttention.length > 0 && (
-        <section>
-          <div className="mb-2 flex items-center gap-2">
-            <AlertTriangle className="h-3.5 w-3.5 text-[var(--danger)]" />
-            <h3 className="text-[13px] font-semibold text-heading">Needs Attention</h3>
-            <span className="text-[11px] font-medium text-[var(--danger)]">{filteredAttention.length}</span>
+      {/* ─── Your Projects — Horizontal Scroll ─── */}
+      {projects.length > 0 && (
+        <section style={{ marginBottom: "32px" }}>
+          <h2 style={{ fontSize: "14.5px", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em", marginBottom: "16px" }}>
+            Your Projects
+          </h2>
+          {/* Status filter chips */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
+            {(["all", "not_started", "ongoing", "draft"] as const).map((status) => {
+              const label = { all: "All", not_started: "Not started", ongoing: "Ongoing", draft: "Draft" }[status];
+              return (
+                <button
+                  key={status}
+                  onClick={() => setProjectStatusFilter(status)}
+                  style={{
+                    padding: "8px 15px",
+                    borderRadius: "999px",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    border: "1px solid",
+                    borderColor: projectStatusFilter === status ? "transparent" : "var(--border-default)",
+                    background: projectStatusFilter === status ? "var(--accent)" : "transparent",
+                    color: projectStatusFilter === status ? "#fff" : "var(--text-secondary)",
+                    cursor: "pointer",
+                    transition: "all 150ms ease-out",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
-          <div>
-            {filteredAttention.map((task) => (
-              <TaskRow key={task.id} task={task} showOverdue />
-            ))}
+          <div
+            style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "8px" }}
+            className="scrollbar-hide"
+          >
+            {projects
+              .filter((project) => {
+                if (projectStatusFilter === "all") return true;
+                const progress = project.totalTasks > 0 ? Math.round((project.completedTasks / project.totalTasks) * 100) : 0;
+                if (projectStatusFilter === "not_started") return project.totalTasks > 0 && progress === 0;
+                if (projectStatusFilter === "ongoing") return progress > 0 && progress < 100;
+                if (projectStatusFilter === "draft") return project.totalTasks === 0;
+                return true;
+              })
+              .map((project) => {
+              const progress = project.totalTasks > 0 ? Math.round((project.completedTasks / project.totalTasks) * 100) : 0;
+              const color = projectColor(project.name);
+              return (
+                <Link
+                  key={project.id}
+                  href={`/graph/${project.id}`}
+                  className="focus-card"
+                  style={{
+                    minWidth: "270px",
+                    padding: "26px",
+                    borderRadius: "var(--radius-lg)",
+                    background: "var(--bg-elevated)",
+                    border: "1px solid var(--border-default)",
+                    boxShadow: "var(--shadow-sm)",
+                    transition: "transform 200ms ease-out, box-shadow 200ms ease-out",
+                    textDecoration: "none",
+                    display: "block",
+                    flexShrink: 0,
+                  }}
+                >
+                  {/* Dot + avatar row */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                    <span style={{ width: "8px", height: "8px", borderRadius: "999px", background: color, flexShrink: 0 }} />
+                    <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                      {project.memberCount} member{project.memberCount !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  {/* Name */}
+                  <div style={{ fontSize: "16.5px", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em", marginBottom: "6px" }}>
+                    {project.name}
+                  </div>
+                  {/* Meta */}
+                  <div style={{ fontSize: "12.5px", color: "var(--text-muted)", marginBottom: "14px" }}>
+                    {project.totalTasks} task{project.totalTasks !== 1 ? "s" : ""} · {project.completedTasks} done
+                  </div>
+                  {/* Progress track — 5px tall */}
+                  <div style={{ height: "5px", borderRadius: "999px", background: "var(--border-default)", overflow: "hidden" }}>
+                    <div
+                      style={{
+                        height: "100%",
+                        borderRadius: "999px",
+                        background: color,
+                        width: `${progress}%`,
+                        transition: "width 500ms ease-out",
+                      }}
+                    />
+                  </div>
+                  {/* Status pill */}
+                  <div style={{ marginTop: "12px" }}>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        borderRadius: "999px",
+                        padding: "3px 10px",
+                        fontSize: "11px",
+                        fontWeight: 500,
+                        background: progress >= 100 ? "var(--accent-soft)" : "var(--bg-muted)",
+                        color: progress >= 100 ? "var(--accent)" : "var(--text-muted)",
+                      }}
+                    >
+                      {progress >= 100 ? "Complete" : `${progress}% done`}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
 
-      {/* ─── Deadline Sections — no wrapping container ─── */}
-      <section className="space-y-0">
+      {/* ─── Second Row: 2-col grid ─── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "32px" }} className="max-sm:!grid-cols-1">
+        {/* Left: Needs Attention */}
+        <div
+          style={{
+            borderRadius: "var(--radius-xl)",
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--border-default)",
+            boxShadow: "var(--shadow-sm)",
+            padding: "26px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "18px" }}>
+            <AlertTriangle style={{ width: "14px", height: "14px", color: "var(--danger)" }} />
+            <h3 style={{ fontSize: "14.5px", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+              Needs Attention
+            </h3>
+            {filteredAttention.length > 0 && (
+              <span
+                style={{
+                  borderRadius: "999px",
+                  padding: "2px 8px",
+                  fontSize: "10.5px",
+                  fontWeight: 700,
+                  background: "var(--danger-soft)",
+                  color: "var(--danger)",
+                }}
+              >
+                {filteredAttention.length}
+              </span>
+            )}
+          </div>
+          {filteredAttention.length === 0 ? (
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>Nothing urgent — nice work!</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              {filteredAttention.slice(0, 5).map((task) => (
+                <Link
+                  key={task.id}
+                  href={`/graph/${task.projectId}?nodeId=${task.id}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "10px 12px",
+                    borderLeft: "3px solid var(--danger)",
+                    borderRadius: "0 8px 8px 0",
+                    textDecoration: "none",
+                    transition: "background 150ms",
+                  }}
+                  className="hover:bg-[var(--bg-muted)]"
+                >
+                  <span style={{ flex: 1, fontSize: "13.5px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {task.title}
+                  </span>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", flexShrink: 0 }}>
+                    {task.daysOverdue && task.daysOverdue > 0 ? `${task.daysOverdue}d overdue` : "blocked"}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right: Team Workload (panel-outer-tinted with nested card) */}
+        <div
+          style={{
+            borderRadius: "var(--radius-xl)",
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--border-default)",
+            boxShadow: "var(--shadow-sm)",
+            padding: "26px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Users style={{ width: "14px", height: "14px", color: "var(--text-muted)" }} />
+              <h3 style={{ fontSize: "14.5px", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+                Team Workload
+              </h3>
+            </div>
+            {projects.length > 1 && (
+              <select
+                value={workloadProject || ""}
+                onChange={(e) => setWorkloadProject(e.target.value || null)}
+                style={{
+                  fontSize: "11px",
+                  color: "var(--text-muted)",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "2px 4px",
+                }}
+              >
+                <option value="">All</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Nested card inside */}
+          <div
+            style={{
+              background: "var(--bg-muted)",
+              border: "1px solid var(--border-default)",
+              borderRadius: "var(--radius-md)",
+              padding: "16px",
+            }}
+          >
+            {filteredWorkload.length === 0 ? (
+              <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>No workload data</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {filteredWorkload.slice(0, 5).map((member) => {
+                  const maxBar = Math.max(...filteredWorkload.map((m) => m.total), 1);
+                  const pct = (member.total / maxBar) * 100;
+                  return (
+                    <div key={member.id} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      {/* 32px avatar circle */}
+                      <div
+                        style={{
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "999px",
+                          background: "var(--accent-soft)",
+                          color: "var(--accent)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {member.initials}
+                      </div>
+                      {/* Name */}
+                      <span style={{ width: "60px", fontSize: "12.5px", fontWeight: 500, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0 }}>
+                        {member.name}
+                      </span>
+                      {/* 10px tall capsule track */}
+                      <div style={{ flex: 1, height: "10px", borderRadius: "999px", background: "var(--border-default)", overflow: "hidden" }}>
+                        <div
+                          style={{
+                            height: "100%",
+                            borderRadius: "999px",
+                            background: "var(--accent)",
+                            width: `${pct}%`,
+                            transition: "width 500ms ease-out",
+                          }}
+                        />
+                      </div>
+                      {/* Task count */}
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", minWidth: "20px", textAlign: "right" }}>
+                        {member.total}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Deadlines Panel ─── */}
+      <div
+        style={{
+          borderRadius: "var(--radius-xl)",
+          background: "var(--bg-elevated)",
+          border: "1px solid var(--border-default)",
+          boxShadow: "var(--shadow-sm)",
+          padding: "26px",
+        }}
+      >
         <CollapsibleSection
           title="Due Today"
           count={filteredToday.length}
-          open={openSection === 'today'}
-          onToggle={() => setOpenSection(prev => prev === 'today' ? null : 'today')}
+          open={openSection === "today"}
+          onToggle={() => setOpenSection((prev) => (prev === "today" ? null : "today"))}
         >
           {filteredToday.length === 0 ? (
-            <p className="py-3 pl-6 text-[12px] text-dim">Nothing due today</p>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)", padding: "8px 0 4px 28px" }}>Nothing due today</p>
           ) : (
-            <div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px", paddingLeft: "4px" }}>
               {filteredToday.map((task) => (
-                <TaskRow key={task.id} task={task} />
+                <DeadlineTaskRow key={task.id} task={task} />
               ))}
             </div>
           )}
@@ -150,15 +436,15 @@ export function DashboardClient({
         <CollapsibleSection
           title="This Week"
           count={filteredWeek.length}
-          open={openSection === 'week'}
-          onToggle={() => setOpenSection(prev => prev === 'week' ? null : 'week')}
+          open={openSection === "week"}
+          onToggle={() => setOpenSection((prev) => (prev === "week" ? null : "week"))}
         >
           {filteredWeek.length === 0 ? (
-            <p className="py-3 pl-6 text-[12px] text-dim">Nothing due this week</p>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)", padding: "8px 0 4px 28px" }}>Nothing due this week</p>
           ) : (
-            <div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px", paddingLeft: "4px" }}>
               {filteredWeek.map((task) => (
-                <TaskRow key={task.id} task={task} />
+                <DeadlineTaskRow key={task.id} task={task} />
               ))}
             </div>
           )}
@@ -167,153 +453,75 @@ export function DashboardClient({
         <CollapsibleSection
           title="Later"
           count={filteredLater.length}
-          open={openSection === 'later'}
-          onToggle={() => setOpenSection(prev => prev === 'later' ? null : 'later')}
+          open={openSection === "later"}
+          onToggle={() => setOpenSection((prev) => (prev === "later" ? null : "later"))}
         >
           {filteredLater.length === 0 ? (
-            <p className="py-3 pl-6 text-[12px] text-dim">No upcoming tasks</p>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)", padding: "8px 0 4px 28px" }}>No upcoming tasks</p>
           ) : (
-            <div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px", paddingLeft: "4px" }}>
               {filteredLater.map((task) => (
-                <TaskRow key={task.id} task={task} />
+                <DeadlineTaskRow key={task.id} task={task} />
               ))}
             </div>
           )}
         </CollapsibleSection>
-      </section>
-
-      {/* ─── Team Workload — no wrapping box ─── */}
-      {(filteredWorkload.length > 0 || workloadProject) && (
-        <section>
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Users className="h-3.5 w-3.5 text-dim" />
-              <h3 className="text-[13px] font-semibold text-heading">Team Workload</h3>
-            </div>
-            {projects.length > 1 && (
-              <div className="flex flex-wrap items-center gap-1.5">
-                <button
-                  onClick={() => setWorkloadProject(null)}
-                  className={cn(
-                    "rounded-full px-2.5 py-0.5 text-[10px] font-medium transition-colors duration-150",
-                    !workloadProject ? "text-[var(--accent)]" : "text-dim hover:text-body"
-                  )}
-                >
-                  All
-                </button>
-                {projects.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setWorkloadProject(workloadProject === p.id ? null : p.id)}
-                    className={cn(
-                      "rounded-full px-2.5 py-0.5 text-[10px] font-medium transition-colors duration-150",
-                      workloadProject === p.id ? "text-[var(--accent)]" : "text-dim hover:text-body"
-                    )}
-                  >
-                    <span className="inline-block h-1.5 w-1.5 rounded-full mr-1" style={{ backgroundColor: projectColor(p.name) }} />
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {filteredWorkload.length === 0 ? (
-            <p className="py-3 text-[12px] text-dim">No workload data for this project</p>
-          ) : (
-            <>
-              <div className="space-y-2.5">
-                {filteredWorkload.map((member) => {
-                  const maxBar = Math.max(...filteredWorkload.map((m) => m.total), 1);
-                  const overloaded = member.total >= WORKLOAD_THRESHOLD;
-                  return (
-                    <div key={member.id} className="flex items-center gap-3">
-                      <div className={cn(
-                        "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[9px] font-semibold",
-                        overloaded ? "bg-[var(--danger-soft)] text-[var(--danger)]" : "bg-[var(--accent-soft)] text-[var(--accent)]"
-                      )}>
-                        {member.initials}
-                      </div>
-                      <span className="w-16 sm:w-20 truncate text-[12px] font-medium text-heading">{member.name}</span>
-                      {/* Bar directly on background — only the filled portion is colored */}
-                      <div className="flex flex-1 items-center">
-                        <div className="flex h-[6px] flex-1 overflow-hidden rounded-full bg-[var(--border-subtle)]">
-                          {member.notStarted > 0 && (
-                            <div
-                              className="h-full bg-[var(--accent)]"
-                              style={{ width: `${(member.notStarted / maxBar) * 100}%`, opacity: 0.3 }}
-                            />
-                          )}
-                          {member.awaitingApproval > 0 && (
-                            <div
-                              className="h-full bg-[var(--accent)]"
-                              style={{ width: `${(member.awaitingApproval / maxBar) * 100}%`, opacity: 0.5 }}
-                            />
-                          )}
-                          {member.inProgress > 0 && (
-                            <div
-                              className="h-full bg-[var(--accent)]"
-                              style={{ width: `${(member.inProgress / maxBar) * 100}%`, opacity: 0.75 }}
-                            />
-                          )}
-                          {member.blocked > 0 && (
-                            <div
-                              className="h-full bg-[var(--danger)]"
-                              style={{ width: `${(member.blocked / maxBar) * 100}%` }}
-                            />
-                          )}
-                        </div>
-                      </div>
-                      <span className={cn("text-[11px] font-medium w-5 text-right", overloaded ? "text-[var(--danger)]" : "text-dim")}>
-                        {member.total}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-3 flex items-center gap-3 text-[9px] text-dim">
-                <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" style={{ opacity: 0.3 }} />Not Started</span>
-                <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" style={{ opacity: 0.5 }} />Awaiting</span>
-                <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" style={{ opacity: 0.75 }} />In Progress</span>
-                <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[var(--danger)]" />Blocked</span>
-              </div>
-            </>
-          )}
-        </section>
-      )}
+      </div>
     </div>
   );
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function TaskRow({ task, showOverdue }: { task: TaskItem; showOverdue?: boolean }) {
+function DeadlineTaskRow({ task }: { task: TaskItem }) {
   return (
     <Link
       href={`/graph/${task.projectId}?nodeId=${task.id}`}
-      className="group flex items-center gap-3 rounded-xl px-2 py-2 transition-colors duration-150 hover:bg-[var(--glass-bg)]"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        padding: "8px 10px",
+        borderRadius: "8px",
+        textDecoration: "none",
+        transition: "background 150ms",
+      }}
+      className="hover:bg-[var(--bg-muted)]"
     >
+      {/* Project tag pill */}
       <span
-        className="h-2 w-2 flex-shrink-0 rounded-full"
-        style={{ backgroundColor: getStatusDotColor(task.status) }}
-      />
-      <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-heading group-hover:text-[var(--accent)] transition-colors">
-        {task.title}
-      </span>
-      <span
-        className="hidden flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold text-white sm:inline-block"
-        style={{ backgroundColor: projectColor(task.projectName) }}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          borderRadius: "999px",
+          padding: "2px 8px",
+          fontSize: "10px",
+          fontWeight: 600,
+          background: "var(--accent-soft)",
+          color: "var(--accent)",
+          flexShrink: 0,
+          whiteSpace: "nowrap",
+        }}
       >
         {task.projectName}
       </span>
-      <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[8px] font-semibold text-[var(--accent)]">
-        {task.assigneeInitials}
-      </div>
-      {showOverdue && task.daysOverdue != null && task.daysOverdue > 0 && (
-        <span className="flex-shrink-0 text-[10px] font-medium text-[var(--danger)]">{task.daysOverdue}d</span>
-      )}
-      {!showOverdue && task.dueDate && (
-        <span className="flex-shrink-0 text-[10px] text-dim">
+      {/* Task name */}
+      <span style={{ flex: 1, fontSize: "13.5px", fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {task.title}
+      </span>
+      {/* Status dot */}
+      <span
+        style={{
+          width: "6px",
+          height: "6px",
+          borderRadius: "999px",
+          background: getStatusDotColor(task.status),
+          flexShrink: 0,
+        }}
+      />
+      {/* Date */}
+      {task.dueDate && (
+        <span style={{ fontSize: "11px", color: "var(--text-muted)", flexShrink: 0 }}>
           {new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
         </span>
       )}
@@ -335,16 +543,45 @@ function CollapsibleSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-b border-[var(--border-subtle)] last:border-b-0">
+    <div style={{ borderBottom: "1px solid var(--border-subtle)" }} className="last:border-b-0">
       <button
         onClick={onToggle}
-        className="flex w-full items-center gap-2 py-3 transition-colors duration-150 hover:text-[var(--accent)]"
+        style={{
+          display: "flex",
+          width: "100%",
+          alignItems: "center",
+          gap: "8px",
+          padding: "14px 0",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          transition: "color 150ms",
+        }}
       >
-        {open ? <ChevronDown className="h-3.5 w-3.5 text-dim" /> : <ChevronRight className="h-3.5 w-3.5 text-dim" />}
-        <span className="text-[13px] font-semibold text-heading">{title}</span>
-        {count > 0 && <span className="text-[11px] font-medium text-[var(--accent)]">{count}</span>}
+        {open ? (
+          <ChevronDown style={{ width: "14px", height: "14px", color: "var(--text-muted)" }} />
+        ) : (
+          <ChevronRight style={{ width: "14px", height: "14px", color: "var(--text-muted)" }} />
+        )}
+        <span style={{ fontSize: "14.5px", fontWeight: 600, color: "var(--text-primary)" }}>
+          {title}
+        </span>
+        {count > 0 && (
+          <span
+            style={{
+              borderRadius: "999px",
+              padding: "2px 8px",
+              fontSize: "10.5px",
+              fontWeight: 700,
+              background: "var(--accent-soft)",
+              color: "var(--accent)",
+            }}
+          >
+            {count}
+          </span>
+        )}
       </button>
-      {open && <div className="pb-2">{children}</div>}
+      {open && <div style={{ paddingBottom: "12px" }}>{children}</div>}
     </div>
   );
 }

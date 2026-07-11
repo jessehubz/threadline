@@ -78,12 +78,10 @@ export default async function AnalyticsPage() {
     : completionsThisWeek > 0 ? 100 : 0;
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-5xl">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-[20px] sm:text-[22px] font-light tracking-tight text-heading">
-          <span className="font-semibold">Analytics</span>
-        </h1>
-        <p className="mt-0.5 text-[13px] text-body">
+        <h1 className="text-headline"><span className="font-bold">Analytics</span></h1>
+        <p className="mt-0.5 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
           Your performance and activity across all projects
         </p>
       </div>

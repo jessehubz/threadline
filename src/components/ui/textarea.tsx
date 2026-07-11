@@ -20,7 +20,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           id={id}
           className={cn(
             "input-field min-h-[80px] resize-y",
-            error && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+            error && "border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]/20",
             className
           )}
           {...props}

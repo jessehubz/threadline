@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,54 +13,96 @@ interface DialogProps {
 }
 
 export function Dialog({ open, onClose, title, children, className }: DialogProps) {
-  const overlayRef = useRef<HTMLDivElement>(null);
+  // mounted = present in DOM; show = CSS classes for visible state
+  const [mounted, setMounted] = useState(false);
+  const [show, setShow] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (open) {
+      // Mount immediately, then trigger enter on next frame
+      setMounted(true);
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setShow(true);
+        });
+      });
+    } else if (mounted) {
+      // Trigger exit, then unmount after transition
+      setShow(false);
+      closeTimerRef.current = setTimeout(() => {
+        setMounted(false);
+      }, 220);
+    }
+  }, [open]);
+
+  // Lock body scroll
+  useEffect(() => {
+    if (mounted) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
-  }, [open]);
+  }, [mounted]);
 
+  // Escape key handler
   useEffect(() => {
     function handleEscape(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
-    if (open) document.addEventListener("keydown", handleEscape);
+    if (mounted) document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [open, onClose]);
+  }, [mounted, onClose]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ isolation: "isolate" }}
     >
-      {/* Overlay — dimmed background */}
-      <div
-        ref={overlayRef}
-        className="fixed inset-0 bg-black/50 backdrop-blur-[2px] animate-[fadeIn_0.15s_ease-out]"
-        onClick={onClose}
-      />
-      {/* Dialog panel — centered via parent flex, scale-in animation */}
+      {/* Overlay — plain dim, NO blur, stays sharp/legible behind */}
       <div
         className={cn(
-          "relative z-10 w-full max-w-lg rounded-2xl border border-themed-subtle bg-card p-6 shadow-2xl",
-          "animate-[scaleIn_0.2s_ease-out]",
+          "fixed inset-0 transition-opacity duration-[220ms] ease-out",
+          show ? "opacity-100" : "opacity-0"
+        )}
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.35)" }}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      {/* Dialog panel — viewport-centered, scale 96%→100% + fade */}
+      <div
+        className={cn(
+          "relative z-10 w-full max-w-lg p-6 transition-all duration-[220ms] ease-out",
+          show
+            ? "opacity-100 scale-100 translate-y-0"
+            : "opacity-0 scale-[0.96] translate-y-1",
           className
         )}
+        style={{
+          borderRadius: "var(--radius-xl)",
+          border: "1px solid var(--border-default)",
+          backgroundColor: "var(--bg-elevated)",
+          boxShadow: "var(--shadow-md)",
+        }}
+        role="dialog"
+        aria-modal="true"
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-[16px] font-semibold text-heading">{title}</h2>
+          <h2 className="text-[16px] font-semibold" style={{ color: "var(--text-primary)" }}>{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-dim transition-all duration-150 hover:bg-hover hover:text-body"
+            className="rounded-lg p-1.5 transition-all duration-150 hover:bg-[var(--bg-muted)]"
+            style={{ color: "var(--text-muted)" }}
             aria-label="Close"
           >
-            <X className="h-4.5 w-4.5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
         {children}

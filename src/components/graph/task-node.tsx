@@ -24,7 +24,7 @@ function TaskNodeInner({ data, selected }: NodeProps & { data: TaskNodeData }) {
   return (
     <div
       className={cn(
-        "min-w-[200px] max-w-[280px] rounded-2xl border bg-card shadow-sm transition-all duration-200 ease-out",
+        "min-w-[200px] max-w-[280px] rounded-xl border bg-card shadow-sm transition-all duration-200 ease-out",
         selected
           ? "shadow-lg ring-2 ring-[var(--accent)]/50"
           : "hover:-translate-y-px hover:shadow-md hover:border-[var(--accent)]/40"

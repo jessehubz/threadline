@@ -136,7 +136,7 @@ export function TaskDetailPanel({
   return (
     <div ref={scrollRef} className="w-[400px] shrink-0 overflow-y-auto border-l border-themed-subtle bg-card">
       <div className="flex items-center justify-between border-b border-themed-subtle px-5 py-4">
-        <h3 className="text-sm font-semibold text-heading">Task Details</h3>
+        <h3 className="text-card-title">Task Details</h3>
         <div className="flex items-center gap-1">
           {!isReadOnly && (
             <button onClick={onDelete} className="rounded-xl p-1.5 text-dim transition-colors hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]" aria-label="Delete">

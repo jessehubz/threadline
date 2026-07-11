@@ -30,7 +30,7 @@ export function DeadlinesPanel({ tasks, onSelectNode, onClose }: DeadlinesPanelP
       <div className="flex items-center justify-between border-b border-themed-subtle px-4 py-3">
         <div className="flex items-center gap-2">
           <CalendarDays className="h-4 w-4 accent-color" />
-          <h3 className="text-sm font-semibold text-heading">Deadlines</h3>
+          <h3 className="text-card-title">Deadlines</h3>
         </div>
         <button onClick={onClose} className="rounded-lg p-1 text-dim hover:bg-hover">
           <X className="h-4 w-4" />

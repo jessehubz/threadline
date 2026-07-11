@@ -46,8 +46,8 @@ export default async function OverviewPage() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-8">
-        <h1 className="text-[22px] font-bold tracking-tight text-heading">Overview</h1>
-        <p className="mt-0.5 text-[13px] text-body">
+        <h1 className="text-headline"><span className="font-bold">Overview</span></h1>
+        <p className="mt-0.5 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
           Detailed progress for each project you lead
         </p>
       </div>

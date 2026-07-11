@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn, getStatusColor, getStatusLabel } from "@/lib/utils";
-import { ClipboardList, Users, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { ClipboardList, Users, CheckCircle2, Clock, AlertCircle, Sparkles } from "lucide-react";
 
 interface Task {
   id: string;
@@ -25,7 +25,7 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
 
   if (projects.length === 0) {
     return (
-      <div className="rounded-2xl border border-themed-subtle bg-card p-12 text-center">
+      <div className="card p-12 text-center">
         <ClipboardList className="h-10 w-10 text-dim mx-auto mb-3" />
         <p className="text-sm font-medium text-heading">No projects to overview</p>
         <p className="text-xs text-body mt-1">You need to be a Head or Co-Head of a project to see its overview.</p>
@@ -105,6 +105,29 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
         </div>
       </div>
 
+      {/* AI Insight — one-line contextual tip */}
+      {totalTasks > 0 && (
+        <div
+          className="flex items-center gap-3 px-4 py-3"
+          style={{ borderRadius: "var(--radius-sm)", border: "1px solid var(--border-default)", backgroundColor: "var(--bg-elevated)" }}
+        >
+          <span className="flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10.5px] font-bold" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}>
+            <Sparkles className="h-3 w-3" />
+            AI
+          </span>
+          <span className="text-[13px] text-[var(--text-secondary)]">
+            {overdue.length > 0
+              ? <><b className="text-[var(--text-primary)]">{overdue[0].title}</b> is overdue{overdue.length > 1 ? ` — ${overdue.length - 1} more also late` : ""}. Clear blockers first.</>
+              : blocked > 0
+              ? <><b className="text-[var(--text-primary)]">{blocked} task{blocked > 1 ? "s" : ""}</b> blocked — might be worth a check-in.</>
+              : inProgress > 0
+              ? <>All on track. <b className="text-[var(--text-primary)]">{inProgress}</b> task{inProgress > 1 ? "s" : ""} actively in progress.</>
+              : <>Project is clear — time to assign next steps.</>
+            }
+          </span>
+        </div>
+      )}
+
       {/* Progress — no container at all, just lives on the background */}
       {totalTasks > 0 && (
         <div className="px-1">
@@ -120,7 +143,7 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
 
       {/* Team member progress */}
       <div className="panel-quiet p-5">
-        <h3 className="text-[14px] font-semibold text-heading mb-4">Team Progress</h3>
+        <h3 className="text-card-title mb-4">Team Progress</h3>
         <div className="space-y-3">
           {memberStats.map((m) => (
             <div key={m.id} className="flex items-center gap-3 py-2 border-b border-themed-subtle last:border-0">
@@ -143,8 +166,8 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
       </div>
 
       {/* Task list — the one focal, level-2 card on this page */}
-      <div className="rounded-2xl border border-themed-subtle bg-card p-5 shadow-themed">
-        <h3 className="text-[14px] font-semibold text-heading mb-4">All Tasks</h3>
+      <div className="card p-5">
+        <h3 className="text-card-title mb-4">All Tasks</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[13px]">
             <thead>
@@ -160,7 +183,7 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
                 const isOverdue = task.dueDate && new Date(task.dueDate) < now && task.status !== "COMPLETE";
                 return (
                   <tr key={task.id} className="border-b border-themed-subtle transition-colors hover:bg-hover">
-                    <td className="py-2.5 pr-4 font-medium text-heading">{task.title}</td>
+                    <td className="py-2.5 pr-4 text-item-title">{task.title}</td>
                     <td className="py-2.5 pr-4 text-body">
                       {task.assignees.length > 0
                         ? task.assignees.map((a) => a.name || a.email.split("@")[0]).join(", ")
@@ -184,16 +207,16 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
         </div>
       </div>
 
-      {/* Overdue alerts — danger-tinted gradient, matching the same treatment used on Dashboard/Analytics */}
+      {/* Overdue alerts — danger-tinted panel (solid fill), matching the treatment used on Analytics */}
       {overdue.length > 0 && (
-        <div className="rounded-2xl border border-[var(--danger-soft)] bg-gradient-to-r from-[var(--danger-soft)] to-transparent p-5">
-          <h3 className="text-[14px] font-semibold text-[var(--danger)] mb-3 flex items-center gap-1.5">
-            <AlertCircle className="h-4 w-4" /> Overdue Tasks ({overdue.length})
+        <div className="p-5" style={{ borderRadius: 'var(--radius-lg)', border: '1px solid var(--danger-soft)', backgroundColor: 'var(--danger-soft)' }}>
+          <h3 className="text-card-title mb-3 flex items-center gap-1.5">
+            <AlertCircle className="h-4 w-4 text-[var(--danger)]" /> Overdue Tasks ({overdue.length})
           </h3>
           <div className="space-y-2">
             {overdue.map((t) => (
               <div key={t.id} className="flex items-center justify-between text-[13px]">
-                <span className="font-medium text-heading">{t.title}</span>
+                <span className="text-item-title">{t.title}</span>
                 <span className="text-[11px] text-[var(--danger)]">Due {new Date(t.dueDate!).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
               </div>
             ))}

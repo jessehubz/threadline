@@ -16,10 +16,8 @@ export default async function TeamPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-8">
-        <h1 className="text-[20px] font-light tracking-tight text-heading sm:text-[22px]">
-          <span className="font-semibold">Teams</span>
-        </h1>
-        <p className="mt-0.5 text-[13px] text-body">
+        <h1 className="text-headline"><span className="font-bold">Teams</span></h1>
+        <p className="mt-0.5 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
           Create teams and invite them to projects in one click.
         </p>
       </div>

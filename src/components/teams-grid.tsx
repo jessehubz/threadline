@@ -27,7 +27,7 @@ export function TeamsGrid({ teams }: { teams: Team[] }) {
       </div>
 
       {teams.length === 0 ? (
-        <div className="rounded-2xl border border-themed-subtle bg-card p-12 text-center">
+        <div className="rounded-xl border border-themed-subtle bg-card p-12 text-center">
           <Users className="h-10 w-10 text-dim mx-auto mb-3" />
           <p className="text-sm font-medium text-heading">No teams yet</p>
           <p className="text-xs text-body mt-1">Create a team to group collaborators together.</p>
@@ -38,7 +38,7 @@ export function TeamsGrid({ teams }: { teams: Team[] }) {
             <button
               key={team.id}
               onClick={() => setSelectedTeam(team)}
-              className={`group animate-entrance-${Math.min(i + 1, 6)} hover-lift rounded-2xl border border-themed-subtle bg-card p-5 text-left shadow-sm transition-all hover:border-themed hover:shadow-themed-md`}
+              className={`group animate-entrance-${Math.min(i + 1, 6)} hover-lift rounded-xl border border-themed-subtle bg-card p-5 text-left transition-all hover:border-themed`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl accent-bg">
@@ -46,7 +46,7 @@ export function TeamsGrid({ teams }: { teams: Team[] }) {
                 </div>
                 <Badge variant="default">{team.members.length}</Badge>
               </div>
-              <h3 className="mt-3 text-item-title group-hover:accent-color">{team.name}</h3>
+              <h3 className="mt-3 text-card-title group-hover:accent-color">{team.name}</h3>
               <div className="mt-2 flex flex-wrap gap-1">
                 {team.members.slice(0, 3).map((m) => (
                   <span key={m.id} className="rounded-full bg-hover px-2 py-0.5 text-[10px] text-body">{m.email.split("@")[0]}</span>

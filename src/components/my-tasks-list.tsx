@@ -52,7 +52,7 @@ function TaskGroup({ title, icon, tasks, variant }: { title: string; icon: React
     <div>
       <div className="mb-3 flex items-center gap-2.5">
         {icon}
-        <h3 className="text-sm font-semibold text-heading">{title}</h3>
+        <h3 className="text-card-title">{title}</h3>
         <Badge variant={variant}>{tasks.length}</Badge>
       </div>
       <div className="space-y-0.5">

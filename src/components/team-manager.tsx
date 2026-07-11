@@ -82,7 +82,7 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
 
       {/* Members list */}
       {project && (
-        <div className="rounded-2xl border border-themed-subtle bg-card p-2 shadow-sm">
+        <div className="rounded-xl border border-themed-subtle bg-card p-2">
           <div className="divide-y divide-[var(--border-subtle)]">
             {project.members.map((member) => (
               <div key={member.id} className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-hover">
@@ -91,7 +91,7 @@ export function TeamManager({ projects, currentUserId }: { projects: Project[]; 
                     {member.user.name?.[0]?.toUpperCase() || member.user.email[0].toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-heading">
+                    <p className="text-item-title">
                       {member.user.name || member.user.email}
                     </p>
                     <p className="text-xs text-body">{member.user.email}</p>

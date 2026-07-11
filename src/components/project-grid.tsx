@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { MoreHorizontal, Trash2, Pencil, Users, UserPlus, Search, Tag, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { deleteProject, updateProject } from "@/actions/project-actions";
 import { inviteMember } from "@/actions/team-actions";
 import { addLabel, removeLabel } from "@/actions/label-actions";
@@ -50,9 +50,9 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
         </div>
         {allLabels.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            <button onClick={() => setActiveLabel(null)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${!activeLabel ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-body hover:text-heading hover:bg-[var(--glass-bg-subtle)]"}`}>All</button>
+            <button onClick={() => setActiveLabel(null)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${!activeLabel ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-body hover:text-heading hover:bg-[var(--bg-muted)]"}`}>All</button>
             {allLabels.map((l) => (
-              <button key={l.name} onClick={() => setActiveLabel(activeLabel === l.name ? null : l.name)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${activeLabel === l.name ? "text-white" : "text-body hover:text-heading hover:bg-[var(--glass-bg-subtle)]"}`} style={activeLabel === l.name ? { backgroundColor: l.color } : undefined}>{l.name}</button>
+              <button key={l.name} onClick={() => setActiveLabel(activeLabel === l.name ? null : l.name)} className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${activeLabel === l.name ? "text-white" : "text-body hover:text-heading hover:bg-[var(--bg-muted)]"}`} style={activeLabel === l.name ? { backgroundColor: l.color } : undefined}>{l.name}</button>
             ))}
           </div>
         )}
@@ -79,11 +79,22 @@ function ProjectCard({ project }: { project: Project }) {
   const [labelOpen, setLabelOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [labels, setLabels] = useState(project.labels || []);
+  const [hoverPreview, setHoverPreview] = useState(false);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const progress =
     project.totalTasks > 0
       ? Math.round((project.completedTasks / project.totalTasks) * 100)
       : 0;
+
+  function handleMouseEnter() {
+    hoverTimeoutRef.current = setTimeout(() => setHoverPreview(true), 400);
+  }
+
+  function handleMouseLeave() {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setHoverPreview(false);
+  }
 
   async function handleDelete() {
     setLoading(true);
@@ -99,7 +110,36 @@ function ProjectCard({ project }: { project: Project }) {
 
   return (
     <>
-      <div className="group relative rounded-2xl border border-[var(--glass-border)] p-5 transition-all duration-200 ease-out hover:border-[var(--accent)]/30">
+      <div className="group relative p-5 transition-all duration-200 ease-out hover:-translate-y-1" style={{ borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-default)', backgroundColor: 'var(--bg-elevated)', boxShadow: 'var(--shadow-sm)' }} onMouseEnter={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-md)'; handleMouseEnter(); }} onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; handleMouseLeave(); }}>
+        {/* Hover Preview Popup */}
+        {hoverPreview && (
+          <div
+            className="pointer-events-none absolute -top-2 left-1/2 z-30 w-64 -translate-x-1/2 -translate-y-full animate-[fadeInUp_0.2s_ease-out_both] p-4"
+            style={{
+              borderRadius: "var(--radius-md)",
+              border: "1px solid var(--border-default)",
+              backgroundColor: "var(--bg-elevated)",
+              boxShadow: "var(--shadow-md)",
+            }}
+          >
+            <p className="text-[13px] font-semibold text-[var(--text-primary)] mb-1.5">{project.name}</p>
+            {project.description && (
+              <p className="text-[12px] text-[var(--text-secondary)] line-clamp-2 mb-2">{project.description}</p>
+            )}
+            <div className="flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
+              <span>{project.completedTasks}/{project.totalTasks} tasks done</span>
+              <span>·</span>
+              <span>{project.memberCount} member{project.memberCount !== 1 ? "s" : ""}</span>
+            </div>
+            {project.totalTasks > 0 && (
+              <div className="mt-2 h-1.5 w-full rounded-full" style={{ background: "var(--border-default)" }}>
+                <div className="h-1.5 rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} />
+              </div>
+            )}
+            {/* Arrow */}
+            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-3 w-3 rotate-45" style={{ backgroundColor: "var(--bg-elevated)", borderRight: "1px solid var(--border-default)", borderBottom: "1px solid var(--border-default)" }} />
+          </div>
+        )}
         <div className="flex items-start justify-between">
           <Link href={`/graph/${project.id}`} className="flex flex-1 items-center gap-2.5 min-w-0">
             <span
@@ -107,7 +147,7 @@ function ProjectCard({ project }: { project: Project }) {
               style={{ backgroundColor: project.needsAttention ? "var(--danger)" : "var(--accent)" }}
               title={project.needsAttention ? "Needs attention" : "On track"}
             />
-            <h3 className="truncate text-[15px] font-medium text-heading transition-colors group-hover:accent-color">
+            <h3 className="truncate text-card-title transition-colors group-hover:accent-color">
               {project.name}
             </h3>
           </Link>
@@ -132,7 +172,7 @@ function ProjectCard({ project }: { project: Project }) {
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full z-20 mt-1 w-40 rounded-xl border border-themed-subtle bg-card py-1.5 shadow-xl">
+                  <div className="absolute right-0 top-full z-20 mt-1 w-40 py-1.5 shadow-xl" style={{ borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)', backgroundColor: 'var(--bg-elevated)' }}>
                     <button onClick={() => { setEditOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-heading transition-colors hover:bg-hover">
                       <Pencil className="h-3.5 w-3.5 text-dim" /> Edit
                     </button>

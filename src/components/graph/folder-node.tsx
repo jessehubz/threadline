@@ -22,9 +22,9 @@ function FolderNodeInner({ data, selected }: NodeProps & { data: FolderNodeData 
   return (
     <div
       className={cn(
-        "min-w-[220px] max-w-[300px] rounded-2xl border-2 border-dashed bg-card/95 shadow-sm transition-all duration-200/95",
+        "min-w-[220px] max-w-[300px] rounded-xl border-2 border-dashed bg-card/95 shadow-sm transition-all duration-200",
         selected
-          ? "shadow-lg ring-2 ring-purple-300/50700/50"
+          ? "shadow-lg ring-2 ring-[var(--accent)]/50"
           : "hover:shadow-md hover:border-solid"
       )}
       style={{ borderColor: selected ? accentColor : `${accentColor}60` }}
@@ -32,12 +32,12 @@ function FolderNodeInner({ data, selected }: NodeProps & { data: FolderNodeData 
       <Handle
         type="source"
         position={Position.Right}
-        className="!h-3 !w-3 !rounded-full !border-2 !border-white !bg-purple-400900"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-card !bg-[var(--accent)]"
       />
       <Handle
         type="target"
         position={Position.Left}
-        className="!h-3 !w-3 !rounded-full !border-2 !border-white !bg-purple-400900"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-card !bg-[var(--accent)]"
       />
 
       <div className="p-4">
@@ -46,7 +46,7 @@ function FolderNodeInner({ data, selected }: NodeProps & { data: FolderNodeData 
             <Folder className="h-4.5 w-4.5" style={{ color: accentColor }} />
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="truncate text-[13px] font-semibold text-heading">
+            <h4 className="truncate text-item-title">
               {nodeData.title}
             </h4>
             {progress && (
