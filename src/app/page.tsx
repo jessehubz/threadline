@@ -304,22 +304,15 @@ export default async function LandingPage() {
 
         {/* ─── Footer ─── */}
         <footer className="land-footer">
-          <div className="foot-grid">
-            <div>
+          <div className="foot-row">
+            <div className="foot-brand">
               <div className="word" style={{ fontSize: "16px" }}><span className="t1">Thread</span><span className="t2">line</span></div>
-              <p className="foot-tagline">Visual project management for teams who think in systems.</p>
+              <span className="foot-tagline">Visual project management for teams who think in systems.</span>
             </div>
-            <div className="foot-col">
-              <h4>Product</h4>
-              <ul><li><a href="#services">Features</a></li><li><a href="#">Pricing</a></li><li><a href="#">Changelog</a></li></ul>
-            </div>
-            <div className="foot-col">
-              <h4>Company</h4>
-              <ul><li><a href="#about">About</a></li><li><a href="#">Blog</a></li><li><a href="#contact">Contact</a></li></ul>
-            </div>
-            <div className="foot-col">
-              <h4>Legal</h4>
-              <ul><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li></ul>
+            <div className="foot-links-row">
+              <a href="#services">Features</a>
+              <a href="#">Pricing</a>
+              <a href="#">Changelog</a>
             </div>
           </div>
           <div className="foot-bottom">
@@ -453,90 +446,97 @@ const landingStyles = `
 }
 .land-mobile-toggle:hover { background: var(--surface-raised); }
 
-/* Mobile menu */
-.land-mobile-menu {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
+/* Mobile dropdown — hidden on desktop */
+.land-mobile-dropdown {
+  display: none;
 }
-.land-mobile-backdrop {
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--bg-base) 92%, transparent);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  animation: fadeIn 0.2s ease;
+
+/* Mobile menu (active styles applied via responsive query) */
+@media (max-width: 900px) {
+  .land-mobile-dropdown {
+    display: block;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 150;
+    padding: 8px 24px 24px;
+    background: var(--bg-base);
+    border-bottom: 1px solid var(--hairline);
+    animation: dropIn 0.2s cubic-bezier(0.16,1,0.3,1);
+  }
 }
-.land-mobile-panel {
-  position: absolute;
-  inset: 0;
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.land-mobile-inner {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 24px;
-  animation: fadeIn 0.25s cubic-bezier(0.16,1,0.3,1);
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  gap: 2px;
 }
 .land-mobile-link {
   display: block;
-  font-size: 22px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  color: var(--text-1);
-  text-decoration: none;
-  padding: 16px 32px;
-  border-radius: 12px;
-  transition: background 0.15s ease, color 0.15s ease;
-  text-align: center;
-}
-.land-mobile-link:hover { background: var(--surface-raised); color: var(--violet-bright); }
-.land-mobile-ctas {
-  margin-top: 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding-top: 24px;
-  border-top: 1px solid var(--hairline);
-  width: 100%;
-  max-width: 280px;
-}
-.land-mobile-ctas .land-cta-nav {
-  text-align: center;
-  display: block;
-  width: 100%;
-  background: linear-gradient(135deg, var(--violet), var(--violet-deep));
-  color: #fff;
-  padding: 14px 24px;
-  border-radius: 999px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
+  color: var(--text-2);
+  text-decoration: none;
+  padding: 12px 0;
+  transition: color 0.15s ease;
 }
-.land-mobile-ctas .land-link-nav { text-align: center; display: block; padding: 10px; font-size: 15px; }
-
-/* Close button inside mobile panel */
-.land-mobile-close {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 44px;
-  height: 44px;
+.land-mobile-link:hover { color: var(--text-1); }
+.land-mobile-divider {
+  height: 1px;
+  background: var(--hairline);
+  margin: 8px 0;
+}
+.land-mobile-actions {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+}
+.land-mobile-cta {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  border: 1px solid var(--hairline);
-  background: var(--surface);
-  color: var(--text-1);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  background: var(--text-1);
+  color: var(--ink);
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
 }
-.land-mobile-close:hover { background: var(--surface-raised); border-color: var(--violet); }
+.land-mobile-cta:hover { opacity: 0.9; }
+
+/* Hamburger icon — two lines that animate to X */
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 18px;
+  height: 18px;
+  gap: 5px;
+  position: relative;
+}
+.hamburger-icon span {
+  display: block;
+  width: 18px;
+  height: 1.5px;
+  background: var(--text-1);
+  border-radius: 1px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.hamburger-icon.open span:first-child {
+  transform: translateY(3.25px) rotate(45deg);
+}
+.hamburger-icon.open span:last-child {
+  transform: translateY(-3.25px) rotate(-45deg);
+}
 
 /* ─── Sections ─── */
 .land-section {
@@ -767,15 +767,14 @@ const landingStyles = `
 .final-cta p { color: var(--text-2); margin-bottom: 30px; font-size: 15.5px; }
 
 /* ─── Footer ─── */
-.land-footer { max-width: 1320px; margin: 0 auto; padding: 60px 48px 60px; }
-.foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
-.foot-tagline { font-size: 13px; color: var(--text-3); margin-top: 14px; max-width: 200px; line-height: 1.6; }
-.foot-col h4 { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 16px; }
-.foot-col ul { list-style: none; }
-.foot-col li { margin-bottom: 12px; }
-.foot-col a { font-size: 13.5px; color: var(--text-2); text-decoration: none; transition: color .15s ease; }
-.foot-col a:hover { color: var(--text-1); }
-.foot-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 28px; border-top: 1px solid var(--hairline); }
+.land-footer { max-width: 1320px; margin: 0 auto; padding: 48px 48px; }
+.foot-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+.foot-brand { display: flex; align-items: center; gap: 16px; }
+.foot-tagline { font-size: 13px; color: var(--text-3); line-height: 1.5; }
+.foot-links-row { display: flex; gap: 28px; }
+.foot-links-row a { font-size: 13.5px; color: var(--text-2); text-decoration: none; transition: color .15s ease; }
+.foot-links-row a:hover { color: var(--text-1); }
+.foot-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid var(--hairline); }
 .land-footer .copy { font-size: 12.5px; color: var(--text-3); }
 .footer-links { display: flex; gap: 24px; font-size: 13px; }
 .footer-links a { color: var(--text-2); text-decoration: none; transition: color .15s ease; }
@@ -883,12 +882,11 @@ const landingStyles = `
   .contact-grid { grid-template-columns: 1fr; max-width: 360px; }
   .final-cta { margin: 40px 16px 60px; padding: 40px 24px; }
   .final-cta h2 { font-size: 30px; }
-  .land-footer { padding: 40px 24px; }
-  .foot-grid { grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
-  .foot-grid > div:first-child { grid-column: 1 / -1; }
-  .foot-tagline { max-width: 100%; }
+  .land-footer { padding: 32px 24px; }
+  .foot-row { flex-direction: column; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
+  .foot-brand { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .foot-links-row { gap: 20px; }
   .foot-bottom { flex-direction: row; justify-content: space-between; align-items: center; }
-}
 }
 
 @media (max-width: 480px) {
@@ -905,13 +903,8 @@ const landingStyles = `
   .mini-track { height: 3px; }
   .mini-stem { height: 8px; }
   .stats-row { gap: 16px; }
-  .foot-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-  .foot-grid > div:first-child { grid-column: 1 / -1; }
-  .foot-tagline { max-width: 100%; }
-  .foot-col h4 { font-size: 10px; margin-bottom: 10px; }
-  .foot-col a { font-size: 12.5px; }
-  .foot-col li { margin-bottom: 8px; }
-  .foot-bottom { flex-direction: row; justify-content: space-between; align-items: center; }
+  .foot-links-row { gap: 16px; }
+  .foot-links-row a { font-size: 12.5px; }
   .footer-links { gap: 16px; font-size: 12px; }
   .land-footer .copy { font-size: 11.5px; }
 }
