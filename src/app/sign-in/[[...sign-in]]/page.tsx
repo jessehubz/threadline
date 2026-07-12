@@ -56,7 +56,6 @@ export default function SignInPage() {
             <SignIn
               appearance={{
                 variables: {
-                  colorTextSecondary: "var(--clerk-body-text)",
                   colorPrimary: "#8B5CF6",
                 },
                 elements: {

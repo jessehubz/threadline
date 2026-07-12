@@ -74,7 +74,6 @@ export default function SignUpPage() {
             <SignUp
               appearance={{
                 variables: {
-                  colorTextSecondary: "var(--clerk-body-text)",
                   colorPrimary: "#8B5CF6",
                 },
                 elements: {
