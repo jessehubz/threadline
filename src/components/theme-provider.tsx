@@ -72,14 +72,39 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const resolved = newTheme === "system" ? getSystemTheme() : newTheme;
     setResolvedTheme(resolved);
 
-    // Enable crossfade transition, then apply theme
-    document.documentElement.classList.add("theme-transition");
-    applyTheme(resolved);
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
-    // Remove transition class after animation completes
-    setTimeout(() => {
-      document.documentElement.classList.remove("theme-transition");
-    }, 350);
+    // Use View Transitions API if available and motion is OK
+    if (
+      !prefersReducedMotion &&
+      "startViewTransition" in document &&
+      typeof (document as any).startViewTransition === "function"
+    ) {
+      // Prevent the default theme-transition class from interfering
+      const transition = (document as any).startViewTransition(() => {
+        applyTheme(resolved);
+      });
+
+      // Mark the document so CSS can target the liquid animation
+      document.documentElement.classList.add("liquid-transitioning");
+      transition.finished.then(() => {
+        document.documentElement.classList.remove("liquid-transitioning");
+      });
+    } else {
+      // Fallback: simple crossfade for unsupported browsers or reduced motion
+      if (prefersReducedMotion) {
+        applyTheme(resolved);
+      } else {
+        document.documentElement.classList.add("theme-transition");
+        applyTheme(resolved);
+        setTimeout(() => {
+          document.documentElement.classList.remove("theme-transition");
+        }, 350);
+      }
+    }
   }, []);
 
   return (

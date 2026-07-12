@@ -131,16 +131,17 @@ const authStyles = `
   background-color: #0A0A0B;
   background-image:
     radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px),
-    radial-gradient(ellipse 900px 700px at 15% 10%, rgba(139,92,246,0.18), transparent 65%);
-  background-size: 28px 28px, auto;
-  background-repeat: repeat, no-repeat;
+    radial-gradient(ellipse 500px 400px at 15% 10%, rgba(139,92,246,0.12), transparent 65%),
+    radial-gradient(ellipse 450px 350px at 85% 90%, rgba(139,92,246,0.09), transparent 65%);
+  background-size: 28px 28px, auto, auto;
+  background-repeat: repeat, no-repeat, no-repeat;
   border-right: 1px solid rgba(255,255,255,0.06);
 }
 .auth-logo-t1 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: #F2F2F4; }
 .auth-logo-t2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: #8B5CF6; }
 .auth-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8B5CF6; margin-bottom: 18px; }
-.auth-heading { font-size: 38px; font-weight: 200; letter-spacing: -0.03em; line-height: 1.1; color: #F2F2F4; margin-bottom: 18px; }
-.auth-subtext { font-size: 15px; color: #98989F; line-height: 1.65; max-width: 380px; }
+.auth-heading { font-size: 57px; font-weight: 200; letter-spacing: -0.03em; line-height: 1.1; color: #F2F2F4; margin-bottom: 22px; }
+.auth-subtext { font-size: 22px; color: #98989F; line-height: 1.65; max-width: 460px; }
 .auth-stats { margin-top: 36px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
 .auth-stat-value { display: block; font-size: 26px; font-weight: 300; letter-spacing: -0.01em; color: #F2F2F4; }
 .auth-stat-label { display: block; font-size: 11px; color: #626268; margin-top: 4px; }

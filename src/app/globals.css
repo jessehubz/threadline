@@ -532,3 +532,105 @@ main > * {
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Liquid Theme Transition (View Transitions API) ──────────────────────── */
+
+/* Disable the default crossfade when View Transitions is active */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* The old state stays in place */
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+/* The new state sweeps in with a liquid blob clip-path */
+::view-transition-new(root) {
+  z-index: 9999;
+  animation: liquidReveal 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes liquidReveal {
+  0% {
+    clip-path: ellipse(8% 4% at 50% 105%);
+  }
+  15% {
+    clip-path: ellipse(12% 8% at 50% 95%);
+  }
+  30% {
+    clip-path: ellipse(18% 14% at 50% 80%);
+  }
+  45% {
+    clip-path: ellipse(25% 22% at 50% 65%);
+  }
+  55% {
+    clip-path: ellipse(35% 30% at 50% 55%);
+  }
+  65% {
+    clip-path: ellipse(45% 38% at 50% 48%);
+  }
+  75% {
+    clip-path: ellipse(60% 50% at 50% 42%);
+  }
+  85% {
+    clip-path: ellipse(80% 65% at 50% 45%);
+  }
+  95% {
+    clip-path: ellipse(100% 85% at 50% 48%);
+  }
+  100% {
+    clip-path: ellipse(150% 150% at 50% 50%);
+  }
+}
+
+/* When transitioning to dark mode (from bottom), make it rise */
+.dark ::view-transition-new(root) {
+  animation-name: liquidRevealUp;
+}
+
+@keyframes liquidRevealUp {
+  0% {
+    clip-path: ellipse(8% 4% at 50% -5%);
+  }
+  15% {
+    clip-path: ellipse(12% 8% at 50% 8%);
+  }
+  30% {
+    clip-path: ellipse(18% 14% at 50% 22%);
+  }
+  45% {
+    clip-path: ellipse(25% 22% at 50% 35%);
+  }
+  55% {
+    clip-path: ellipse(35% 30% at 50% 45%);
+  }
+  65% {
+    clip-path: ellipse(45% 38% at 50% 52%);
+  }
+  75% {
+    clip-path: ellipse(60% 50% at 50% 55%);
+  }
+  85% {
+    clip-path: ellipse(80% 65% at 50% 53%);
+  }
+  95% {
+    clip-path: ellipse(100% 85% at 50% 52%);
+  }
+  100% {
+    clip-path: ellipse(150% 150% at 50% 50%);
+  }
+}
+
+/* Respect reduced motion — instant swap, no liquid animation */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+  ::view-transition-new(root) {
+    clip-path: none !important;
+  }
+}
