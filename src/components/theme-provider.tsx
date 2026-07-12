@@ -83,15 +83,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       "startViewTransition" in document &&
       typeof (document as any).startViewTransition === "function"
     ) {
-      // Prevent the default theme-transition class from interfering
-      const transition = (document as any).startViewTransition(() => {
+      (document as any).startViewTransition(() => {
         applyTheme(resolved);
-      });
-
-      // Mark the document so CSS can target the liquid animation
-      document.documentElement.classList.add("liquid-transitioning");
-      transition.finished.then(() => {
-        document.documentElement.classList.remove("liquid-transitioning");
       });
     } else {
       // Fallback: simple crossfade for unsupported browsers or reduced motion
