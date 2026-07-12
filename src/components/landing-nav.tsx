@@ -108,6 +108,13 @@ export function LandingNav() {
             onClick={() => setMobileOpen(false)}
           />
           <div className="land-mobile-panel">
+            <button
+              className="land-mobile-close"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+            >
+              <X className="h-6 w-6" />
+            </button>
             {navItems.map((item) => (
               <a
                 key={item.href}
@@ -120,18 +127,18 @@ export function LandingNav() {
             ))}
             <div className="land-mobile-ctas">
               <Link
+                href="/sign-up"
+                className="land-cta-nav"
+                onClick={() => setMobileOpen(false)}
+              >
+                Start for free
+              </Link>
+              <Link
                 href="/sign-in"
                 className="land-link-nav"
                 onClick={() => setMobileOpen(false)}
               >
                 Sign in
-              </Link>
-              <Link
-                href="/sign-up"
-                className="land-cta-nav"
-                onClick={() => setMobileOpen(false)}
-              >
-                Sign up
               </Link>
             </div>
           </div>
