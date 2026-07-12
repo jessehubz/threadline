@@ -1,17 +1,20 @@
 "use client";
 
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
 export function FloatingThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
 
+  // Only dark and light — no system
   const buttons = [
     { value: "dark" as const, icon: Moon, label: "Dark mode" },
     { value: "light" as const, icon: Sun, label: "Light mode" },
-    { value: "system" as const, icon: Monitor, label: "System theme" },
   ];
+
+  // Use resolvedTheme for active state (in case theme was previously set to "system")
+  const activeTheme = theme === "system" ? resolvedTheme : theme;
 
   return (
     <div
@@ -28,7 +31,7 @@ export function FloatingThemeToggle() {
           onClick={() => setTheme(btn.value)}
           className={cn(
             "flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200",
-            theme === btn.value
+            activeTheme === btn.value
               ? "bg-[var(--accent)] text-white"
               : "text-[var(--text-secondary)] hover:bg-[var(--bg-muted)] hover:text-[var(--text-primary)]"
           )}
