@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -12,8 +12,11 @@ import {
   type Node,
   type Edge,
   type NodeTypes,
+  type EdgeTypes,
   type OnNodesChange,
   type OnEdgesChange,
+  type OnSelectionChangeParams,
+  type ReactFlowInstance,
   BackgroundVariant,
   Panel,
   ReactFlowProvider,
@@ -29,17 +32,24 @@ import { CollaboratorPresence } from "@/components/graph/collaborator-presence";
 import { ShareDialog } from "@/components/graph/share-dialog";
 import { DeadlinesPanel } from "@/components/graph/deadlines-panel";
 import { AIAssistantPanel } from "@/components/graph/ai-assistant-panel";
-import { createNode, createEdge, deleteNode, deleteEdge, updateNodePosition, createSubGraph } from "@/actions/graph-actions";
+import { ThemedBezierEdge } from "@/components/graph/themed-edge";
+import { MultiSelectPanel } from "@/components/graph/multi-select-panel";
+import { createNode, createEdge, deleteNode, deleteEdge, updateNodePosition, restoreNode, getDeletedNodes } from "@/actions/graph-actions";
 import { wouldCreateCycle } from "@/lib/graph-utils";
 import { toast } from "sonner";
 import { usePusher } from "@/hooks/use-pusher";
+import { useUndo } from "@/hooks/use-undo";
 import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { RecentlyDeletedPanel } from "@/components/graph/recently-deleted-panel";
 
 const nodeTypes: NodeTypes = {
   taskNode: TaskNodeComponent,
   folderNode: FolderNodeComponent,
+};
+
+const edgeTypes: EdgeTypes = {
+  themed: ThemedBezierEdge,
 };
 
 interface GraphEditorProps {
@@ -61,6 +71,7 @@ interface GraphEditorProps {
       attachments: Array<{ id: string; fileName: string; fileUrl: string; fileType: string }>;
       incomingEdges: Array<{ id: string; sourceNodeId: string }>;
       outgoingEdges: Array<{ id: string; targetNodeId: string }>;
+      _count?: { comments: number };
     }>;
     edges: Array<{ id: string; sourceNodeId: string; targetNodeId: string }>;
   };
@@ -71,11 +82,27 @@ interface GraphEditorProps {
   breadcrumbs: Array<{ id: string; name: string; graphId?: string }>;
   currentPath: string[];
   currentUserId: string;
+  unreadCommentNodeIds?: string[];
 }
 
-export function GraphEditor({ projectId, graph, projectName, shareToken, members, role, breadcrumbs, currentPath, currentUserId }: GraphEditorProps) {
-  const isReadOnly = role === "MEMBER";
-  const router = useRouter();
+function makeEdge(id: string, source: string, target: string): Edge {
+  return {
+    id,
+    source,
+    target,
+    type: "themed",
+    style: { strokeWidth: 2, stroke: "var(--accent)" },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "var(--accent)",
+      width: 16,
+      height: 16,
+    },
+  };
+}
+
+export function GraphEditor({ projectId, graph, projectName, shareToken, members, role, breadcrumbs, currentPath, currentUserId, unreadCommentNodeIds = [] }: GraphEditorProps) {
+  const isReadOnly = false; // All project members (HEAD, CO_HEAD, MEMBER) can edit. View-only access uses the separate /share page.
 
   const initialNodes: Node[] = graph.nodes.map((node) => ({
     id: node.id,
@@ -95,25 +122,99 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
           }
         : null,
       attachmentCount: node.attachments.length,
+      hasDescription: !!node.description,
+      commentCount: node._count?.comments ?? 0,
+      hasUnreadComments: unreadCommentNodeIds.includes(node.id),
     },
   }));
 
-  const initialEdges: Edge[] = graph.edges.map((edge) => ({
-    id: edge.id,
-    source: edge.sourceNodeId,
-    target: edge.targetNodeId,
-    animated: true,
-    style: { strokeWidth: 2, stroke: "#8B5CF6" },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#8B5CF6", width: 20, height: 20 },
-  }));
+  const initialEdges: Edge[] = graph.edges.map((edge) => makeEdge(edge.id, edge.sourceNodeId, edge.targetNodeId));
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
   const [shareOpen, setShareOpen] = useState(false);
   const [showDeadlines, setShowDeadlines] = useState(false);
   const [showAI, setShowAI] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
+  const [edgeContextMenu, setEdgeContextMenu] = useState<{ edgeId: string; x: number; y: number } | null>(null);
   const positionUpdateTimeout = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
+  const { push: pushUndo, undo: performUndo, canUndo } = useUndo();
+
+  // Recently deleted nodes
+  interface DeletedNodeData {
+    id: string;
+    title: string;
+    nodeType: string;
+    status: string;
+    color: string | null;
+    positionX: number;
+    positionY: number;
+    deletedAt: Date | string;
+  }
+  const [deletedNodes, setDeletedNodes] = useState<DeletedNodeData[]>([]);
+
+  // Load deleted nodes on mount
+  useEffect(() => {
+    getDeletedNodes(projectId, graph.id)
+      .then((nodes) => setDeletedNodes(nodes.map((n) => ({ ...n, deletedAt: n.deletedAt! }))))
+      .catch(() => {});
+  }, [projectId, graph.id]);
+
+  // Ctrl+Z / Cmd+Z undo handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+        e.preventDefault();
+        if (canUndo()) {
+          performUndo().then((action) => {
+            if (action) {
+              toast.success(`Undid: ${action.description}`);
+            }
+          });
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [canUndo, performUndo]);
+
+  // 7.1 — Spacebar-to-pan (Figma-style)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" && !e.repeat && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault();
+        setIsPanning(true);
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        setIsPanning(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
+
+  // Track multi-selection
+  const handleSelectionChange = useCallback(({ nodes: selectedNodes }: OnSelectionChangeParams) => {
+    const ids = selectedNodes.map((n) => n.id);
+    setSelectedNodeIds(ids);
+    // If exactly one node selected via marquee, open its detail panel
+    if (ids.length === 1) {
+      setSelectedNodeId(ids[0]);
+    } else if (ids.length > 1) {
+      // Multi-select: close detail panel
+      setSelectedNodeId(null);
+    }
+  }, []);
 
   // Real-time via Pusher
   usePusher(graph.id, {
@@ -130,8 +231,16 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
       });
     },
     onNodeUpdated: (data: unknown) => {
-      const node = data as { id: string; [key: string]: unknown };
-      setNodes((nds) => nds.map((n) => (n.id === node.id ? { ...n, data: { ...n.data, ...node } } : n)));
+      const node = data as { id: string; commentCount?: number; lastCommentUserId?: string; [key: string]: unknown };
+      setNodes((nds) => nds.map((n) => {
+        if (n.id !== node.id) return n;
+        const updatedData = { ...n.data, ...node };
+        // If this is a comment count update, derive unread state for the current user
+        if (node.commentCount !== undefined && node.lastCommentUserId) {
+          updatedData.hasUnreadComments = node.lastCommentUserId !== currentUserId;
+        }
+        return { ...n, data: updatedData };
+      }));
     },
     onNodeMoved: (data: unknown) => {
       const moved = data as { id: string; positionX: number; positionY: number };
@@ -145,7 +254,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
       const edge = data as { id: string; sourceNodeId: string; targetNodeId: string };
       setEdges((eds) => {
         if (eds.find((e) => e.id === edge.id)) return eds;
-        return [...eds, { id: edge.id, source: edge.sourceNodeId, target: edge.targetNodeId, animated: true, style: { strokeWidth: 2, stroke: "#8B5CF6" }, markerEnd: { type: MarkerType.ArrowClosed, color: "#8B5CF6", width: 20, height: 20 } }];
+        return [...eds, makeEdge(edge.id, edge.sourceNodeId, edge.targetNodeId)];
       });
     },
     onEdgeDeleted: (data: unknown) => {
@@ -154,23 +263,52 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
     },
   });
 
+  // Track previous positions for undo
+  const previousPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
+
   const handleNodesChange: OnNodesChange = useCallback(
     (changes) => {
       onNodesChange(changes);
       changes.forEach((change) => {
+        if (change.type === "position" && change.dragging) {
+          // Capture start position at beginning of drag
+          if (!previousPositions.current.has(change.id)) {
+            const currentNode = nodes.find((n) => n.id === change.id);
+            if (currentNode) {
+              previousPositions.current.set(change.id, { ...currentNode.position });
+            }
+          }
+        }
         if (change.type === "position" && change.position && !change.dragging) {
           const nodeId = change.id;
+          const prevPos = previousPositions.current.get(nodeId);
+          const newPos = change.position;
+          previousPositions.current.delete(nodeId);
+
           const existing = positionUpdateTimeout.current.get(nodeId);
           if (existing) clearTimeout(existing);
           const timeout = setTimeout(() => {
-            updateNodePosition(projectId, nodeId, change.position!.x, change.position!.y);
+            updateNodePosition(projectId, nodeId, newPos.x, newPos.y);
             positionUpdateTimeout.current.delete(nodeId);
-          }, 500);
+          }, 300);
           positionUpdateTimeout.current.set(nodeId, timeout);
+
+          // Push undo for move
+          if (prevPos && (Math.abs(prevPos.x - newPos.x) > 1 || Math.abs(prevPos.y - newPos.y) > 1)) {
+            const savedPrevPos = { ...prevPos };
+            pushUndo({
+              type: "node-move",
+              description: "Move node",
+              undo: async () => {
+                setNodes((nds) => nds.map((n) => n.id === nodeId ? { ...n, position: savedPrevPos } : n));
+                await updateNodePosition(projectId, nodeId, savedPrevPos.x, savedPrevPos.y);
+              },
+            });
+          }
         }
       });
     },
-    [onNodesChange, projectId]
+    [onNodesChange, projectId, nodes, pushUndo, setNodes]
   );
 
   const handleConnect = useCallback(
@@ -181,13 +319,36 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
         toast.error("Cannot connect: would create a circular dependency");
         return;
       }
+
+      // Optimistic: add edge immediately with temp ID
+      const tempId = `temp-edge-${Date.now()}`;
+      const tempEdge = makeEdge(tempId, connection.source, connection.target);
+      setEdges((eds) => addEdge({ ...connection, ...tempEdge }, eds));
+
+      // Persist to server
       const result = await createEdge(projectId, graph.id, connection.source, connection.target);
-      if ("error" in result) { toast.error(result.error); return; }
+      if ("error" in result) {
+        // Rollback optimistic edge
+        setEdges((eds) => eds.filter((e) => e.id !== tempId));
+        toast.error(result.error);
+        return;
+      }
       if (result.edge) {
-        setEdges((eds) => addEdge({ ...connection, id: result.edge.id, animated: true, style: { strokeWidth: 2, stroke: "#8B5CF6" }, markerEnd: { type: MarkerType.ArrowClosed, color: "#8B5CF6", width: 20, height: 20 } }, eds));
+        // Replace temp edge with real one
+        setEdges((eds) => eds.map((e) => e.id === tempId ? makeEdge(result.edge.id, connection.source!, connection.target!) : e));
+        // Push undo action for edge creation
+        const edgeId = result.edge.id;
+        pushUndo({
+          type: "edge-create",
+          description: "Create connection",
+          undo: async () => {
+            await deleteEdge(projectId, edgeId);
+            setEdges((eds) => eds.filter((e) => e.id !== edgeId));
+          },
+        });
       }
     },
-    [edges, graph.id, isReadOnly, projectId, setEdges]
+    [edges, graph.id, isReadOnly, projectId, setEdges, pushUndo]
   );
 
   const isValidConnection = useCallback(
@@ -204,7 +365,51 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
 
   const handleAddNode = useCallback(async (nodeType: "TASK" | "FOLDER" = "TASK") => {
     if (isReadOnly) return;
-    const position = { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 };
+
+    // Calculate viewport center
+    let position = { x: 300, y: 200 }; // fallback
+    if (reactFlowInstance.current) {
+      const { x, y, zoom } = reactFlowInstance.current.getViewport();
+      // Get the container dimensions
+      const container = document.querySelector('.react-flow');
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        // Convert screen center to flow coordinates
+        position = {
+          x: (-x + rect.width / 2) / zoom,
+          y: (-y + rect.height / 2) / zoom,
+        };
+      }
+    }
+
+    // Overlap avoidance: check if any existing node is too close
+    const NODE_WIDTH = 250;
+    const NODE_HEIGHT = 120;
+    const SPACING = 30;
+    let attempts = 0;
+    const maxAttempts = 20;
+    const centerX = position.x;
+    const centerY = position.y;
+
+    while (attempts < maxAttempts) {
+      const overlaps = nodes.some((n) => {
+        const dx = Math.abs(n.position.x - position.x);
+        const dy = Math.abs(n.position.y - position.y);
+        return dx < NODE_WIDTH + SPACING && dy < NODE_HEIGHT + SPACING;
+      });
+
+      if (!overlaps) break;
+
+      // Spiral outward from center
+      const angle = attempts * 0.8;
+      const radius = 50 + attempts * 40;
+      position = {
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY + Math.sin(angle) * radius,
+      };
+      attempts++;
+    }
+
     const tempId = `temp-${Date.now()}`;
     setNodes((nds) => [...nds, {
       id: tempId,
@@ -216,71 +421,252 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
     try {
       const node = await createNode(projectId, graph.id, { title: nodeType === "FOLDER" ? "New Folder" : undefined, positionX: position.x, positionY: position.y, nodeType });
       setNodes((nds) => nds.map((n) => n.id === tempId ? { ...n, id: node.id } : n));
+      // Push undo action for node creation
+      pushUndo({
+        type: "node-create",
+        description: `Create ${nodeType === "FOLDER" ? "folder" : "task"}`,
+        undo: async () => {
+          await deleteNode(projectId, node.id);
+          setNodes((nds) => nds.filter((n) => n.id !== node.id));
+          setEdges((eds) => eds.filter((e) => e.source !== node.id && e.target !== node.id));
+          setDeletedNodes((prev) => [{ id: node.id, title: nodeType === "FOLDER" ? "New Folder" : "New Task", nodeType, status: "NOT_STARTED", color: null, positionX: position.x, positionY: position.y, deletedAt: new Date() }, ...prev]);
+        },
+      });
       toast.success(nodeType === "FOLDER" ? "Folder added" : "Task added");
     } catch {
       setNodes((nds) => nds.filter((n) => n.id !== tempId));
       toast.error("Failed to create node");
     }
-  }, [graph.id, isReadOnly, projectId, setNodes]);
+  }, [graph.id, isReadOnly, projectId, setNodes, setEdges, nodes, pushUndo]);
 
   const handleDeleteNode = useCallback(async (nodeId: string) => {
     if (isReadOnly) return;
+    // Capture node data before deletion for undo
+    const nodeToDelete = nodes.find((n) => n.id === nodeId);
+    const nodeData = nodeToDelete?.data as Record<string, unknown> | undefined;
+
     await deleteNode(projectId, nodeId);
     setNodes((nds) => nds.filter((n) => n.id !== nodeId));
     setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
     setSelectedNodeId(null);
-    toast.success("Deleted");
-  }, [isReadOnly, projectId, setNodes, setEdges]);
+
+    // Add to recently deleted
+    const title = (nodeData?.title as string) || "Untitled";
+    const nodeType = nodeToDelete?.type === "folderNode" ? "FOLDER" : "TASK";
+    const deletedEntry = {
+      id: nodeId,
+      title,
+      nodeType,
+      status: (nodeData?.status as string) || "NOT_STARTED",
+      color: (nodeData?.color as string | null) || null,
+      positionX: nodeToDelete?.position.x ?? 0,
+      positionY: nodeToDelete?.position.y ?? 0,
+      deletedAt: new Date(),
+    };
+    setDeletedNodes((prev) => [deletedEntry, ...prev]);
+
+    // Push undo action
+    pushUndo({
+      type: "node-delete",
+      description: `Delete "${title}"`,
+      undo: async () => {
+        const result = await restoreNode(projectId, nodeId);
+        if (result.success && result.node) {
+          setNodes((nds) => [...nds, {
+            id: result.node.id,
+            type: result.node.nodeType === "FOLDER" ? "folderNode" : "taskNode",
+            position: { x: result.node.positionX, y: result.node.positionY },
+            data: { title: result.node.title, status: result.node.status, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
+          }]);
+          setDeletedNodes((prev) => prev.filter((n) => n.id !== nodeId));
+        }
+      },
+    });
+    toast("Deleted", {
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          const result = await restoreNode(projectId, nodeId);
+          if (result.success && result.node) {
+            setNodes((nds) => [...nds, {
+              id: result.node.id,
+              type: result.node.nodeType === "FOLDER" ? "folderNode" : "taskNode",
+              position: { x: result.node.positionX, y: result.node.positionY },
+              data: { title: result.node.title, status: result.node.status, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
+            }]);
+            setDeletedNodes((prev) => prev.filter((n) => n.id !== nodeId));
+          }
+        },
+      },
+    });
+  }, [isReadOnly, projectId, setNodes, setEdges, nodes, pushUndo]);
+
+  const handleBatchDelete = useCallback((nodeIds: string[]) => {
+    setNodes((nds) => nds.filter((n) => !nodeIds.includes(n.id)));
+    setEdges((eds) => eds.filter((e) => !nodeIds.includes(e.source) && !nodeIds.includes(e.target)));
+    setSelectedNodeIds([]);
+    setSelectedNodeId(null);
+  }, [setNodes, setEdges]);
+
+  // Listen for delete-node custom events dispatched from node components
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { nodeId: string };
+      if (detail?.nodeId) {
+        handleDeleteNode(detail.nodeId);
+      }
+    };
+    window.addEventListener("graph-delete-node", handler);
+    return () => window.removeEventListener("graph-delete-node", handler);
+  }, [handleDeleteNode]);
 
   const handleEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
       onEdgesChange(changes);
-      changes.forEach((change) => { if (change.type === "remove") deleteEdge(projectId, change.id); });
+      changes.forEach((change) => {
+        if (change.type === "remove") {
+          const removedEdge = edges.find((e) => e.id === change.id);
+          deleteEdge(projectId, change.id);
+          if (removedEdge) {
+            const source = removedEdge.source;
+            const target = removedEdge.target;
+            pushUndo({
+              type: "edge-delete",
+              description: "Delete connection",
+              undo: async () => {
+                const result = await createEdge(projectId, graph.id, source, target);
+                if (!("error" in result) && result.edge) {
+                  setEdges((eds) => [...eds, makeEdge(result.edge.id, source, target)]);
+                }
+              },
+            });
+          }
+        }
+      });
     },
-    [onEdgesChange, projectId]
+    [onEdgesChange, projectId, edges, graph.id, setEdges, pushUndo]
   );
 
   const handleNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     setSelectedNodeId(node.id);
   }, []);
 
-  const handleNodeDoubleClick = useCallback(async (_: React.MouseEvent, node: Node) => {
-    // Double-click folder nodes to navigate into sub-graph
-    const graphNode = graph.nodes.find((n) => n.id === node.id);
-    const isFolder = graphNode?.nodeType === "FOLDER" || node.type === "folderNode";
-    if (!isFolder) return;
-
-    setSelectedNodeId(null);
-    let subGraphId: string | undefined;
-
-    if (graphNode?.subGraph && graphNode.subGraph.id) {
-      subGraphId = graphNode.subGraph.id;
-    } else {
-      // Create a new sub-graph for this folder (or get existing one)
-      const result = await createSubGraph(projectId, node.id);
-      if ("error" in result && result.error) {
-        toast.error(result.error);
-        return;
-      }
-      if ("graphId" in result) {
-        subGraphId = result.graphId;
-      }
-    }
-
-    if (subGraphId) {
-      const newPath = [...currentPath, node.id].join(",");
-      window.location.href = `/graph/${projectId}?path=${newPath}&graphId=${subGraphId}`;
-    }
-  }, [currentPath, graph.nodes, projectId]);
+  const handleNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => {
+    setSelectedNodeId(node.id);
+  }, []);
 
   const handleSelectNodeFromPanel = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId);
-    // Focus the node on canvas
     const node = nodes.find((n) => n.id === nodeId);
     if (node) {
       setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === nodeId })));
     }
   }, [nodes, setNodes]);
+
+  const handleEdgeContextMenu = useCallback((event: React.MouseEvent, edge: Edge) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setEdgeContextMenu({ edgeId: edge.id, x: event.clientX, y: event.clientY });
+  }, []);
+
+  const handleDeleteEdgeFromMenu = useCallback(() => {
+    if (!edgeContextMenu) return;
+    const edgeId = edgeContextMenu.edgeId;
+    const edgeToDelete = edges.find((e) => e.id === edgeId);
+    if (edgeToDelete) {
+      setEdges((eds) => eds.filter((e) => e.id !== edgeId));
+      deleteEdge(projectId, edgeId);
+      pushUndo({
+        type: "edge-delete",
+        description: "Delete connection",
+        undo: async () => {
+          const result = await createEdge(projectId, graph.id, edgeToDelete.source, edgeToDelete.target);
+          if (!("error" in result) && result.edge) {
+            setEdges((eds) => [...eds, makeEdge(result.edge.id, edgeToDelete.source, edgeToDelete.target)]);
+          }
+        },
+      });
+    }
+    setEdgeContextMenu(null);
+  }, [edgeContextMenu, edges, projectId, graph.id, setEdges, pushUndo]);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+  }, []);
+
+  // Recently Deleted: restore a node
+  const handleRestoreNode = useCallback(async (nodeId: string) => {
+    try {
+      const result = await restoreNode(projectId, nodeId);
+      if (result.success && result.node) {
+        setNodes((nds) => [...nds, {
+          id: result.node.id,
+          type: result.node.nodeType === "FOLDER" ? "folderNode" : "taskNode",
+          position: { x: result.node.positionX, y: result.node.positionY },
+          data: { title: result.node.title, status: result.node.status, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
+        }]);
+        setDeletedNodes((prev) => prev.filter((n) => n.id !== nodeId));
+        toast.success(`Restored "${result.node.title}"`);
+      }
+    } catch {
+      toast.error("Failed to restore node");
+    }
+  }, [projectId, setNodes]);
+
+  // Recently Deleted: drag start
+  const handleDeletedDragStart = useCallback((e: React.DragEvent, node: DeletedNodeData) => {
+    e.dataTransfer.setData("application/reactflow-restore", JSON.stringify(node));
+    e.dataTransfer.effectAllowed = "move";
+  }, []);
+
+  // Handle drop on canvas to restore deleted node
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData("application/reactflow-restore");
+    if (!data) return;
+
+    const deletedNode = JSON.parse(data) as DeletedNodeData;
+
+    // Calculate drop position in flow coordinates
+    let position = { x: deletedNode.positionX, y: deletedNode.positionY };
+    if (reactFlowInstance.current) {
+      const bounds = (e.target as HTMLElement).closest('.react-flow')?.getBoundingClientRect();
+      if (bounds) {
+        position = reactFlowInstance.current.screenToFlowPosition({
+          x: e.clientX - bounds.left,
+          y: e.clientY - bounds.top,
+        });
+      }
+    }
+
+    try {
+      const result = await restoreNode(projectId, deletedNode.id);
+      if (result.success && result.node) {
+        // Update position to drop location
+        await updateNodePosition(projectId, result.node.id, position.x, position.y);
+        setNodes((nds) => [...nds, {
+          id: result.node.id,
+          type: result.node.nodeType === "FOLDER" ? "folderNode" : "taskNode",
+          position,
+          data: { title: result.node.title, status: result.node.status, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
+        }]);
+        setDeletedNodes((prev) => prev.filter((n) => n.id !== deletedNode.id));
+        toast.success(`Restored "${result.node.title}"`);
+      }
+    } catch {
+      toast.error("Failed to restore node");
+    }
+  }, [projectId, setNodes]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const handlePaneClick = useCallback(() => {
+    setSelectedNodeId(null);
+    setEdgeContextMenu(null);
+  }, []);
 
   const selectedNode = graph.nodes.find((n) => n.id === selectedNodeId) || (selectedNodeId && nodes.find((n) => n.id === selectedNodeId) ? {
     id: selectedNodeId,
@@ -298,11 +684,12 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
     incomingEdges: [] as Array<{ id: string; sourceNodeId: string }>,
     outgoingEdges: [] as Array<{ id: string; targetNodeId: string }>,
   } : null);
-  const validNodes = nodes.filter((n) => n.position && typeof n.position.x === "number" && typeof n.position.y === "number");
 
   const deadlineTasks = graph.nodes
     .filter((n) => n.dueDate)
     .map((n) => ({ id: n.id, title: n.title, status: n.status, dueDate: n.dueDate }));
+
+  const showMultiSelect = selectedNodeIds.length > 1 && !isReadOnly;
 
   return (
     <ReactFlowProvider>
@@ -316,23 +703,36 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
           />
         )}
 
-        <div className="flex-1">
+        <div className="relative flex-1" onContextMenu={handleContextMenu} onDrop={handleDrop} onDragOver={handleDragOver}>
           <ReactFlow
-            nodes={validNodes}
+            nodes={nodes}
             edges={edges}
             onNodesChange={isReadOnly ? undefined : handleNodesChange}
             onEdgesChange={isReadOnly ? undefined : handleEdgesChange}
             onConnect={handleConnect}
+            connectOnClick={true}
+            onInit={(instance) => { reactFlowInstance.current = instance; }}
             onNodeClick={handleNodeClick}
+            onEdgeContextMenu={handleEdgeContextMenu}
             onNodeDoubleClick={handleNodeDoubleClick}
+            onPaneClick={handlePaneClick}
+            onSelectionChange={handleSelectionChange}
             isValidConnection={isValidConnection}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            defaultEdgeOptions={{ type: "themed" }}
             fitView
             fitViewOptions={{ padding: 0.4, maxZoom: 1 }}
-            deleteKeyCode={isReadOnly ? null : "Delete"}
-            className="bg-page"
+            deleteKeyCode={isReadOnly ? null : ["Delete", "Backspace"]}
+            className={`bg-page [&_.react-flow__pane]:!cursor-default [&_.react-flow__pane.dragging]:!cursor-grabbing ${isPanning ? "[&_.react-flow__pane]:!cursor-grab [&_.react-flow__pane.dragging]:!cursor-grabbing" : ""}`}
+            /* 7.1 — Marquee select by default, spacebar-to-pan */
+            selectionOnDrag={!isPanning}
+            panOnDrag={isPanning ? [0, 2] : [2]}
+            panOnScroll={true}
+            /* Selection styling */
+            selectionMode={undefined}
           >
-            <Background variant={BackgroundVariant.Dots} gap={22} size={1.4} color="var(--border-default)" />
+            <Background variant={BackgroundVariant.Dots} gap={22} size={2} color="var(--text-muted)" />
             <Panel position="top-left" className="space-y-2">
               <GraphBreadcrumbs breadcrumbs={breadcrumbs} projectId={projectId} currentPath={currentPath} />
             </Panel>
@@ -344,7 +744,31 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             </Panel>
           </ReactFlow>
 
+          {/* 7.2 — Controls at z-5, below task detail panel */}
           <CustomControls />
+
+          {/* Recently Deleted Panel */}
+          {!isReadOnly && (
+            <RecentlyDeletedPanel
+              deletedNodes={deletedNodes}
+              onRestore={handleRestoreNode}
+              onDragStart={handleDeletedDragStart}
+            />
+          )}
+
+          {/* 7.1 — Multi-select batch actions panel */}
+          {showMultiSelect && (
+            <MultiSelectPanel
+              selectedNodeIds={selectedNodeIds}
+              projectId={projectId}
+              members={members}
+              onDelete={handleBatchDelete}
+              onClearSelection={() => {
+                setSelectedNodeIds([]);
+                setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
+              }}
+            />
+          )}
 
           {!isReadOnly && (
             <GraphToolbar
@@ -364,8 +788,27 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
               onToggle={() => setShowAI(!showAI)}
             />
           )}
+
+          {/* Edge right-click context menu */}
+          {edgeContextMenu && (
+            <div
+              className="fixed z-50 min-w-[140px] rounded-xl border border-themed-subtle bg-card py-1 shadow-themed-md"
+              style={{ left: edgeContextMenu.x, top: edgeContextMenu.y }}
+            >
+              <button
+                onClick={handleDeleteEdgeFromMenu}
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--danger)] transition-colors hover:bg-[var(--danger-soft)]"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete connection
+              </button>
+            </div>
+          )}
         </div>
 
+        {/* 7.2 — Task detail panel renders at z-20, above controls */}
         {selectedNodeId && selectedNode && (
           <TaskDetailPanel
             key={selectedNodeId}
@@ -381,7 +824,6 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             isReadOnly={isReadOnly}
             onClose={() => setSelectedNodeId(null)}
             onDelete={() => handleDeleteNode(selectedNodeId)}
-            currentPath={currentPath}
           />
         )}
 
@@ -389,8 +831,10 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
           open={shareOpen}
           onClose={() => setShareOpen(false)}
           projectId={projectId}
+          projectName={projectName}
           shareToken={shareToken}
           members={members}
+          currentUserRole={role}
         />
       </div>
     </ReactFlowProvider>

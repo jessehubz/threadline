@@ -38,6 +38,8 @@ export function getStatusColor(status: string): string {
       return "bg-[var(--violet-200)] text-[var(--violet-600)]";
     case "AWAITING_APPROVAL":
       return "bg-[var(--violet-100)] text-[var(--violet-600)]";
+    case "URGENT":
+      return "bg-[var(--danger-soft)] text-[var(--danger)]";
     case "BLOCKED":
       return "bg-[var(--danger-soft)] text-[var(--danger)]";
     case "REJECTED":
@@ -54,6 +56,7 @@ export function getStatusDotColor(status: string): string {
   switch (status) {
     case "NOT_STARTED":
       return "var(--text-muted)";
+    case "URGENT":
     case "BLOCKED":
     case "REJECTED":
       return "var(--danger)";
@@ -68,6 +71,8 @@ export function getStatusLabel(status: string): string {
       return "Not Started";
     case "IN_PROGRESS":
       return "In Progress";
+    case "URGENT":
+      return "Urgent";
     case "BLOCKED":
       return "Blocked";
     case "AWAITING_APPROVAL":

@@ -2,7 +2,6 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
 import { wouldCreateCycle, canCompleteNode, deriveParentStatus } from "@/lib/graph-utils";
 import { pusherServer } from "@/lib/pusher";
 import { sanitizeTitle, sanitizeText } from "@/lib/sanitize";
@@ -49,6 +48,7 @@ export async function getGraphData(projectId: string, graphId?: string) {
     where: { id: targetGraphId, projectId },
     include: {
       nodes: {
+        where: { deletedAt: null },
         include: {
           assignments: {
             include: {
@@ -61,6 +61,7 @@ export async function getGraphData(projectId: string, graphId?: string) {
           subGraph: { include: { nodes: { select: { id: true, status: true } } } },
           incomingEdges: true,
           outgoingEdges: true,
+          _count: { select: { comments: true } },
         },
       },
       edges: true,
@@ -143,7 +144,7 @@ export async function updateNode(
     positionY?: number;
   }
 ) {
-  const { user } = await requireProjectAccess(projectId, "EDITOR");
+  await requireProjectAccess(projectId, "EDITOR");
 
   const existingNode = await prisma.taskNode.findUnique({
     where: { id: nodeId },
@@ -256,7 +257,7 @@ export async function deleteNode(projectId: string, nodeId: string) {
 
   const node = await prisma.taskNode.findUnique({
     where: { id: nodeId },
-    select: { id: true, graphId: true, graph: { select: { projectId: true } } },
+    select: { id: true, graphId: true, title: true, nodeType: true, graph: { select: { projectId: true } } },
   });
 
   if (!node) throw new Error("Node not found");
@@ -264,9 +265,90 @@ export async function deleteNode(projectId: string, nodeId: string) {
   // IDOR fix: verify node belongs to this project
   if (node.graph.projectId !== projectId) throw new Error("Node not found");
 
-  await prisma.taskNode.delete({ where: { id: nodeId } });
+  // Soft-delete: set deletedAt timestamp
+  await prisma.taskNode.update({
+    where: { id: nodeId },
+    data: { deletedAt: new Date() },
+  });
+
   await pusherServer.trigger(`private-graph-${node.graphId}`, "node-deleted", { id: nodeId });
   return { success: true };
+}
+
+export async function restoreNode(projectId: string, nodeId: string) {
+  await requireProjectAccess(projectId, "EDITOR");
+
+  const node = await prisma.taskNode.findUnique({
+    where: { id: nodeId },
+    include: {
+      graph: { select: { projectId: true } },
+      assignments: { include: { user: { select: { id: true, name: true, imageUrl: true } } } },
+    },
+  });
+
+  if (!node) throw new Error("Node not found");
+  if (node.graph.projectId !== projectId) throw new Error("Node not found");
+  if (!node.deletedAt) throw new Error("Node is not deleted");
+
+  await prisma.taskNode.update({
+    where: { id: nodeId },
+    data: { deletedAt: null },
+  });
+
+  // Notify via Pusher
+  await pusherServer.trigger(`private-graph-${node.graphId}`, "node-created", {
+    id: node.id,
+    title: node.title,
+    status: node.status,
+    nodeType: node.nodeType,
+    color: node.color,
+    positionX: node.positionX,
+    positionY: node.positionY,
+  });
+
+  return {
+    success: true,
+    node: {
+      id: node.id,
+      title: node.title,
+      status: node.status,
+      nodeType: node.nodeType,
+      color: node.color,
+      positionX: node.positionX,
+      positionY: node.positionY,
+    },
+  };
+}
+
+export async function getDeletedNodes(projectId: string, graphId: string) {
+  await requireProjectAccess(projectId, "VIEWER");
+
+  // Verify graph belongs to project
+  const graph = await prisma.graph.findUnique({
+    where: { id: graphId, projectId },
+    select: { id: true },
+  });
+  if (!graph) throw new Error("Graph not found");
+
+  const deletedNodes = await prisma.taskNode.findMany({
+    where: {
+      graphId,
+      deletedAt: { not: null },
+    },
+    select: {
+      id: true,
+      title: true,
+      nodeType: true,
+      status: true,
+      color: true,
+      positionX: true,
+      positionY: true,
+      deletedAt: true,
+    },
+    orderBy: { deletedAt: "desc" },
+  });
+
+  return deletedNodes;
 }
 
 export async function createEdge(
@@ -342,43 +424,7 @@ export async function deleteEdge(projectId: string, edgeId: string) {
   return { success: true };
 }
 
-export async function createSubGraph(projectId: string, nodeId: string) {
-  try {
-    await requireProjectAccess(projectId, "EDITOR");
 
-    const node = await prisma.taskNode.findUnique({
-      where: { id: nodeId },
-      include: { graph: { select: { projectId: true } } },
-    });
-
-    if (!node) return { error: "Node not found" };
-
-    // IDOR fix: verify node belongs to this project
-    if (node.graph.projectId !== projectId) return { error: "Node not found" };
-
-    // If already has a sub-graph, just return its ID
-    if (node.subGraphId) {
-      return { graphId: node.subGraphId };
-    }
-
-    const subGraph = await prisma.graph.create({
-      data: {
-        projectId,
-        name: node.title,
-      },
-    });
-
-    await prisma.taskNode.update({
-      where: { id: nodeId },
-      data: { subGraphId: subGraph.id },
-    });
-
-    revalidatePath(`/graph/${projectId}`);
-    return { graphId: subGraph.id };
-  } catch (e) {
-    return { error: (e as Error).message || "Failed to create sub-graph" };
-  }
-}
 
 export async function getBreadcrumbs(projectId: string, path: string[]) {
   // IDOR fix: verify user has access to this project

@@ -146,7 +146,7 @@ export async function rejectCompletion(projectId: string, requestId: string, rea
 
   await prisma.taskNode.update({
     where: { id: request.nodeId },
-    data: { status: "REJECTED" },
+    data: { status: "URGENT" },
   });
 
   const safeTitle = sanitizeTitle(request.node.title);
@@ -162,7 +162,7 @@ export async function rejectCompletion(projectId: string, requestId: string, rea
 
   await pusherServer.trigger(`private-graph-${request.node.graph.id}`, "node-updated", {
     id: request.nodeId,
-    status: "REJECTED",
+    status: "URGENT",
   });
 
   revalidatePath(`/graph/${projectId}`);

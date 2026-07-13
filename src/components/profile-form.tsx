@@ -16,11 +16,19 @@ interface User {
   email: string;
   imageUrl: string | null;
   bio: string | null;
+  githubUrl?: string | null;
+  twitterUrl?: string | null;
+  linkedinUrl?: string | null;
+  websiteUrl?: string | null;
 }
 
 export function ProfileForm({ user }: { user: User }) {
   const [name, setName] = useState(user.name || "");
   const [bio, setBio] = useState(user.bio || "");
+  const [githubUrl, setGithubUrl] = useState(user.githubUrl || "");
+  const [twitterUrl, setTwitterUrl] = useState(user.twitterUrl || "");
+  const [linkedinUrl, setLinkedinUrl] = useState(user.linkedinUrl || "");
+  const [websiteUrl, setWebsiteUrl] = useState(user.websiteUrl || "");
   const [saving, setSaving] = useState(false);
   const [imageUrl, setImageUrl] = useState(user.imageUrl);
   const [uploading, setUploading] = useState(false);
@@ -28,7 +36,14 @@ export function ProfileForm({ user }: { user: User }) {
 
   async function handleSave() {
     setSaving(true);
-    const result = await updateProfile({ name, bio });
+    const result = await updateProfile({
+      name,
+      bio,
+      githubUrl,
+      twitterUrl,
+      linkedinUrl,
+      websiteUrl,
+    });
     if (result.error) toast.error(result.error);
     else toast.success("Profile updated");
     setSaving(false);
@@ -136,6 +151,35 @@ export function ProfileForm({ user }: { user: User }) {
           onChange={(e) => setBio(e.target.value)}
           placeholder="Tell us about yourself..."
           rows={3}
+        />
+
+        {/* Social Links */}
+        <Input
+          label="GitHub URL"
+          value={githubUrl}
+          onChange={(e) => setGithubUrl(e.target.value)}
+          placeholder="https://github.com/username"
+        />
+
+        <Input
+          label="Twitter URL"
+          value={twitterUrl}
+          onChange={(e) => setTwitterUrl(e.target.value)}
+          placeholder="https://twitter.com/username"
+        />
+
+        <Input
+          label="LinkedIn URL"
+          value={linkedinUrl}
+          onChange={(e) => setLinkedinUrl(e.target.value)}
+          placeholder="https://linkedin.com/in/username"
+        />
+
+        <Input
+          label="Website URL"
+          value={websiteUrl}
+          onChange={(e) => setWebsiteUrl(e.target.value)}
+          placeholder="https://yourwebsite.com"
         />
 
         <Button onClick={handleSave} loading={saving}>

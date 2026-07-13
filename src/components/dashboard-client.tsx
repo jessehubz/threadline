@@ -1,9 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, AlertTriangle, Users } from "lucide-react";
-import { cn, getStatusDotColor } from "@/lib/utils";
+import { ChevronDown, ChevronRight, AlertTriangle, Users, Tag, X } from "lucide-react";
+import { getStatusDotColor } from "@/lib/utils";
+import { addLabel, removeLabel } from "@/actions/label-actions";
+import { LABEL_COLORS } from "@/lib/constants";
+import { toast } from "sonner";
+
+interface Label {
+  id: string;
+  name: string;
+  color: string;
+}
 
 interface TaskItem {
   id: string;
@@ -29,7 +38,7 @@ interface WorkloadMember {
 }
 
 interface DashboardClientProps {
-  projects: Array<{ id: string; name: string; totalTasks: number; completedTasks: number; memberCount: number }>;
+  projects: Array<{ id: string; name: string; totalTasks: number; completedTasks: number; memberCount: number; labels: Label[] }>;
   needsAttention: TaskItem[];
   dueToday: TaskItem[];
   dueThisWeek: TaskItem[];
@@ -39,14 +48,185 @@ interface DashboardClientProps {
 }
 
 function projectColor(name: string): string {
-  const colors = ["#2563eb", "#059669", "#d97706", "#db2777", "#7c2d12", "#4338ca", "#0891b2", "#65a30d"];
+  const colors = ["#7c3aed", "#6366f1", "#8b5cf6", "#a855f7", "#9333ea", "#7e22ce", "#6d28d9", "#4f46e5"];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
 }
 
+// ─── Label Picker Popover (inline on dashboard cards) ─────────────────────────
+function LabelPickerPopover({
+  projectId,
+  labels,
+  onLabelsChange,
+  onClose,
+}: {
+  projectId: string;
+  labels: Label[];
+  onLabelsChange: (labels: Label[]) => void;
+  onClose: () => void;
+}) {
+  const [newLabel, setNewLabel] = useState("");
+  const [selectedColor, setSelectedColor] = useState(LABEL_COLORS[0]);
+  const [loading, setLoading] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose]);
+
+  async function handleAdd() {
+    if (!newLabel.trim()) return;
+    setLoading(true);
+    const result = await addLabel(projectId, newLabel.trim(), selectedColor);
+    if (result.error) toast.error(result.error);
+    else if (result.label) {
+      onLabelsChange([...labels, result.label]);
+      setNewLabel("");
+      toast.success("Label added!");
+    }
+    setLoading(false);
+  }
+
+  async function handleRemove(labelId: string) {
+    await removeLabel(projectId, labelId);
+    onLabelsChange(labels.filter((l) => l.id !== labelId));
+  }
+
+  return (
+    <div
+      ref={ref}
+      onClick={(e) => e.preventDefault()}
+      style={{
+        position: "absolute",
+        top: "100%",
+        right: 0,
+        zIndex: 50,
+        marginTop: "4px",
+        width: "260px",
+        padding: "14px",
+        borderRadius: "var(--radius-md)",
+        border: "1px solid var(--border-default)",
+        backgroundColor: "var(--bg-elevated)",
+        boxShadow: "var(--shadow-md)",
+      }}
+    >
+      <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "10px" }}>Labels</p>
+      {labels.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
+          {labels.map((l) => (
+            <span
+              key={l.id}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                borderRadius: "999px",
+                padding: "2px 8px",
+                fontSize: "10px",
+                fontWeight: 600,
+                color: "#fff",
+                backgroundColor: l.color,
+              }}
+            >
+              {l.name}
+              <button
+                onClick={(e) => { e.preventDefault(); handleRemove(l.id); }}
+                style={{ opacity: 0.8, cursor: "pointer", background: "none", border: "none", color: "#fff", padding: 0 }}
+              >
+                <X style={{ width: "10px", height: "10px" }} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+        <input
+          type="text"
+          value={newLabel}
+          onChange={(e) => setNewLabel(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
+          placeholder="New label..."
+          onClick={(e) => e.preventDefault()}
+          style={{
+            flex: 1,
+            fontSize: "12px",
+            padding: "6px 10px",
+            borderRadius: "var(--radius-sm)",
+            border: "1px solid var(--border-default)",
+            background: "var(--bg-base)",
+            color: "var(--text-primary)",
+            outline: "none",
+          }}
+        />
+        <button
+          onClick={(e) => { e.preventDefault(); handleAdd(); }}
+          disabled={loading || !newLabel.trim()}
+          style={{
+            fontSize: "11px",
+            fontWeight: 600,
+            padding: "6px 10px",
+            borderRadius: "var(--radius-sm)",
+            background: "var(--accent)",
+            color: "#fff",
+            border: "none",
+            cursor: loading ? "wait" : "pointer",
+            opacity: !newLabel.trim() ? 0.5 : 1,
+          }}
+        >
+          Add
+        </button>
+      </div>
+      <div style={{ display: "flex", gap: "5px", marginBottom: "8px" }}>
+        {LABEL_COLORS.map((c) => (
+          <button
+            key={c}
+            onClick={(e) => { e.preventDefault(); setSelectedColor(c); }}
+            style={{
+              width: "18px",
+              height: "18px",
+              borderRadius: "999px",
+              backgroundColor: c,
+              border: selectedColor === c ? "2px solid var(--text-primary)" : "2px solid transparent",
+              cursor: "pointer",
+              transition: "transform 150ms",
+              transform: selectedColor === c ? "scale(1.15)" : "scale(1)",
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+        {["Urgent", "In Progress", "Review", "Design", "Backend"].map((p) => (
+          <button
+            key={p}
+            onClick={(e) => { e.preventDefault(); setNewLabel(p); }}
+            style={{
+              fontSize: "10px",
+              padding: "3px 8px",
+              borderRadius: "999px",
+              border: "1px solid var(--border-default)",
+              background: "transparent",
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+            }}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ──────────────────────────────────────────────────────────
 export function DashboardClient({
-  projects,
+  projects: initialProjects,
   needsAttention,
   dueToday,
   dueThisWeek,
@@ -54,9 +234,11 @@ export function DashboardClient({
   workload,
   workloadByProject,
 }: DashboardClientProps) {
+  const [projects, setProjects] = useState(initialProjects);
   const [activeProject, setActiveProject] = useState<string | null>(null);
   const [workloadProject, setWorkloadProject] = useState<string | null>(null);
   const [projectStatusFilter, setProjectStatusFilter] = useState<string>("all");
+  const [activeLabelFilters, setActiveLabelFilters] = useState<string[]>([]);
   const [openSection, setOpenSection] = useState<"today" | "week" | "later" | null>(() => {
     if (dueToday.length > 0) return "today";
     if (dueThisWeek.length > 0) return "week";
@@ -64,10 +246,46 @@ export function DashboardClient({
     return null;
   });
 
+  // Collect all unique labels across projects
+  const allLabels = Array.from(
+    new Map(projects.flatMap((p) => p.labels).map((l) => [l.name, l])).values()
+  );
+
+  function toggleLabelFilter(labelName: string) {
+    setActiveLabelFilters((prev) =>
+      prev.includes(labelName) ? prev.filter((n) => n !== labelName) : [...prev, labelName]
+    );
+  }
+
+  function clearLabelFilters() {
+    setActiveLabelFilters([]);
+  }
+
+  function handleProjectLabelsChange(projectId: string, newLabels: Label[]) {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === projectId ? { ...p, labels: newLabels } : p))
+    );
+  }
+
   function filterByProject<T extends { projectId: string }>(items: T[]): T[] {
     if (!activeProject) return items;
     return items.filter((i) => i.projectId === activeProject);
   }
+
+  // Filter projects by status AND labels
+  const filteredProjects = projects
+    .filter((project) => {
+      if (projectStatusFilter === "all") return true;
+      const progress = project.totalTasks > 0 ? Math.round((project.completedTasks / project.totalTasks) * 100) : 0;
+      if (projectStatusFilter === "not_started") return project.totalTasks > 0 && progress === 0;
+      if (projectStatusFilter === "ongoing") return progress > 0 && progress < 100;
+      if (projectStatusFilter === "draft") return project.totalTasks === 0;
+      return true;
+    })
+    .filter((project) => {
+      if (activeLabelFilters.length === 0) return true;
+      return project.labels.some((l) => activeLabelFilters.includes(l.name));
+    });
 
   const filteredAttention = filterByProject(needsAttention);
   const filteredToday = filterByProject(dueToday);
@@ -128,8 +346,9 @@ export function DashboardClient({
           <h2 style={{ fontSize: "14.5px", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em", marginBottom: "16px" }}>
             Your Projects
           </h2>
+
           {/* Status filter chips */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "12px" }}>
             {(["all", "not_started", "ongoing", "draft"] as const).map((status) => {
               const label = { all: "All", not_started: "Not started", ongoing: "Ongoing", draft: "Draft" }[status];
               return (
@@ -154,88 +373,111 @@ export function DashboardClient({
               );
             })}
           </div>
-          <div
-            style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "8px" }}
-            className="scrollbar-hide"
-          >
-            {projects
-              .filter((project) => {
-                if (projectStatusFilter === "all") return true;
-                const progress = project.totalTasks > 0 ? Math.round((project.completedTasks / project.totalTasks) * 100) : 0;
-                if (projectStatusFilter === "not_started") return project.totalTasks > 0 && progress === 0;
-                if (projectStatusFilter === "ongoing") return progress > 0 && progress < 100;
-                if (projectStatusFilter === "draft") return project.totalTasks === 0;
-                return true;
-              })
-              .map((project) => {
-              const progress = project.totalTasks > 0 ? Math.round((project.completedTasks / project.totalTasks) * 100) : 0;
-              const color = projectColor(project.name);
-              return (
-                <Link
-                  key={project.id}
-                  href={`/graph/${project.id}`}
-                  className="focus-card"
+
+          {/* Label filter bar */}
+          {allLabels.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px", marginBottom: "16px" }}>
+              <Tag style={{ width: "13px", height: "13px", color: "var(--text-muted)" }} />
+              {allLabels.map((l) => {
+                const isActive = activeLabelFilters.includes(l.name);
+                return (
+                  <button
+                    key={l.name}
+                    onClick={() => toggleLabelFilter(l.name)}
+                    style={{
+                      padding: "4px 12px",
+                      borderRadius: "999px",
+                      fontSize: "11.5px",
+                      fontWeight: 600,
+                      border: "1px solid",
+                      borderColor: isActive ? "transparent" : "var(--border-default)",
+                      background: isActive ? l.color : "transparent",
+                      color: isActive ? "#fff" : "var(--text-secondary)",
+                      cursor: "pointer",
+                      transition: "all 150ms ease-out",
+                    }}
+                  >
+                    {l.name}
+                  </button>
+                );
+              })}
+              {activeLabelFilters.length > 0 && (
+                <button
+                  onClick={clearLabelFilters}
                   style={{
-                    minWidth: "270px",
-                    padding: "26px",
-                    borderRadius: "var(--radius-lg)",
-                    background: "var(--bg-elevated)",
-                    border: "1px solid var(--border-default)",
-                    boxShadow: "var(--shadow-sm)",
-                    transition: "transform 200ms ease-out, box-shadow 200ms ease-out",
-                    textDecoration: "none",
-                    display: "block",
-                    flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    padding: "4px 10px",
+                    borderRadius: "999px",
+                    fontSize: "11px",
+                    fontWeight: 500,
+                    background: "var(--bg-muted)",
+                    color: "var(--text-muted)",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 150ms ease-out",
                   }}
                 >
-                  {/* Dot + avatar row */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                    <span style={{ width: "8px", height: "8px", borderRadius: "999px", background: color, flexShrink: 0 }} />
-                    <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                      {project.memberCount} member{project.memberCount !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                  {/* Name */}
-                  <div style={{ fontSize: "16.5px", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em", marginBottom: "6px" }}>
-                    {project.name}
-                  </div>
-                  {/* Meta */}
-                  <div style={{ fontSize: "12.5px", color: "var(--text-muted)", marginBottom: "14px" }}>
-                    {project.totalTasks} task{project.totalTasks !== 1 ? "s" : ""} · {project.completedTasks} done
-                  </div>
-                  {/* Progress track — 5px tall */}
-                  <div style={{ height: "5px", borderRadius: "999px", background: "var(--border-default)", overflow: "hidden" }}>
-                    <div
-                      style={{
-                        height: "100%",
-                        borderRadius: "999px",
-                        background: color,
-                        width: `${progress}%`,
-                        transition: "width 500ms ease-out",
-                      }}
-                    />
-                  </div>
-                  {/* Status pill */}
-                  <div style={{ marginTop: "12px" }}>
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        borderRadius: "999px",
-                        padding: "3px 10px",
-                        fontSize: "11px",
-                        fontWeight: 500,
-                        background: progress >= 100 ? "var(--accent-soft)" : "var(--bg-muted)",
-                        color: progress >= 100 ? "var(--accent)" : "var(--text-muted)",
-                      }}
-                    >
-                      {progress >= 100 ? "Complete" : `${progress}% done`}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                  <X style={{ width: "10px", height: "10px" }} />
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Cards or empty state */}
+          {filteredProjects.length === 0 ? (
+            <div
+              style={{
+                padding: "40px 20px",
+                textAlign: "center",
+                borderRadius: "var(--radius-lg)",
+                border: "1px dashed var(--border-default)",
+                background: "var(--bg-muted)",
+              }}
+            >
+              <Tag style={{ width: "24px", height: "24px", color: "var(--text-muted)", margin: "0 auto 12px" }} />
+              <p style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-secondary)", marginBottom: "8px" }}>
+                No projects match this filter
+              </p>
+              <button
+                onClick={() => { clearLabelFilters(); setProjectStatusFilter("all"); }}
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--accent)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                  textUnderlineOffset: "3px",
+                }}
+              >
+                Clear all filters
+              </button>
+            </div>
+          ) : (
+            <div style={{ position: "relative" }}>
+              {/* Right gradient mask */}
+              <div style={{ position: "absolute", right: 0, top: 0, bottom: "8px", width: "60px", background: "linear-gradient(to left, var(--bg-base), transparent)", zIndex: 2, pointerEvents: "none" }} />
+
+              <div
+                style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "8px", scrollSnapType: "x mandatory", scrollPaddingLeft: "4px" }}
+                className="scrollbar-hide"
+              >
+                {filteredProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onLabelsChange={(newLabels) => handleProjectLabelsChange(project.id, newLabels)}
+                  />
+                ))}
+                {/* Spacer for peek effect */}
+                <div style={{ minWidth: "40px", flexShrink: 0 }} />
+              </div>
+            </div>
+          )}
         </section>
       )}
 
@@ -303,7 +545,7 @@ export function DashboardClient({
           )}
         </div>
 
-        {/* Right: Team Workload (panel-outer-tinted with nested card) */}
+        {/* Right: Team Workload */}
         <div
           style={{
             borderRadius: "var(--radius-xl)",
@@ -359,7 +601,6 @@ export function DashboardClient({
                   const pct = (member.total / maxBar) * 100;
                   return (
                     <div key={member.id} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      {/* 32px avatar circle */}
                       <div
                         style={{
                           width: "32px",
@@ -377,11 +618,9 @@ export function DashboardClient({
                       >
                         {member.initials}
                       </div>
-                      {/* Name */}
                       <span style={{ width: "60px", fontSize: "12.5px", fontWeight: 500, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0 }}>
                         {member.name}
                       </span>
-                      {/* 10px tall capsule track */}
                       <div style={{ flex: 1, height: "10px", borderRadius: "999px", background: "var(--border-default)", overflow: "hidden" }}>
                         <div
                           style={{
@@ -393,7 +632,6 @@ export function DashboardClient({
                           }}
                         />
                       </div>
-                      {/* Task count */}
                       <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", minWidth: "20px", textAlign: "right" }}>
                         {member.total}
                       </span>
@@ -467,6 +705,151 @@ export function DashboardClient({
           )}
         </CollapsibleSection>
       </div>
+    </div>
+  );
+}
+
+// ─── Project Card with label chips and tag button ────────────────────────────
+function ProjectCard({
+  project,
+  onLabelsChange,
+}: {
+  project: DashboardClientProps["projects"][number];
+  onLabelsChange: (labels: Label[]) => void;
+}) {
+  const [labelPickerOpen, setLabelPickerOpen] = useState(false);
+  const progress = project.totalTasks > 0 ? Math.round((project.completedTasks / project.totalTasks) * 100) : 0;
+  const color = projectColor(project.name);
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        minWidth: "270px",
+        maxWidth: "300px",
+        scrollSnapAlign: "start",
+        flexShrink: 0,
+      }}
+    >
+      <Link
+        href={`/graph/${project.id}`}
+        className="focus-card"
+        style={{
+          padding: "26px",
+          borderRadius: "var(--radius-lg)",
+          background: "var(--bg-elevated)",
+          border: "1px solid var(--border-default)",
+          boxShadow: "var(--shadow-sm)",
+          transition: "transform 200ms ease-out, box-shadow 200ms ease-out",
+          textDecoration: "none",
+          display: "block",
+        }}
+      >
+        {/* Dot + members row */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+          <span style={{ width: "8px", height: "8px", borderRadius: "999px", background: color, flexShrink: 0 }} />
+          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+            {project.memberCount} member{project.memberCount !== 1 ? "s" : ""}
+          </span>
+        </div>
+        {/* Name */}
+        <div style={{ fontSize: "16.5px", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em", marginBottom: "6px" }}>
+          {project.name}
+        </div>
+        {/* Label chips */}
+        {project.labels.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "10px" }}>
+            {project.labels.map((l) => (
+              <span
+                key={l.id}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  borderRadius: "999px",
+                  padding: "2px 8px",
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  color: "#fff",
+                  backgroundColor: l.color,
+                }}
+              >
+                {l.name}
+              </span>
+            ))}
+          </div>
+        )}
+        {/* Meta */}
+        <div style={{ fontSize: "12.5px", color: "var(--text-muted)", marginBottom: "14px" }}>
+          {project.totalTasks} task{project.totalTasks !== 1 ? "s" : ""} · {project.completedTasks} done
+        </div>
+        {/* Progress track */}
+        <div style={{ height: "5px", borderRadius: "999px", background: "var(--border-default)", overflow: "hidden" }}>
+          <div
+            style={{
+              height: "100%",
+              borderRadius: "999px",
+              background: color,
+              width: `${progress}%`,
+              transition: "width 500ms ease-out",
+            }}
+          />
+        </div>
+        {/* Status pill */}
+        <div style={{ marginTop: "12px" }}>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              borderRadius: "999px",
+              padding: "3px 10px",
+              fontSize: "11px",
+              fontWeight: 500,
+              background: progress >= 100 ? "var(--accent-soft)" : "var(--bg-muted)",
+              color: progress >= 100 ? "var(--accent)" : "var(--text-muted)",
+            }}
+          >
+            {progress >= 100 ? "Complete" : `${progress}% done`}
+          </span>
+        </div>
+      </Link>
+
+      {/* Tag button — positioned at top-right of card */}
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLabelPickerOpen(!labelPickerOpen); }}
+        style={{
+          position: "absolute",
+          top: "12px",
+          right: "12px",
+          width: "28px",
+          height: "28px",
+          borderRadius: "var(--radius-sm)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: labelPickerOpen ? "var(--accent-soft)" : "transparent",
+          border: "none",
+          cursor: "pointer",
+          color: labelPickerOpen ? "var(--accent)" : "var(--text-muted)",
+          transition: "all 150ms ease-out",
+          opacity: labelPickerOpen ? 1 : 0,
+        }}
+        className="group-hover:!opacity-100 hover:!opacity-100 hover:!bg-[var(--bg-muted)]"
+        aria-label="Edit labels"
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
+        onMouseLeave={(e) => { if (!labelPickerOpen) (e.currentTarget as HTMLButtonElement).style.opacity = "0"; }}
+      >
+        <Tag style={{ width: "14px", height: "14px" }} />
+      </button>
+
+      {/* Label picker popover */}
+      {labelPickerOpen && (
+        <LabelPickerPopover
+          projectId={project.id}
+          labels={project.labels}
+          onLabelsChange={onLabelsChange}
+          onClose={() => setLabelPickerOpen(false)}
+        />
+      )}
     </div>
   );
 }

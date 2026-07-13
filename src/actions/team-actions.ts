@@ -5,7 +5,6 @@ import { requireUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 import { rateLimiters } from "@/lib/rate-limit";
-import { generateSecureToken } from "@/lib/tokens";
 import { z } from "zod/v4";
 
 const inviteMemberSchema = z.object({
@@ -70,20 +69,13 @@ export async function inviteMember(projectId: string, email: string, role: strin
       },
     });
   } else {
-    const invite = await prisma.invite.create({
-      data: {
-        email: parsed.data.email,
-        projectId: parsed.data.projectId,
-        role: parsed.data.role,
-        token: generateSecureToken(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-    });
-    revalidatePath("/team");
-    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${invite.token}`;
-    return { success: true, inviteLink: inviteUrl };
+    // User doesn't exist — cannot invite. Only existing accounts can be added.
+    return { error: "User not found. Only people with existing accounts can be invited." };
   }
   revalidatePath("/team");
+  revalidatePath("/dashboard");
+  revalidatePath("/overview");
+  revalidatePath(`/graph/${parsed.data.projectId}`);
   return { success: true };
 }
 
@@ -109,6 +101,9 @@ export async function removeMember(projectId: string, memberId: string) {
 
   await prisma.projectMember.delete({ where: { id: memberId } });
   revalidatePath("/team");
+  revalidatePath("/dashboard");
+  revalidatePath("/overview");
+  revalidatePath(`/graph/${projectId}`);
   return { success: true };
 }
 
@@ -143,5 +138,7 @@ export async function updateMemberRole(projectId: string, memberId: string, newR
   });
 
   revalidatePath("/team");
+  revalidatePath("/dashboard");
+  revalidatePath(`/graph/${projectId}`);
   return { success: true };
 }

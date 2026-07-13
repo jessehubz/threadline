@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Send, Trash2, Paperclip, Lock, Image as ImageIcon, FileText, X } from "lucide-react";
 import { upload } from "@vercel/blob/client";
 import { addComment, deleteComment } from "@/actions/comment-actions";
+import { markCommentsRead } from "@/actions/comment-read-actions";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -61,7 +62,11 @@ export function TaskComments({
     setLoading(true);
     fetch(`/api/comments?nodeId=${nodeId}`)
       .then((res) => res.json())
-      .then((data) => setComments(data.comments || []))
+      .then((data) => {
+        setComments(data.comments || []);
+        // Mark comments as read for this user when they view them
+        markCommentsRead(nodeId).catch(() => {});
+      })
       .catch(() => setComments([]))
       .finally(() => setLoading(false));
   }, [nodeId]);

@@ -75,6 +75,23 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // DM channel authorization: verify user is a participant
+  const dmMatch = channel.match(/^private-dm-(.+)$/);
+  if (dmMatch) {
+    const conversationId = dmMatch[1];
+    const participant = await prisma.conversationParticipant.findUnique({
+      where: {
+        conversationId_userId: { conversationId, userId: user.id },
+      },
+    });
+    if (!participant) {
+      return NextResponse.json(
+        { error: "Not authorized for this conversation" },
+        { status: 403 }
+      );
+    }
+  }
+
   // For presence channels, include user info
   if (channel.startsWith("presence-")) {
     const authResponse = pusherServer.authorizeChannel(socketId, channel, {

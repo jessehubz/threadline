@@ -1,19 +1,19 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { X, Trash2, ChevronRight, AlertCircle, UserPlus, Check } from "lucide-react";
+import { X, Trash2, AlertCircle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { updateNode, createSubGraph } from "@/actions/graph-actions";
+import { updateNode } from "@/actions/graph-actions";
 import { submitForApproval } from "@/actions/approval-actions";
 import { assignUser, unassignUser } from "@/actions/assignment-actions";
 import { FileUpload } from "@/components/file-upload";
 import { TaskComments } from "@/components/graph/task-comments";
+import { DatePicker } from "@/components/ui/date-picker";
 import { cn, getStatusColor, getStatusLabel } from "@/lib/utils";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 const PRESET_COLORS = [
   "#ef4444", "#f97316", "#f59e0b", "#22c55e", "#3b82f6",
@@ -42,20 +42,19 @@ interface TaskDetailPanelProps {
   isReadOnly: boolean;
   onClose: () => void;
   onDelete: () => void;
-  currentPath: string[];
 }
 
 const STATUS_OPTIONS = [
   { value: "NOT_STARTED", label: "Not Started" },
   { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "URGENT", label: "Urgent" },
   { value: "BLOCKED", label: "Blocked" },
   { value: "COMPLETE", label: "Complete" },
 ];
 
 export function TaskDetailPanel({
-  projectId, currentUserId, node, graphEdges, graphNodes, members, isReadOnly, onClose, onDelete, currentPath,
+  projectId, currentUserId, node, graphEdges, graphNodes, members, isReadOnly, onClose, onDelete,
 }: TaskDetailPanelProps) {
-  const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Scroll to top when panel opens
@@ -70,7 +69,7 @@ export function TaskDetailPanel({
     node.dueDate ? new Date(node.dueDate).toISOString().split("T")[0] : ""
   );
   const [saving, setSaving] = useState(false);
-  const [showMemberPicker, setShowMemberPicker] = useState(false);
+
 
   const blockedBy = graphEdges
     .filter((e) => e.targetNodeId === node.id)
@@ -85,8 +84,8 @@ export function TaskDetailPanel({
 
   const hasApprover = node.assignments.some((a) => a.isApprover);
 
-  const assignedUserIds = new Set(node.assignments.map((a) => a.user.id));
-  const unassignedMembers = members.filter((m) => !assignedUserIds.has(m.user.id));
+
+
 
   async function handleSave() {
     setSaving(true);
@@ -112,7 +111,6 @@ export function TaskDetailPanel({
     const result = await assignUser(projectId, node.id, userId);
     if (result.error) toast.error(result.error);
     else toast.success("Assigned");
-    setShowMemberPicker(false);
   }
 
   async function handleUnassign(userId: string) {
@@ -120,21 +118,10 @@ export function TaskDetailPanel({
     toast.success("Removed");
   }
 
-  async function handleOpenSubGraph() {
-    let subGraphId: string | undefined;
-    if (!node.subGraph) {
-      const result = await createSubGraph(projectId, node.id);
-      if ("error" in result) { toast.error("Failed to create sub-graph"); return; }
-      subGraphId = result.graphId;
-    } else {
-      subGraphId = (node as unknown as { subGraphId?: string }).subGraphId;
-    }
-    const newPath = [...currentPath, node.id].join(",");
-    router.push(`/graph/${projectId}?path=${newPath}&graphId=${subGraphId}`);
-  }
+
 
   return (
-    <div ref={scrollRef} className="w-[400px] shrink-0 overflow-y-auto border-l border-themed-subtle bg-card">
+    <div ref={scrollRef} className="fixed inset-0 z-30 w-full md:relative md:inset-auto md:z-auto md:w-[400px] shrink-0 overflow-y-auto border-l border-themed-subtle bg-card">
       <div className="flex items-center justify-between border-b border-themed-subtle px-5 py-4">
         <h3 className="text-card-title">Task Details</h3>
         <div className="flex items-center gap-1">
@@ -204,55 +191,71 @@ export function TaskDetailPanel({
         <Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} onBlur={handleSave} disabled={isReadOnly} rows={3} placeholder="Add details..." />
 
         {/* Due Date */}
-        <Input label="Due Date" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} onBlur={handleSave} disabled={isReadOnly} />
+        <DatePicker label="Due Date" value={dueDate} onChange={(val) => { setDueDate(val); updateNode(projectId, node.id, { title, description, color: color || null, dueDate: val || null }).then(() => toast.success("Saved")); }} disabled={isReadOnly} />
 
         {/* Assignees */}
         <div>
           <label className="text-eyebrow mb-2 block">Assigned People</label>
-          <div className="space-y-2">
-            {node.assignments.map((assignment) => (
-              <div key={assignment.user.id} className="flex items-center justify-between rounded-xl bg-hover px-3 py-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full accent-bg text-xs font-semibold accent-color">
-                    {assignment.user.name?.[0]?.toUpperCase() || "?"}
-                  </div>
-                  <span className="text-[13px] text-body">{assignment.user.name || "Unknown"}</span>
-                  {assignment.isApprover && <Badge variant="info">Approver</Badge>}
-                </div>
-                {!isReadOnly && (
-                  <button onClick={() => handleUnassign(assignment.user.id)} className="text-dim transition-colors hover:text-[var(--danger)]">
-                    <X className="h-3 w-3" />
+          <div className="space-y-1.5">
+            {(() => {
+              const assignedIds = new Set(node.assignments.map((a) => a.user.id));
+              const sortedMembers = [...members].sort((a, b) => {
+                const aAssigned = assignedIds.has(a.user.id);
+                const bAssigned = assignedIds.has(b.user.id);
+                if (aAssigned && !bAssigned) return -1;
+                if (!aAssigned && bAssigned) return 1;
+                return 0;
+              });
+              return sortedMembers.map((m) => {
+                const isAssigned = assignedIds.has(m.user.id);
+                const assignment = node.assignments.find((a) => a.user.id === m.user.id);
+                const isApprover = assignment?.isApprover ?? false;
+                return (
+                  <button
+                    key={m.user.id}
+                    type="button"
+                    disabled={isReadOnly}
+                    onClick={() => isAssigned ? handleUnassign(m.user.id) : handleAssign(m.user.id)}
+                    className={cn(
+                      "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-all duration-200 ease-out",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1",
+                      isAssigned
+                        ? "bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]"
+                        : "bg-hover ring-1 ring-transparent",
+                      !isReadOnly && "hover:-translate-y-0.5 hover:shadow-themed-md cursor-pointer",
+                      isReadOnly && "cursor-default opacity-80"
+                    )}
+                    aria-pressed={isAssigned}
+                    aria-label={`${isAssigned ? "Unassign" : "Assign"} ${m.user.name || m.user.email}`}
+                  >
+                    <div className={cn(
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors duration-200",
+                      isAssigned ? "bg-[var(--accent)] text-white" : "accent-bg accent-color"
+                    )}>
+                      {isAssigned && <Check className="h-3.5 w-3.5" />}
+                      {!isAssigned && (m.user.name?.[0]?.toUpperCase() || m.user.email[0].toUpperCase())}
+                    </div>
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <span className={cn(
+                        "truncate text-[13px] font-medium transition-colors duration-200",
+                        isAssigned ? "text-[var(--accent)]" : "text-body"
+                      )}>
+                        {m.user.name || m.user.email}
+                      </span>
+                      <Badge variant={isAssigned ? "success" : "default"} className="shrink-0 text-[10px] px-1.5 py-0">
+                        {m.role === "OWNER" ? "Owner" : m.role === "EDITOR" ? "Editor" : "Viewer"}
+                      </Badge>
+                      {isApprover && (
+                        <Badge variant="info" className="shrink-0 text-[10px] px-1.5 py-0">
+                          Approver
+                        </Badge>
+                      )}
+                    </div>
                   </button>
-                )}
-              </div>
-            ))}
+                );
+              });
+            })()}
           </div>
-          {!isReadOnly && (
-            <div className="relative mt-3">
-              <button
-                onClick={() => setShowMemberPicker(!showMemberPicker)}
-                className="flex items-center gap-1.5 rounded-xl border border-dashed border-themed px-3 py-2 text-xs font-medium text-body transition-colors hover:border-[var(--accent)] hover:accent-color"
-              >
-                <UserPlus className="h-3.5 w-3.5" /> Assign member
-              </button>
-              {showMemberPicker && unassignedMembers.length > 0 && (
-                <div className="absolute left-0 top-full z-10 mt-1 w-56 rounded-xl border border-themed bg-card py-1 shadow-themed-md">
-                  {unassignedMembers.map((m) => (
-                    <button
-                      key={m.user.id}
-                      onClick={() => handleAssign(m.user.id)}
-                      className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-body hover:bg-hover"
-                    >
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full accent-bg text-[10px] font-semibold accent-color">
-                        {m.user.name?.[0]?.toUpperCase() || m.user.email[0].toUpperCase()}
-                      </div>
-                      {m.user.name || m.user.email}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Dependencies */}
@@ -283,17 +286,9 @@ export function TaskDetailPanel({
           <FileUpload nodeId={node.id} projectId={projectId} attachments={node.attachments} isReadOnly={isReadOnly} />
         </div>
 
-        {/* Comments */}
+        {/* Comments — all project members can comment regardless of graph edit role */}
         <div>
-          <TaskComments nodeId={node.id} currentUserId={currentUserId} isReadOnly={isReadOnly} />
-        </div>
-
-        {/* Sub-graph */}
-        <div className="border-t border-themed-subtle pt-5">
-          <Button variant="secondary" size="sm" onClick={handleOpenSubGraph} className="w-full gap-1.5">
-            <ChevronRight className="h-4 w-4" />
-            {node.subGraph ? "Open Sub-Graph" : "Create Sub-Graph"}
-          </Button>
+          <TaskComments nodeId={node.id} currentUserId={currentUserId} isReadOnly={false} />
         </div>
 
         {!isReadOnly && (

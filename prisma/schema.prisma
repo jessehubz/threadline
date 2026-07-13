@@ -9,6 +9,7 @@ datasource db {
 enum TaskStatus {
   NOT_STARTED
   IN_PROGRESS
+  URGENT
   BLOCKED
   AWAITING_APPROVAL
   REJECTED
@@ -42,6 +43,11 @@ enum NodeType {
   FOLDER
 }
 
+enum ProjectVisibility {
+  PUBLIC
+  PRIVATE
+}
+
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
@@ -51,6 +57,12 @@ model User {
   bio       String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Social links
+  githubUrl   String?
+  twitterUrl  String?
+  linkedinUrl String?
+  websiteUrl  String?
 
   // Preferences
   theme              String @default("system")
@@ -72,6 +84,8 @@ model User {
   ownedTeams        Team[] @relation("TeamOwner")
   friends        Friendship[] @relation("UserFriends")
   friendOf       Friendship[] @relation("FriendOf")
+  auditLogs      NodeAuditLog[]
+  commentReads   CommentRead[]
 }
 
 model Project {
@@ -79,15 +93,17 @@ model Project {
   name        String
   description String?
   shareToken  String?  @unique
+  visibility  ProjectVisibility @default(PRIVATE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?
   deleteAfter DateTime?
 
-  members ProjectMember[]
-  graphs  Graph[]
-  messages Message[]
-  labels  ProjectLabel[]
+  members     ProjectMember[]
+  graphs      Graph[]
+  messages    Message[]
+  labels      ProjectLabel[]
+  permissions ProjectPermission[]
 }
 
 model ProjectMember {
@@ -129,6 +145,7 @@ model TaskNode {
   positionY   Float      @default(0)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
 
   // Sub-graph relationship
   subGraphId String? @unique
@@ -139,6 +156,8 @@ model TaskNode {
   attachments Attachment[]
   completionRequests CompletionRequest[]
   comments    Comment[]
+  auditLogs   NodeAuditLog[]
+  commentReads CommentRead[]
 
   // Edges
   outgoingEdges Edge[] @relation("SourceNode")
@@ -336,4 +355,47 @@ model Friendship {
   friend User @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
 
   @@unique([userId, friendId])
+}
+
+model ProjectPermission {
+  id                String     @id @default(cuid())
+  projectId         String
+  role              MemberRole
+  canCreateNodes    Boolean    @default(true)
+  canEditNodes      Boolean    @default(true)
+  canDeleteNodes    Boolean    @default(true)
+  canCreateEdges    Boolean    @default(true)
+  canDeleteEdges    Boolean    @default(true)
+  canChangeSettings Boolean    @default(false)
+  canInviteMembers  Boolean    @default(false)
+  canKickMembers    Boolean    @default(false)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, role])
+}
+
+model NodeAuditLog {
+  id        String   @id @default(cuid())
+  nodeId    String
+  userId    String
+  action    String
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+
+  node TaskNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CommentRead {
+  id         String   @id @default(cuid())
+  userId     String
+  nodeId     String
+  lastReadAt DateTime @default(now())
+
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  node TaskNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, nodeId])
 }

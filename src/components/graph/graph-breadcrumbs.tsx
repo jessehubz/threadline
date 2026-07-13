@@ -12,7 +12,7 @@ export function GraphBreadcrumbs({ breadcrumbs, projectId, currentPath }: GraphB
   return (
     <nav className="flex items-center gap-1 rounded-xl border border-themed-subtle bg-card/95 px-3 py-2 text-sm shadow-sm backdrop-blur-md">
       <a
-        href={`/graph/${projectId}`}
+        href="/dashboard"
         className="flex items-center gap-1 text-dim transition-colors hover:accent-color"
       >
         <Home className="h-3.5 w-3.5" />

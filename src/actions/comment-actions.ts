@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { sanitizeMessageContent } from "@/lib/sanitize";
 import { rateLimiters } from "@/lib/rate-limit";
+import { pusherServer } from "@/lib/pusher";
 import { z } from "zod/v4";
 
 const addCommentSchema = z.object({
@@ -88,6 +89,23 @@ export async function addComment(data: {
     },
   });
 
+  // Get updated comment count for real-time indicator
+  const commentCount = await prisma.comment.count({ where: { nodeId: parsed.nodeId } });
+
+  // Mark comments as read for the author (their own comments should not appear as unread)
+  await prisma.commentRead.upsert({
+    where: { userId_nodeId: { userId: user.id, nodeId: parsed.nodeId } },
+    create: { userId: user.id, nodeId: parsed.nodeId, lastReadAt: new Date() },
+    update: { lastReadAt: new Date() },
+  });
+
+  // Broadcast real-time update so all viewers see the comment indicator immediately
+  await pusherServer.trigger(`private-graph-${node.graph.id}`, "node-updated", {
+    id: parsed.nodeId,
+    commentCount,
+    lastCommentUserId: user.id,
+  });
+
   return { comment };
 }
 
@@ -128,6 +146,15 @@ export async function deleteComment(commentId: string) {
   }
 
   await prisma.comment.delete({ where: { id: commentId } });
+
+  // Get updated comment count for real-time indicator
+  const commentCount = await prisma.comment.count({ where: { nodeId: comment.nodeId } });
+
+  // Broadcast real-time update so comment indicator reflects deletion
+  await pusherServer.trigger(`private-graph-${comment.node.graph.id}`, "node-updated", {
+    id: comment.nodeId,
+    commentCount,
+  });
 
   return { success: true };
 }

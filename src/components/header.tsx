@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Menu, Search, LayoutDashboard, CalendarDays, BarChart3, MessageSquare, ClipboardList, Users, UserPlus, Settings, Calendar, User, MoreHorizontal } from "lucide-react";
+import { Menu, LayoutDashboard, CalendarDays, BarChart3, MessageSquare, ClipboardList, Users, UserPlus, Settings, Calendar, User, MoreHorizontal } from "lucide-react";
 import { NotificationDropdown } from "@/components/notification-dropdown";
 import { ChatPopup } from "@/components/chat-popup";
-import { useEffect, useRef, useState } from "react";
+import { SearchDropdown } from "@/components/search-dropdown";
+import { useState } from "react";
 import { MobileSidebar } from "@/components/mobile-sidebar";
 import { cn } from "@/lib/utils";
 
@@ -32,42 +33,10 @@ const secondaryNavItems = [
   { name: "Profile", href: "/profile", icon: User },
 ];
 
-const allNavItems = [...primaryNavItems, ...moreNavItems, ...secondaryNavItems];
-
 export function Header({ currentUserId }: { currentUserId: string }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const pathname = usePathname();
-  const router = useRouter();
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setSearchOpen(true);
-        setTimeout(() => searchInputRef.current?.focus(), 50);
-      }
-      if (e.key === "Escape" && searchOpen) {
-        setSearchOpen(false);
-        setSearchQuery("");
-      }
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [searchOpen]);
-
-  const filteredNav = searchQuery
-    ? allNavItems.filter((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : allNavItems;
-
-  function handleSearchNavigate(href: string) {
-    router.push(href);
-    setSearchOpen(false);
-    setSearchQuery("");
-  }
 
   return (
     <>
@@ -162,14 +131,9 @@ export function Header({ currentUserId }: { currentUserId: string }) {
               <Menu className="h-4 w-4" />
             </button>
 
-            <button
-              onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
-              className="hidden rounded-full p-2 text-body transition-all duration-150 hover:scale-[1.05] hover:bg-white/5 hover:text-heading md:flex"
-              aria-label="Search"
-              title="Search (⌘K)"
-            >
-              <Search className="h-4 w-4" />
-            </button>
+            <div className="hidden md:flex">
+              <SearchDropdown />
+            </div>
 
             <ChatPopup currentUserId={currentUserId} />
             <NotificationDropdown />
@@ -188,47 +152,6 @@ export function Header({ currentUserId }: { currentUserId: string }) {
       </div>
 
       <MobileSidebar open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
-
-      {/* Quick Find (⌘K) */}
-      {searchOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[18vh]">
-          <div
-            className="fixed inset-0 bg-black/30 animate-[fadeIn_0.15s_ease-out]"
-            onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
-          />
-          <div className="relative z-10 w-full max-w-md animate-entrance rounded-2xl border border-themed bg-card shadow-2xl">
-            <div className="flex items-center gap-3 border-b border-themed px-4 py-3">
-              <Search className="h-4 w-4 text-dim" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search pages..."
-                className="flex-1 bg-transparent text-sm text-heading placeholder-[var(--text-secondary)] outline-none"
-                autoFocus
-              />
-              <kbd className="rounded border border-themed bg-page px-1 py-0.5 text-[10px] font-medium text-dim">Esc</kbd>
-            </div>
-            <div className="max-h-72 overflow-y-auto py-1.5">
-              {filteredNav.length === 0 ? (
-                <p className="px-4 py-6 text-center text-sm text-dim">No results</p>
-              ) : (
-                filteredNav.map((item) => (
-                  <button
-                    key={item.href}
-                    onClick={() => handleSearchNavigate(item.href)}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-body transition-colors hover:bg-hover hover:text-heading"
-                  >
-                    <item.icon className="h-4 w-4 text-dim" />
-                    <span className="font-medium">{item.name}</span>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

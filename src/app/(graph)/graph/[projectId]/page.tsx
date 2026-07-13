@@ -1,4 +1,5 @@
 import { getGraphData, getBreadcrumbs } from "@/actions/graph-actions";
+import { getUnreadCommentNodes } from "@/actions/comment-read-actions";
 import { GraphEditor } from "@/components/graph/graph-editor";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
@@ -37,8 +38,11 @@ export default async function GraphPage({ params, searchParams }: GraphPageProps
     include: { user: { select: { id: true, name: true, email: true } } },
   });
 
+  // Get unread comment node IDs for the current user
+  const unreadCommentNodeIds = await getUnreadCommentNodes(projectId);
+
   return (
-    <div className="-mx-6 -my-8 lg:-mx-10 lg:-my-10 flex h-[calc(100vh-4rem)] flex-col">
+    <div className="flex h-full w-full flex-col">
       <GraphEditor
         projectId={projectId}
         graph={data.graph}
@@ -49,6 +53,7 @@ export default async function GraphPage({ params, searchParams }: GraphPageProps
         breadcrumbs={breadcrumbs}
         currentPath={pathArray}
         currentUserId={user.id}
+        unreadCommentNodeIds={unreadCommentNodeIds}
       />
     </div>
   );

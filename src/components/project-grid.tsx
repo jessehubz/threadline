@@ -364,76 +364,89 @@ function LabelDialog({ open, onClose, projectId, labels, onLabelsChange }: { ope
 }
 
 function InviteDialog({ open, onClose, projectId }: { open: boolean; onClose: () => void; projectId: string }) {
-  const [email, setEmail] = useState("");
+  const [query, setQuery] = useState("");
   const [role, setRole] = useState<"CO_HEAD" | "MEMBER">("MEMBER");
   const [loading, setLoading] = useState(false);
-  const [invited, setInvited] = useState<Array<{ email: string; link?: string }>>([]);
-  const [teams, setTeams] = useState<Array<{ id: string; name: string; members: Array<{ id: string; email: string }> }>>([]);
+  const [invited, setInvited] = useState<Array<{ name: string; email: string }>>([]);
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; name: string | null; email: string; imageUrl: string | null }>>([]);
+  const [searching, setSearching] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (open) { import("@/actions/team-group-actions").then(({ getTeams }) => getTeams().then(setTeams)); }
-  }, [open]);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const trimmed = query.trim();
+    if (!trimmed || trimmed.length < 2) { setSearchResults([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const { searchAllUsers } = await import("@/actions/search-actions");
+        const results = await searchAllUsers(trimmed);
+        setSearchResults(results);
+      } catch { setSearchResults([]); }
+      setSearching(false);
+    }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [query]);
 
-  async function handleInvite() {
-    if (!email.trim()) return;
+  async function handleInvite(email: string, name: string | null) {
     setLoading(true);
-    const result = await inviteMember(projectId, email.trim(), role);
+    const result = await inviteMember(projectId, email, role);
     if (result.error) toast.error(result.error);
     else {
-      const link = "inviteLink" in result ? (result as { inviteLink?: string }).inviteLink : undefined;
-      setInvited((p) => [...p, { email: email.trim(), link }]);
-      setEmail("");
-      toast.success("Invite created!");
+      setInvited((p) => [...p, { name: name || email, email }]);
+      toast.success("Member added!");
     }
-    setLoading(false);
-  }
-
-  async function handleInviteTeam(teamId: string) {
-    const team = teams.find((t) => t.id === teamId);
-    if (!team) return;
-    setLoading(true);
-    for (const m of team.members) {
-      const result = await inviteMember(projectId, m.email, role);
-      if (!result.error) {
-        const link = "inviteLink" in result ? (result as { inviteLink?: string }).inviteLink : undefined;
-        setInvited((p) => [...p, { email: m.email, link }]);
-      }
-    }
-    toast.success(`Invited ${team.members.length} from "${team.name}"`);
     setLoading(false);
   }
 
   return (
-    <Dialog open={open} onClose={onClose} title="Invite Collaborators">
+    <Dialog open={open} onClose={onClose} title="Add Members">
       <div className="space-y-4 max-h-[60vh] overflow-y-auto">
         <div className="flex gap-2">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleInvite(); } }} placeholder="Email address" className="input-field flex-1" />
-          <select value={role} onChange={(e) => setRole(e.target.value as "CO_HEAD" | "MEMBER")} className="input-field w-auto">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-dim" />
+            <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search people by name..." className="input-field pl-9" />
+          </div>
+          <select value={role} onChange={(e) => setRole(e.target.value as "CO_HEAD" | "MEMBER")} className="input-field w-auto text-xs">
             <option value="MEMBER">Member</option>
             <option value="CO_HEAD">Co-Head</option>
           </select>
-          <Button onClick={handleInvite} loading={loading}>Invite</Button>
         </div>
-        {teams.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-body mb-2">Or invite a team</p>
-            <div className="space-y-2">
-              {teams.map((t) => (
-                <div key={t.id} className="flex items-center justify-between rounded-xl border border-themed-subtle bg-card px-3 py-2">
-                  <div><p className="text-sm font-medium text-heading">{t.name}</p><p className="text-[11px] text-body">{t.members.length} members</p></div>
-                  <Button size="sm" variant="secondary" onClick={() => handleInviteTeam(t.id)}>Invite All</Button>
+        {searching && <p className="text-xs text-dim text-center py-2">Searching...</p>}
+        {searchResults.length > 0 && (
+          <div className="space-y-1">
+            {searchResults.map((person) => {
+              const isInvited = invited.some((i) => i.email === person.email);
+              return (
+                <div key={person.id} className="flex items-center justify-between rounded-xl px-3 py-2 hover:bg-hover transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-semibold" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' }}>
+                      {person.imageUrl ? <img src={person.imageUrl} alt="" className="h-7 w-7 rounded-full object-cover" /> : (person.name?.[0]?.toUpperCase() || person.email[0].toUpperCase())}
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-heading">{person.name || person.email}</p>
+                      {person.name && <p className="text-[10px] text-dim">{person.email}</p>}
+                    </div>
+                  </div>
+                  {isInvited ? (
+                    <span className="text-[10px] font-medium text-[var(--accent)]">Added</span>
+                  ) : (
+                    <Button size="sm" variant="secondary" onClick={() => handleInvite(person.email, person.name)} loading={loading}>Add</Button>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         )}
+        {query.length >= 2 && !searching && searchResults.length === 0 && (
+          <p className="text-xs text-dim text-center py-3">No users found</p>
+        )}
         {invited.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium text-body">Invited:</p>
+          <div className="space-y-1.5 border-t border-themed-subtle pt-3">
+            <p className="text-xs font-medium text-body">Added:</p>
             {invited.map((inv) => (
               <div key={inv.email} className="rounded-lg bg-[var(--accent-soft)] px-3 py-2 text-xs text-[var(--accent)]">
-                {inv.email}
-                {inv.link && <input readOnly value={inv.link} className="mt-1 w-full rounded border border-themed-subtle bg-card px-2 py-1 text-[11px] text-body" onClick={(e) => { (e.target as HTMLInputElement).select(); navigator.clipboard.writeText(inv.link!); toast.success("Copied!"); }} />}
+                {inv.name}
               </div>
             ))}
           </div>

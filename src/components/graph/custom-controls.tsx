@@ -16,7 +16,7 @@ export function CustomControls() {
   }, [getZoom]);
 
   return (
-    <div className="absolute bottom-4 right-4 z-10 flex items-center gap-1 rounded-xl border border-themed-subtle bg-card px-2.5 py-1.5 shadow-sm">
+    <div className="absolute bottom-4 right-4 z-[5] flex items-center gap-1 rounded-xl border border-themed-subtle bg-card px-2.5 py-1.5 shadow-sm">
       <button
         onClick={() => zoomOut()}
         className="rounded-lg p-1.5 text-dim transition-colors hover:bg-hover hover:text-body"

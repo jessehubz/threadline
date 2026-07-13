@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,14 +14,18 @@ interface DialogProps {
 }
 
 export function Dialog({ open, onClose, title, children, className }: DialogProps) {
-  // mounted = present in DOM; show = CSS classes for visible state
   const [mounted, setMounted] = useState(false);
   const [show, setShow] = useState(false);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Ensure we only portal on the client
+  useEffect(() => {
+    setPortalContainer(document.body);
+  }, []);
 
   useEffect(() => {
     if (open) {
-      // Mount immediately, then trigger enter on next frame
       setMounted(true);
       if (closeTimerRef.current) {
         clearTimeout(closeTimerRef.current);
@@ -32,7 +37,6 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         });
       });
     } else if (mounted) {
-      // Trigger exit, then unmount after transition
       setShow(false);
       closeTimerRef.current = setTimeout(() => {
         setMounted(false);
@@ -50,7 +54,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
     return () => { document.body.style.overflow = ""; };
   }, [mounted]);
 
-  // Escape key handler
+  // Escape key
   useEffect(() => {
     function handleEscape(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -59,24 +63,24 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
     return () => document.removeEventListener("keydown", handleEscape);
   }, [mounted, onClose]);
 
-  if (!mounted) return null;
+  if (!mounted || !portalContainer) return null;
 
-  return (
+  const dialogContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       style={{ isolation: "isolate" }}
     >
-      {/* Overlay — plain dim, NO blur, stays sharp/legible behind */}
+      {/* Overlay — solid dark scrim, NO blur */}
       <div
         className={cn(
           "fixed inset-0 transition-opacity duration-[220ms] ease-out",
           show ? "opacity-100" : "opacity-0"
         )}
-        style={{ backgroundColor: "rgba(0, 0, 0, 0.35)" }}
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }}
         onClick={onClose}
         aria-hidden="true"
       />
-      {/* Dialog panel — viewport-centered, scale 96%→100% + fade */}
+      {/* Dialog panel */}
       <div
         className={cn(
           "relative z-10 w-full max-w-lg p-6 transition-all duration-[220ms] ease-out",
@@ -89,7 +93,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
           borderRadius: "var(--radius-xl)",
           border: "1px solid var(--border-default)",
           backgroundColor: "var(--bg-elevated)",
-          boxShadow: "var(--shadow-md)",
+          boxShadow: "var(--elevation-4, var(--shadow-md))",
         }}
         role="dialog"
         aria-modal="true"
@@ -98,7 +102,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
           <h2 className="text-[16px] font-semibold" style={{ color: "var(--text-primary)" }}>{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 transition-all duration-150 hover:bg-[var(--bg-muted)]"
+            className="rounded-lg p-1.5 transition-all duration-150 hover:bg-[var(--bg-muted)] hover:scale-105"
             style={{ color: "var(--text-muted)" }}
             aria-label="Close"
           >
@@ -109,4 +113,6 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
       </div>
     </div>
   );
+
+  return createPortal(dialogContent, portalContainer);
 }
