@@ -25,10 +25,10 @@ function buildInsight({
   overdueCount: number;
 }): string {
   if (overdueCount > 0) {
-    return `${overdueCount} task${overdueCount > 1 ? "s are" : " is"} overdue — clearing ${overdueCount > 1 ? "these" : "it"} first will lift your health score fastest.`;
+    return `${overdueCount} task${overdueCount > 1 ? "s are" : " is"} overdue - clearing ${overdueCount > 1 ? "these" : "it"} first will lift your health score fastest.`;
   }
   if (completionsThisWeek === 0) {
-    return "No completions yet this week — trends will appear here once tasks wrap up.";
+    return "No completions yet this week - trends will appear here once tasks wrap up.";
   }
   if (weeklyTrendPct > 0) {
     return `Completion pace is up ${weeklyTrendPct}% from last week. Nice momentum.`;
@@ -55,7 +55,7 @@ export function AnalyticsCharts({
 
   return (
     <div className="space-y-5">
-      {/* Insight strip — no container. Lives directly on the background,
+      {/* Insight strip - no container. Lives directly on the background,
           separated from the charts below by a hairline rule and whitespace. */}
       <div className="flex flex-col gap-4 border-b border-themed-subtle pb-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-wrap gap-x-8 gap-y-3">
@@ -70,7 +70,7 @@ export function AnalyticsCharts({
         <p className="max-w-xs text-[13px] leading-relaxed text-body sm:text-right">{insight}</p>
       </div>
 
-      {/* Hero: one focal panel — trend chart + completion radial share the same card
+      {/* Hero: one focal panel - trend chart + completion radial share the same card
           instead of standing as two equal-weight boxes. */}
       <div className="animate-entrance-1 card">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto]">
@@ -97,7 +97,7 @@ export function AnalyticsCharts({
         </div>
       </div>
 
-      {/* Second row: quieter, border-only supporting panels — not a repeat of the hero's card. */}
+      {/* Second row: quieter, border-only supporting panels - not a repeat of the hero's card. */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_1fr]">
         <div className="animate-entrance-2 panel-quiet p-5">
           <h3 className="mb-1 text-card-title">Status breakdown</h3>
@@ -118,7 +118,7 @@ export function AnalyticsCharts({
         </div>
       </div>
 
-      {/* Overdue — a compact list, not another boxed grid tile */}
+      {/* Overdue - a compact list, not another boxed grid tile */}
       {overdueTasks.length > 0 && (
         <div className="animate-entrance-4 rounded-xl border border-[var(--danger-soft)] bg-[var(--danger-soft)] p-5">
           <div className="mb-2 flex items-center gap-2">

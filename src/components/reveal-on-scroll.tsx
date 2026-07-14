@@ -49,7 +49,7 @@ export function RevealOnScroll({
           } else {
             setIsVisible(true);
           }
-          // Only trigger once — disconnect after revealing
+          // Only trigger once - disconnect after revealing
           observer.unobserve(entry.target);
         }
       },

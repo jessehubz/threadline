@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Threadline",
+  title: "Privacy Policy - Threadline",
   description: "Privacy Policy for the Threadline platform.",
 };
 

@@ -73,7 +73,7 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
         ))}
       </div>
 
-      {/* Summary stats — quiet, border-only tier; the table below is the page's one focal card */}
+      {/* Summary stats - quiet, border-only tier; the table below is the page's one focal card */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="panel-quiet p-4 hover-lift">
           <div className="flex items-center gap-2 mb-1.5">
@@ -105,7 +105,7 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
         </div>
       </div>
 
-      {/* AI Insight — one-line contextual tip */}
+      {/* AI Insight - one-line contextual tip */}
       {totalTasks > 0 && (
         <div
           className="flex items-center gap-3 px-4 py-3"
@@ -117,18 +117,18 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
           </span>
           <span className="text-[13px] text-[var(--text-secondary)]">
             {overdue.length > 0
-              ? <><b className="text-[var(--text-primary)]">{overdue[0].title}</b> is overdue{overdue.length > 1 ? ` — ${overdue.length - 1} more also late` : ""}. Clear blockers first.</>
+              ? <><b className="text-[var(--text-primary)]">{overdue[0].title}</b> is overdue{overdue.length > 1 ? ` - ${overdue.length - 1} more also late` : ""}. Clear blockers first.</>
               : blocked > 0
-              ? <><b className="text-[var(--text-primary)]">{blocked} task{blocked > 1 ? "s" : ""}</b> blocked — might be worth a check-in.</>
+              ? <><b className="text-[var(--text-primary)]">{blocked} task{blocked > 1 ? "s" : ""}</b> blocked - might be worth a check-in.</>
               : inProgress > 0
               ? <>All on track. <b className="text-[var(--text-primary)]">{inProgress}</b> task{inProgress > 1 ? "s" : ""} actively in progress.</>
-              : <>Project is clear — time to assign next steps.</>
+              : <>Project is clear - time to assign next steps.</>
             }
           </span>
         </div>
       )}
 
-      {/* Progress — no container at all, just lives on the background */}
+      {/* Progress - no container at all, just lives on the background */}
       {totalTasks > 0 && (
         <div className="px-1">
           <div className="flex items-center justify-between mb-2">
@@ -165,7 +165,7 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
         </div>
       </div>
 
-      {/* Task list — the one focal, level-2 card on this page */}
+      {/* Task list - the one focal, level-2 card on this page */}
       <div className="card p-5">
         <h3 className="text-card-title mb-4">All Tasks</h3>
         <div className="overflow-x-auto">
@@ -196,7 +196,7 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
                       </span>
                     </td>
                     <td className={cn("py-2.5 text-[12px]", isOverdue ? "font-medium text-[var(--danger)]" : "text-body")}>
-                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
+                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-"}
                     </td>
                   </tr>
                 );
@@ -207,7 +207,7 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
         </div>
       </div>
 
-      {/* Overdue alerts — danger-tinted panel (solid fill), matching the treatment used on Analytics */}
+      {/* Overdue alerts - danger-tinted panel (solid fill), matching the treatment used on Analytics */}
       {overdue.length > 0 && (
         <div className="p-5" style={{ borderRadius: 'var(--radius-lg)', border: '1px solid var(--danger-soft)', backgroundColor: 'var(--danger-soft)' }}>
           <h3 className="text-card-title mb-3 flex items-center gap-1.5">

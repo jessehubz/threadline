@@ -21,7 +21,7 @@ export default async function AnalyticsPage() {
     },
   });
 
-  // Status breakdown — single-accent system: violet intensity rises with progress,
+  // Status breakdown - single-accent system: violet intensity rises with progress,
   // muted coral flags anything that needs attention. No other hues.
   const statusBreakdown = [
     { name: "Not Started", value: tasks.filter((t) => t.status === "NOT_STARTED").length, color: "var(--text-muted)" },
@@ -66,7 +66,7 @@ export default async function AnalyticsPage() {
     completionTimeline.push({ date: dateStr, count });
   }
 
-  // Week-over-week trend — gives the hero chart something to actually say
+  // Week-over-week trend - gives the hero chart something to actually say
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
   const completionsThisWeek = tasks.filter((t) => t.status === "COMPLETE" && t.updatedAt >= sevenDaysAgo).length;

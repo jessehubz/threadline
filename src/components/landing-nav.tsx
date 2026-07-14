@@ -39,7 +39,7 @@ export function LandingNav() {
     if (!mobileOpen) return;
     function handleClick(e: MouseEvent) {
       const target = e.target as Node;
-      // Don't close if clicking the toggle button — let its onClick handle it
+      // Don't close if clicking the toggle button - let its onClick handle it
       if (toggleRef.current && toggleRef.current.contains(target)) return;
       if (menuRef.current && !menuRef.current.contains(target)) {
         setMobileOpen(false);
@@ -97,7 +97,7 @@ export function LandingNav() {
           className="word"
           style={{ textDecoration: "none" }}
         >
-          <span className="t1">Thread</span>
+          <span className="t1">thread</span>
           <span className="t2">line</span>
         </a>
 

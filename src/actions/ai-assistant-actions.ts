@@ -283,7 +283,7 @@ function buildSystemPrompt(context: AssistantContext): string {
     .filter((t) => t.status !== "COMPLETE")
     .slice(0, 30)
     .map((t) => {
-      const parts = [`- "${t.title}" [${t.projectName}] — ${t.status}`];
+      const parts = [`- "${t.title}" [${t.projectName}] - ${t.status}`];
       if (t.dueDate) {
         const due = new Date(t.dueDate);
         const daysUntil = Math.floor((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -299,12 +299,12 @@ function buildSystemPrompt(context: AssistantContext): string {
 
   const projectNames = [...new Set(context.tasks.map((t) => t.projectName))];
 
-  return `You are Loom, a friendly and concise AI planning assistant inside Threadline — a collaborative task management app built around visual dependency graphs.
+  return `You are Loom, a friendly and concise AI planning assistant inside Threadline - a collaborative task management app built around visual dependency graphs.
 
 Your user's name is ${context.userName}.
 
 ## Your personality
-- Friendly but concise — no filler, get to the point
+- Friendly but concise - no filler, get to the point
 - Use emoji sparingly for emphasis (not every sentence)
 - When giving task advice, be specific and actionable
 - You can introduce yourself as "Loom" if asked your name
@@ -324,7 +324,7 @@ ${tasksSummary || "  (no active tasks)"}
 - Setting reminders (tell user you've noted it, actual reminder creation happens separately)
 
 ## Important rules
-- You are advisory only — you cannot modify tasks, only suggest actions
+- You are advisory only - you cannot modify tasks, only suggest actions
 - Keep responses under 200 words unless the user asks for detail
 - If you don't know something about their workspace, say so
 - Never invent tasks or data that isn't in the context above`;

@@ -70,7 +70,7 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    // Only apply security headers in production — they interfere with Turbopack HMR in dev
+    // Only apply security headers in production - they interfere with Turbopack HMR in dev
     if (!isProd) return [];
 
     return [

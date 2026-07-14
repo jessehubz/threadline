@@ -98,7 +98,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
               >
                 <option value="">Or pick a template...</option>
                 {templates.map((t) => (
-                  <option key={t.name} value={t.name}>{t.name} — {t.description}</option>
+                  <option key={t.name} value={t.name}>{t.name} - {t.description}</option>
                 ))}
               </select>
             </div>

@@ -19,7 +19,7 @@ const team = [
     name: "Theo Bramwell",
     role: "Co-Founder & Design Lead",
     initials: "TB",
-    bio: "10 years of product design across B2B SaaS. Believes the best software is invisible — it just works.",
+    bio: "10 years of product design across B2B SaaS. Believes the best software is invisible - it just works.",
     color: "#A78BFA",
   },
 ];
@@ -49,7 +49,7 @@ export default function AboutPage() {
           }}
         >
           We started Threadline because we were tired of flat to-do lists that hide relationships
-          between tasks. Every real project has dependencies, bottlenecks, and parallel tracks — your
+          between tasks. Every real project has dependencies, bottlenecks, and parallel tracks - your
           tools should make those visible, not force them into a single column.
         </p>
       </div>
@@ -76,7 +76,7 @@ export default function AboutPage() {
         </h2>
         <p style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.7 }}>
           Make project complexity visible and manageable for every team. We believe that when you
-          can see the whole picture — dependencies, blockers, progress, and people — you make
+          can see the whole picture - dependencies, blockers, progress, and people - you make
           better decisions and ship faster with less stress.
         </p>
       </div>
@@ -168,7 +168,7 @@ export default function AboutPage() {
         </h2>
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {[
-            { title: "Visibility over complexity", desc: "Show the full picture. Hiding information doesn't reduce complexity — it just makes surprises worse." },
+            { title: "Visibility over complexity", desc: "Show the full picture. Hiding information doesn't reduce complexity - it just makes surprises worse." },
             { title: "Speed of thought", desc: "The tool should never be the bottleneck. Keyboard shortcuts, instant sync, and minimal clicks." },
             { title: "Privacy by design", desc: "Your data is yours. We don't sell it, advertise against it, or use it to train models." },
           ].map((value) => (

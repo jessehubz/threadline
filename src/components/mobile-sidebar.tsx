@@ -29,7 +29,7 @@ export function MobileSidebar({ open, onClose }: { open: boolean; onClose: () =>
   const [query, setQuery] = useState("");
 
   // Panel stays permanently mounted (just off-screen + invisible when closed) so the
-  // slide transition has something to animate from — no mount-timing effect needed.
+  // slide transition has something to animate from - no mount-timing effect needed.
   function handleClose() {
     setQuery("");
     onClose();
@@ -45,7 +45,7 @@ export function MobileSidebar({ open, onClose }: { open: boolean; onClose: () =>
       aria-hidden={!open}
       inert={!open}
     >
-      {/* Dimmed backdrop — no blur, per design spec */}
+      {/* Dimmed backdrop - no blur, per design spec */}
       <div
         className={cn(
           "fixed inset-0 bg-black/40 transition-opacity duration-200 ease-out",

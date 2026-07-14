@@ -28,7 +28,7 @@ const features = [
     icon: Zap,
     title: "Approval Workflows",
     description:
-      "Built-in approval workflows let you submit tasks for review, with one-click approve/reject and dependency enforcement — tasks can't complete until upstream work is done.",
+      "Built-in approval workflows let you submit tasks for review, with one-click approve/reject and dependency enforcement - tasks can't complete until upstream work is done.",
     color: "#6D28D9",
   },
   {
@@ -49,7 +49,7 @@ const features = [
     icon: Shield,
     title: "Enterprise-Grade Security",
     description:
-      "Role-based access control, input sanitization, rate limiting, file validation, CSRF protection, and private comments — security built into every layer.",
+      "Role-based access control, input sanitization, rate limiting, file validation, CSRF protection, and private comments - security built into every layer.",
     color: "#4C1D95",
   },
   {
@@ -87,7 +87,7 @@ export default function FeaturesPage() {
           }}
         >
           Threadline replaces flat to-do lists with visual dependency graphs, real-time collaboration,
-          and intelligent automation — all in one place.
+          and intelligent automation - all in one place.
         </p>
       </div>
 

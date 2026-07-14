@@ -70,7 +70,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       style={{ isolation: "isolate" }}
     >
-      {/* Overlay — solid dark scrim, NO blur */}
+      {/* Overlay - solid dark scrim, NO blur */}
       <div
         className={cn(
           "fixed inset-0 transition-opacity duration-[220ms] ease-out",

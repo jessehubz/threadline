@@ -55,7 +55,7 @@ export function SettingsForm({ user }: { user: User }) {
 
   return (
     <div className="space-y-7">
-      {/* Theme — iOS-style grouped section: label above, border-only group below */}
+      {/* Theme - iOS-style grouped section: label above, border-only group below */}
       <div>
         <p className="text-eyebrow mb-2.5 px-1">Appearance</p>
         <div className="panel-quiet p-5">

@@ -204,7 +204,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
   return (
     <div ref={wrapperRef} className={cn("relative", className)}>
       {/* 
-        The search bar itself — always visible, full width, inline. 
+        The search bar itself - always visible, full width, inline. 
         Clicking focuses the same input in-place. No popup, no modal.
       */}
       <div
@@ -247,7 +247,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
       </div>
 
       {/* 
-        Suggestions dropdown — anchored directly beneath the search bar,
+        Suggestions dropdown - anchored directly beneath the search bar,
         matching its width. Think Safari address bar behavior.
       */}
       {showDropdown && (

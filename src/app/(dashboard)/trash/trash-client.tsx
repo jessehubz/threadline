@@ -167,7 +167,7 @@ export function TrashPageClient({ initialProjects }: { initialProjects: DeletedP
                 <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
                   {project.deletedAt
                     ? new Date(project.deletedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                    : "—"
+                    : "-"
                   }
                 </div>
 

@@ -31,7 +31,7 @@ function FolderNodeInner({ id, data, selected }: NodeProps & { data: FolderNodeD
       )}
       style={{ borderColor: selected ? accentColor : `${accentColor}60` }}
     >
-      {/* Delete button — top-right on hover */}
+      {/* Delete button - top-right on hover */}
       <button
         onClick={(e) => {
           e.stopPropagation();

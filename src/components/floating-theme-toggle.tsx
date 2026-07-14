@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export function FloatingThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
 
-  // Only dark and light — no system
+  // Only dark and light - no system
   const buttons = [
     { value: "dark" as const, icon: Moon, label: "Dark mode" },
     { value: "light" as const, icon: Sun, label: "Light mode" },

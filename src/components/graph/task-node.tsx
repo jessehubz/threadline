@@ -39,7 +39,7 @@ function TaskNodeInner({ id, data, selected }: NodeProps & { data: TaskNodeData 
         boxShadow: selected ? undefined : 'var(--elevation-1, var(--shadow-sm))',
       }}
     >
-      {/* Delete button — top-right on hover */}
+      {/* Delete button - top-right on hover */}
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -51,7 +51,7 @@ function TaskNodeInner({ id, data, selected }: NodeProps & { data: TaskNodeData 
         <Trash2 className="h-3 w-3" />
       </button>
 
-      {/* Connection Handles — all 4 sides */}
+      {/* Connection Handles - all 4 sides */}
       <Handle
         type="source"
         position={Position.Top}

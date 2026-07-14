@@ -12,7 +12,7 @@ interface TagChipProps {
 }
 
 /**
- * TagChip — A small pill-shaped tag with color coding.
+ * TagChip - A small pill-shaped tag with color coding.
  * Supports light/dark mode via CSS custom properties.
  * Follows the .mini-tag pattern from the dashboard reference.
  */

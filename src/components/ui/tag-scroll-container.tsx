@@ -8,7 +8,7 @@ interface TagScrollContainerProps {
 }
 
 /**
- * TagScrollContainer — A horizontal-scroll container for tags.
+ * TagScrollContainer - A horizontal-scroll container for tags.
  *
  * Per spec 04-tags-system.md:
  * - Scrolls horizontally rather than wrapping to multiple lines

@@ -341,7 +341,7 @@ export function DashboardContent(props: DashboardContentProps) {
           opacity: 1;
           transform: translateY(0);
         }
-        /* Section separator — subtle hairline between major blocks */
+        /* Section separator - subtle hairline between major blocks */
         .dash-separator {
           height: 1px;
           margin: 24px 0 28px;
@@ -802,7 +802,7 @@ export function DashboardContent(props: DashboardContentProps) {
 
       </div>{/* end revealContainerRef */}
 
-      {/* AI Assistant Launcher — slides in after 200px scroll */}
+      {/* AI Assistant Launcher - slides in after 200px scroll */}
       {showLauncher && (
         <button
           onClick={openAiChat}
@@ -1059,7 +1059,7 @@ function HeroSection({
         <CreateProjectButton />
       </div>
 
-      {/* RIGHT — Snapshot Card */}
+      {/* RIGHT - Snapshot Card */}
       <div
         style={{
           background: "var(--bg-base)",
@@ -1521,8 +1521,8 @@ function ProjectCard({ project, index, availableTags, onDeleteProject }: { proje
           el.style.borderColor = "var(--border-default)";
         }}
       >
-        {/* Tag manager button — top right */}
-        {/* Top-right actions — edit + delete + tag manager */}
+        {/* Tag manager button - top right */}
+        {/* Top-right actions - edit + delete + tag manager */}
         <div
           style={{ position: "absolute", top: "14px", right: "14px", zIndex: 2, display: "flex", alignItems: "center", gap: "4px" }}
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -1565,7 +1565,7 @@ function ProjectCard({ project, index, availableTags, onDeleteProject }: { proje
           />
         </div>
 
-        {/* Top row — status badge */}
+        {/* Top row - status badge */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-start", marginBottom: "14px" }}>
           <span
             style={{
@@ -2165,7 +2165,7 @@ function NeedsAttentionPanel({ items }: { items: DashboardContentProps["needsAtt
       {items.length === 0 ? (
         <div style={{ textAlign: "center", padding: "32px 0", color: "var(--text-muted)" }}>
           <CheckCircle2 style={{ width: "28px", height: "28px", margin: "0 auto 10px", opacity: 0.4 }} />
-          <p style={{ fontSize: "13px" }}>All clear — nothing needs attention</p>
+          <p style={{ fontSize: "13px" }}>All clear - nothing needs attention</p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -2456,7 +2456,7 @@ function DeadlinesPanel({
         What&apos;s due, sorted by urgency
       </div>
 
-      {/* Segmented tab bar — wraps on mobile via className for responsive */}
+      {/* Segmented tab bar - wraps on mobile via className for responsive */}
       <div
         className="deadlines-tabbar"
         style={{
@@ -2521,7 +2521,7 @@ function DeadlinesPanel({
         <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)" }}>
           <Clock style={{ width: "28px", height: "28px", margin: "0 auto 10px", opacity: 0.4 }} />
           <p style={{ fontSize: "13px" }}>
-            {deadlineTab === "overdue" ? "Nothing overdue — you\u2019re on track!" : deadlineTab === "today" ? "Nothing due today — enjoy the breathing room" : deadlineTab === "week" ? "No tasks due this week" : "No upcoming deadlines"}
+            {deadlineTab === "overdue" ? "Nothing overdue - you\u2019re on track!" : deadlineTab === "today" ? "Nothing due today - enjoy the breathing room" : deadlineTab === "week" ? "No tasks due this week" : "No upcoming deadlines"}
           </p>
         </div>
       ) : (

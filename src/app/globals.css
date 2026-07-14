@@ -65,7 +65,7 @@
   --radius-md: 16px;
   --radius-sm: 10px;
 
-  /* Violet hierarchy — light mode. Emphasis darkens (inverse of dark mode) to hold contrast on white. */
+  /* Violet hierarchy - light mode. Emphasis darkens (inverse of dark mode) to hold contrast on white. */
   --violet-50: rgba(139, 92, 246, 0.06);
   --violet-100: rgba(139, 92, 246, 0.10);
   --violet-200: rgba(139, 92, 246, 0.16);
@@ -75,7 +75,7 @@
   --violet-600: #7C3AED;
   --violet-700: #6D28D9;
 
-  /* Single negative/warning color — muted coral. The only non-violet hue in the app. */
+  /* Single negative/warning color - muted coral. The only non-violet hue in the app. */
   --danger: #DC4C4C;
   --danger-hover: #C93D3D;
   --danger-soft: rgba(220, 76, 76, 0.08);
@@ -112,12 +112,12 @@
   --radius-md: 16px;
   --radius-sm: 10px;
 
-  /* Single negative/warning color — muted coral. The only non-violet hue in the app. */
+  /* Single negative/warning color - muted coral. The only non-violet hue in the app. */
   --danger: #E5484D;
   --danger-hover: #EC6A6E;
   --danger-soft: rgba(229, 72, 77, 0.14);
 
-  /* Violet hierarchy — use these for UI chrome, borders, hover states */
+  /* Violet hierarchy - use these for UI chrome, borders, hover states */
   --violet-50: rgba(139, 92, 246, 0.04);
   --violet-100: rgba(139, 92, 246, 0.08);
   --violet-200: rgba(139, 92, 246, 0.12);
@@ -170,7 +170,7 @@ html.theme-transition *::after {
   /* Buttons follow the Linear-derived rule: CTAs are 8px-radius rectangles,
      never pills. Pills are reserved for status/tag/tab chips (see
      .status-tint below and the nav pill, which is untouched). No shadow on
-     any button variant — hover reads via background-color + a hairline lift,
+     any button variant - hover reads via background-color + a hairline lift,
      not elevation. */
 
   .btn-primary {
@@ -220,7 +220,7 @@ html.theme-transition *::after {
     }
   }
 
-  /* Cards carry depth via a background step + hairline border + inset shadow —
+  /* Cards carry depth via a background step + hairline border + inset shadow -
      surface-ladder logic from sample3. */
   .card {
     @apply p-6 transition-all duration-200 ease-out;
@@ -459,17 +459,17 @@ main > * {
 .shadow-themed { box-shadow: var(--shadow-sm); }
 .shadow-themed-md { box-shadow: var(--shadow-md); }
 
-/* ─── Type Scale, Elevation, Hover, Status (components layer — see below) ── */
+/* ─── Type Scale, Elevation, Hover, Status (components layer - see below) ── */
 /* Kept inside @layer components (not the unlayered zone above) specifically so
-   these can be combined with one-off Tailwind utility overrides — e.g.
-   cn("text-meta", danger && "text-[var(--danger)]") — and the utility wins,
+   these can be combined with one-off Tailwind utility overrides - e.g.
+   cn("text-meta", danger && "text-[var(--danger)]") - and the utility wins,
    same as any other Tailwind class-on-class override. */
 
 @layer components {
   /* Type scale: weight is a scarce resource. Bold/semibold is reserved for the
      1-2 things per screen that are the actual point (a hero number, the
-     current focal panel's header). Everything else — item titles, captions,
-     meta — is medium or regular; hierarchy comes from size/color/tracking. */
+     current focal panel's header). Everything else - item titles, captions,
+     meta - is medium or regular; hierarchy comes from size/color/tracking. */
 
   .text-eyebrow {
     font-size: 10px;
@@ -500,7 +500,7 @@ main > * {
 
   /* Display/headline/card-title: the negative-tracking-scales-with-size
      logic from DESIGN.md. Pair with a Tailwind text-[Npx] size (sizes vary
-     per context/breakpoint) — these classes only fix weight + tracking +
+     per context/breakpoint) - these classes only fix weight + tracking +
      line-height so every heading tier reads consistently. */
 
   .text-display {
@@ -526,8 +526,8 @@ main > * {
     color: var(--text-primary);
   }
 
-  /* Elevation: .card (above) is Level 2 — a genuine raised object; reserve it
-     for one focal panel per section. .panel-quiet is Level 1 — a border-only
+  /* Elevation: .card (above) is Level 2 - a genuine raised object; reserve it
+     for one focal panel per section. .panel-quiet is Level 1 - a border-only
      grouping with no fill, so it doesn't compete with a level-2 neighbor. */
 
   .panel-quiet {
@@ -538,7 +538,7 @@ main > * {
   }
 
   /* Premium hover: for grid-locked focal elements (Health Score, hero stat)
-     where a vertical lift would look like it's escaping its cell — glow +
+     where a vertical lift would look like it's escaping its cell - glow +
      a hairline scale instead of translateY. */
 
   .hover-premium {
@@ -550,7 +550,7 @@ main > * {
     transform: scale(1.012);
   }
 
-  /* Status tint pill: understated status indication — a soft alpha-tinted
+  /* Status tint pill: understated status indication - a soft alpha-tinted
      pill, not a loud solid-fill block. Background/text color are set inline
      per-status since they derive from the dynamic status accent. */
 
@@ -604,7 +604,7 @@ main > * {
   to { opacity: 1; }
 }
 
-/* Respect reduced motion — instant swap */
+/* Respect reduced motion - instant swap */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root) {
@@ -651,9 +651,9 @@ main > * {
 
 /* ─── Clerk Overrides ─────────────────────────────────────────────────────── */
 /* Comprehensive restyle: layout-driven, minimalist, matches the app's
-   design system. Real design judgment — not just token-swapping. */
+   design system. Real design judgment - not just token-swapping. */
 
-/* ── 0. Hide ALL Clerk branding, footers, dev badges — NUCLEAR ─────────────── */
+/* ── 0. Hide ALL Clerk branding, footers, dev badges - NUCLEAR ─────────────── */
 
 /* Hide footer on popover and sign-in/sign-up pages, but NOT inside UserProfile modal */
 .cl-userButtonPopoverFooter,
@@ -679,7 +679,7 @@ main > * {
   display: none !important;
 }
 
-/* Development mode badge — styled to match */
+/* Development mode badge - styled to match */
 .cl-badge[data-color="warning"],
 .cl-badge[data-variant="warning"],
 .cl-developerBadge {
@@ -756,7 +756,7 @@ main > * {
   min-height: 0 !important;
 }
 
-/* ── 3. Sidebar — narrower, proper top spacing, tighter rhythm ─────────────── */
+/* ── 3. Sidebar - narrower, proper top spacing, tighter rhythm ─────────────── */
 
 .cl-navbar {
   background-color: var(--bg-base) !important;
@@ -787,7 +787,7 @@ main > * {
   margin-bottom: 20px !important;
 }
 
-/* ── 4. Nav item boxes — refined, compact, clear states ────────────────────── */
+/* ── 4. Nav item boxes - refined, compact, clear states ────────────────────── */
 
 .cl-navbarButton {
   border-radius: 8px !important;
@@ -832,7 +832,7 @@ main > * {
   flex-direction: column !important;
 }
 
-/* ── 6. Headers — tight, hierarchical ──────────────────────────────────────── */
+/* ── 6. Headers - tight, hierarchical ──────────────────────────────────────── */
 
 .cl-headerTitle {
   color: var(--text-primary) !important;
@@ -850,7 +850,7 @@ main > * {
   line-height: 1.4 !important;
 }
 
-/* ── 7. Profile sections — cleaner dividers, tighter spacing ───────────────── */
+/* ── 7. Profile sections - cleaner dividers, tighter spacing ───────────────── */
 
 .cl-profileSection {
   border-bottom: 1px solid var(--border-default) !important;
@@ -931,7 +931,7 @@ a.cl-profileSectionPrimaryButton:hover {
   box-shadow: 0 1px 2px rgba(139, 92, 246, 0.15) !important;
 }
 
-/* ── 8. Form elements — inputs refined, BUTTONS look like buttons ───────────── */
+/* ── 8. Form elements - inputs refined, BUTTONS look like buttons ───────────── */
 
 .cl-formFieldInput {
   background-color: var(--bg-muted) !important;
@@ -961,7 +961,7 @@ a.cl-profileSectionPrimaryButton:hover {
   margin-bottom: 4px !important;
 }
 
-/* Primary form button — MUST look obviously clickable
+/* Primary form button - MUST look obviously clickable
    Uses doubled class selector for higher specificity to beat Clerk's defaults */
 .cl-formButtonPrimary.cl-formButtonPrimary {
   background: var(--accent) !important;
@@ -1013,7 +1013,7 @@ a.cl-profileSectionPrimaryButton:hover {
   border-color: var(--border-default) !important;
 }
 
-/* ── 9. Badges — subtle, pill-shaped ───────────────────────────────────────── */
+/* ── 9. Badges - subtle, pill-shaped ───────────────────────────────────────── */
 
 .cl-badge {
   background-color: rgba(139, 92, 246, 0.15) !important;
@@ -1058,7 +1058,7 @@ a.cl-profileSectionPrimaryButton:hover {
   box-shadow: 0 2px 8px rgba(220, 76, 76, 0.2) !important;
 }
 
-/* ── 12. Scrollbar — minimal ───────────────────────────────────────────────── */
+/* ── 12. Scrollbar - minimal ───────────────────────────────────────────────── */
 
 .cl-scrollBox::-webkit-scrollbar {
   width: 5px;
@@ -1117,7 +1117,7 @@ a.cl-profileSectionPrimaryButton:hover {
   }
 }
 
-/* ── 15. Additional cleanup — internal Clerk elements ──────────────────────── */
+/* ── 15. Additional cleanup - internal Clerk elements ──────────────────────── */
 
 /* Tighten spacing on user info rows */
 .cl-userPreview {
@@ -1168,7 +1168,7 @@ a.cl-profileSectionPrimaryButton:hover {
   font-size: 11px !important;
 }
 
-/* ── 16. Clerk UserProfile — belt-and-suspenders CSS overrides ─────────────── */
+/* ── 16. Clerk UserProfile - belt-and-suspenders CSS overrides ─────────────── */
 /* Doubled selectors for specificity; these guarantee our styles win over
    Clerk's defaults regardless of stylesheet load order. */
 

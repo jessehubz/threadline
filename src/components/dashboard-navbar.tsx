@@ -167,7 +167,7 @@ export function DashboardNavbar() {
 
           {/* Utility group */}
           <div className="flex items-center gap-2">
-            {/* Search — always-visible inline input, fills available space */}
+            {/* Search - always-visible inline input, fills available space */}
             <SearchDropdown className="hidden sm:flex min-w-[180px] max-w-[280px]" />
 
             {/* Message icon button with notification dot */}
@@ -323,7 +323,7 @@ export function DashboardNavbar() {
                       rootBox: {
                         background: resolvedTheme === "dark" ? "#0A0A0B" : "#F5F5F6",
                       },
-                      // Main card — fills modal, flex row for sidebar + content
+                      // Main card - fills modal, flex row for sidebar + content
                       card: {
                         border: "none",
                         boxShadow: "none",
@@ -375,7 +375,7 @@ export function DashboardNavbar() {
                         overflowY: "auto" as const,
                         minHeight: "0",
                       },
-                      // Each settings section — flat with separator, no box
+                      // Each settings section - flat with separator, no box
                       profileSection: {
                         background: "transparent",
                         borderRadius: "0",
@@ -420,7 +420,7 @@ export function DashboardNavbar() {
                         transition: "opacity 0.15s ease, transform 0.15s ease",
                         boxShadow: "none",
                       },
-                      // "Update profile" link button — must always look like a button
+                      // "Update profile" link button - must always look like a button
                       profileSectionPrimaryButton: {
                         background: "#8B5CF6",
                         backgroundColor: "#8B5CF6",
@@ -458,7 +458,7 @@ export function DashboardNavbar() {
                         color: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
                         borderBottom: `1px solid ${resolvedTheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(20, 20, 25, 0.08)"}`,
                       },
-                      // Footer — let Clerk branding show
+                      // Footer - let Clerk branding show
                       footer: {
                         color: resolvedTheme === "dark" ? "#626268" : "#A6A6AD",
                         fontSize: "11px",

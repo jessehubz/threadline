@@ -69,7 +69,7 @@ export async function inviteMember(projectId: string, email: string, role: strin
       },
     });
   } else {
-    // User doesn't exist — cannot invite. Only existing accounts can be added.
+    // User doesn't exist - cannot invite. Only existing accounts can be added.
     return { error: "User not found. Only people with existing accounts can be invited." };
   }
   revalidatePath("/team");

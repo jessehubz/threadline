@@ -65,14 +65,14 @@ export default async function DashboardPage() {
     const blockedTask = allTasks.find((t) => t.status === "BLOCKED");
     insights.push({
       type: "warning",
-      message: `${blockedTasksCount} task${blockedTasksCount > 1 ? "s" : ""} blocked${blockedTask ? ` — "${blockedTask.title}" needs unblocking` : ""}`,
+      message: `${blockedTasksCount} task${blockedTasksCount > 1 ? "s" : ""} blocked${blockedTask ? ` - "${blockedTask.title}" needs unblocking` : ""}`,
     });
   }
 
   if (previousWeekCompletions > 0 && completionsThisWeek < previousWeekCompletions * 0.5) {
     insights.push({
       type: "tip",
-      message: `Velocity dropped — ${completionsThisWeek} completed this week vs ${previousWeekCompletions} last week. Focus on smaller tasks.`,
+      message: `Velocity dropped - ${completionsThisWeek} completed this week vs ${previousWeekCompletions} last week. Focus on smaller tasks.`,
     });
   } else if (completionsThisWeek > previousWeekCompletions && previousWeekCompletions > 0) {
     insights.push({
@@ -85,12 +85,12 @@ export default async function DashboardPage() {
   if (dueTodayCount > 0) {
     insights.push({
       type: "tip",
-      message: `${dueTodayCount} task${dueTodayCount > 1 ? "s" : ""} due today — prioritize to stay on track.`,
+      message: `${dueTodayCount} task${dueTodayCount > 1 ? "s" : ""} due today - prioritize to stay on track.`,
     });
   }
 
   if (completionRate >= 80 && totalTasks > 5) {
-    insights.push({ type: "positive", message: `${completionRate}% done across ${totalTasks} tasks — almost there!` });
+    insights.push({ type: "positive", message: `${completionRate}% done across ${totalTasks} tasks - almost there!` });
   }
 
   if (insights.length === 0 && totalTasks > 0) {
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
     const reminders = await getPendingReminders();
     pendingReminderCount = reminders.length;
   } catch {
-    // Non-critical — silently default to 0
+    // Non-critical - silently default to 0
   }
 
   const insightsForWidget = insights.map((insight) => ({
@@ -240,7 +240,7 @@ export default async function DashboardPage() {
   try {
     availableTags = await getUserTags();
   } catch {
-    // Non-critical — default to empty
+    // Non-critical - default to empty
   }
 
   return (

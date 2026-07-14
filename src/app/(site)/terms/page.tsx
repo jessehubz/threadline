@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — Threadline",
+  title: "Terms of Service - Threadline",
   description: "Terms of Service for the Threadline platform.",
 };
 

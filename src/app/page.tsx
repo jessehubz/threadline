@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { LandingNav } from "@/components/landing-nav";
 import { RevealOnScroll } from "@/components/reveal-on-scroll";
+import { FloatingThemeToggle } from "@/components/floating-theme-toggle";
 
 export default async function LandingPage() {
   const { userId } = await auth();
@@ -12,6 +13,7 @@ export default async function LandingPage() {
     <>
       <style dangerouslySetInnerHTML={{ __html: landingStyles }} />
       <div className="landing-page">
+        <FloatingThemeToggle />
         {/* ─── Sticky Nav ─── */}
         <div className="land-nav-wrapper" id="home">
           <LandingNav />
@@ -20,11 +22,10 @@ export default async function LandingPage() {
         {/* ─── Hero ─── */}
         <div className="hero">
           <div>
-            <h1>Pull every<br/>thread <b>together.</b></h1>
-            <p className="lead">Map your tasks as visual dependency graphs. See what blocks what, who owns what, and what ships next — all on one infinite canvas your whole team edits in real time.</p>
+            <h1>Pull every<br/>thread <span className="h1-2">together.</span></h1>
+            <p className="lead">Master complex projects and never lose sight of what's blocking your team with intelligent, real-time dependency mapping.</p>
             <div className="hero-ctas">
               <Link href="/sign-up" className="btn-primary">
-                <svg width="16" height="16" viewBox="0 0 20 20"><line x1="10" y1="3" x2="10" y2="17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
                 Start for free
               </Link>
               <a href="#services" className="btn-ghost">See how it works</a>
@@ -86,13 +87,12 @@ export default async function LandingPage() {
           </div>
         </div>
 
-        {/* ─── About Us Section ─── */}
         <section id="about" className="land-section">
           <RevealOnScroll>
             <div className="section-header">
-              <div className="f-eyebrow">About Us</div>
-              <h2 className="section-title">Built by builders,<br/>for builders.</h2>
-              <p className="section-subtitle">We&apos;re a small, obsessive team that believes project management should think the way engineers think — in graphs, not lists. Threadline was born from the frustration of forcing complex, interconnected work into flat tools that weren&apos;t designed for it.</p>
+              <div className="f-eyebrow">About Me</div>
+              <h2 className="section-title">No team. No funding.<br/>Just one stubborn developer.</h2>
+              <p className="section-subtitle">I got tired of forcing complex, tangled projects into flat checklists that weren&apos;t built for how work actually connects. So I built the tool I wished existed, <b>threadline</b>, one that thinks in graphs, not lists.</p>
             </div>
           </RevealOnScroll>
 
@@ -120,7 +120,7 @@ export default async function LandingPage() {
                 role="Product Manager"
               />
               <TestimonialCard
-                quote="Finally understands how real projects work — dependencies, approvals, nested sub-projects, all of it."
+                quote="Finally understands how real projects work - dependencies, approvals, nested sub-projects, all of it."
                 name="Anika Patel"
                 role="Design Director"
               />
@@ -152,7 +152,7 @@ export default async function LandingPage() {
               <div className="f-text">
                 <div className="f-eyebrow">The core idea</div>
                 <h3>Tasks aren&apos;t a list. They&apos;re a graph.</h3>
-                <p>Draw dependencies between tasks on an infinite canvas. See instantly what&apos;s blocked, what&apos;s ready, and what the critical path looks like — no spreadsheet gymnastics required.</p>
+                <p>Draw dependencies between tasks on an infinite canvas. See instantly what&apos;s blocked, what&apos;s ready, and what the critical path looks like - no spreadsheet gymnastics required.</p>
               </div>
               <div className="f-visual" style={{ flexDirection: "column", alignItems: "center", gap: "0", padding: "28px" }}>
                 <svg width="220" height="180" viewBox="0 0 220 180" fill="none">
@@ -183,7 +183,7 @@ export default async function LandingPage() {
               <div className="f-text">
                 <div className="f-eyebrow">AI-powered</div>
                 <h3>Describe it. We&apos;ll build the graph.</h3>
-                <p>Tell the AI assistant what you&apos;re building in plain English. It generates a full dependency graph with tasks, connections, and sensible structure — ready to edit and assign.</p>
+                <p>Tell the AI assistant what you&apos;re building in plain English. It generates a full dependency graph with tasks, connections, and sensible structure - ready to edit and assign.</p>
               </div>
               <div className="f-visual" style={{ flexDirection: "column", alignItems: "stretch", gap: "14px", padding: "28px" }}>
                 <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
@@ -213,7 +213,7 @@ export default async function LandingPage() {
               <div className="f-text">
                 <div className="f-eyebrow">Nothing slips through</div>
                 <h3>Know what&apos;s stuck before it slows you down.</h3>
-                <p>Threadline surfaces blockers and stale tasks automatically, so problems get caught in a morning check-in — not two weeks before a deadline.</p>
+                <p>Threadline surfaces blockers and stale tasks automatically, so problems get caught in a morning check-in - not two weeks before a deadline.</p>
               </div>
               <div className="f-visual" style={{ flexDirection: "column", alignItems: "stretch", gap: "12px" }}>
                 <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", borderLeft: "3px solid var(--violet-deep)", paddingLeft: "14px" }}>
@@ -237,7 +237,7 @@ export default async function LandingPage() {
               <div className="f-text">
                 <div className="f-eyebrow">Built for real teams</div>
                 <h3>Built for how your team actually works.</h3>
-                <p>Workload views show who&apos;s stretched thin and who has room — so the next task goes to the right person, automatically informed, never guessed.</p>
+                <p>Workload views show who&apos;s stretched thin and who has room - so the next task goes to the right person, automatically informed, never guessed.</p>
               </div>
               <div className="f-visual" style={{ flexDirection: "column", alignItems: "stretch", gap: "16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -306,7 +306,7 @@ export default async function LandingPage() {
         <footer className="land-footer">
           <div className="foot-row">
             <div className="foot-brand">
-              <div className="word" style={{ fontSize: "16px" }}><span className="t1">Thread</span><span className="t2">line</span></div>
+              <div className="word" style={{ fontSize: "16px" }}><span className="t1">thread</span><span className="t2">line</span></div>
               <span className="foot-tagline">Visual project management for teams who think in systems.</span>
             </div>
             <div className="foot-links-row">
@@ -316,7 +316,7 @@ export default async function LandingPage() {
             </div>
           </div>
           <div className="foot-bottom">
-            <div className="copy">&copy; 2026 Threadline</div>
+            <div className="copy">&copy; 2026 threadline</div>
             <div className="footer-links"><a href="#">Privacy</a><a href="#">Terms</a><a href="#contact">Contact</a></div>
           </div>
         </footer>
@@ -345,7 +345,18 @@ function TestimonialCard({ quote, name, role }: { quote: string; name: string; r
 // ─── Landing Page Styles ──────────────────────────────────────────────────────
 
 const landingStyles = `
-/* ─── Variables ─── */
+/* ────────────────────────────────────────────────────────────────────────
+   Landing Page Styles — table of contents
+   1. Variables      5. Hero (visual)    9. Stats
+   2. Sticky Nav      6. Social Proof    10. Contact Section
+   3. Section Header  7. Feature Rows    11. Final CTA
+   4. Hero (text)     8. Testimonials    12. Footer
+                                          13. Responsive
+   Light/dark overrides live directly under the rule they override,
+   not in a separate block — search for ":not(.dark)" / ".dark ".
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* ─── 1. Variables ─── */
 .landing-page {
   --ink: var(--bg-base);
   --surface: var(--bg-elevated);
@@ -370,7 +381,7 @@ const landingStyles = `
   --orchid: #C4B5FD;
 }
 
-/* ─── Sticky Nav ─── */
+/* ─── 2. Sticky Nav ─── */
 .land-nav-wrapper {
   position: sticky;
   top: 0;
@@ -403,9 +414,10 @@ const landingStyles = `
   padding-bottom: 14px;
 }
 
-.word { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.word { font-family: 'Inter', sans-serif; font-size: 25px; font-weight: 500; letter-spacing: 0.03em; }
 .word .t1 { color: var(--text-1); }
-.word .t2 { color: var(--violet-bright); }
+.word .t2 { color: #7C3AED;; }
+
 
 .land-links { display: flex; gap: 32px; font-size: 14px; color: var(--text-2); }
 .land-links a { text-decoration: none; color: inherit; transition: color .15s ease; position: relative; }
@@ -446,7 +458,7 @@ const landingStyles = `
 }
 .land-mobile-toggle:hover { background: var(--surface-raised); }
 
-/* Mobile dropdown — hidden on desktop */
+/* Mobile dropdown - hidden on desktop */
 .land-mobile-dropdown {
   display: none;
 }
@@ -512,7 +524,7 @@ const landingStyles = `
 }
 .land-mobile-cta:hover { opacity: 0.9; }
 
-/* Hamburger icon — two lines that animate to X */
+/* Hamburger icon - two lines that animate to X */
 .hamburger-icon {
   display: flex;
   flex-direction: column;
@@ -538,7 +550,7 @@ const landingStyles = `
   transform: translateY(-3.25px) rotate(-45deg);
 }
 
-/* ─── Sections ─── */
+/* ─── 3. Section Header (shared across sections) ─── */
 .land-section {
   scroll-margin-top: var(--nav-height);
 }
@@ -546,16 +558,18 @@ const landingStyles = `
 .section-header {
   max-width: 1320px;
   margin: 0 auto;
-  padding: 100px 48px 40px;
+  padding: 65px 48px 40px;
   text-align: center;
 }
 .section-title {
+  font-family: 'inter', sans-serif;
   font-size: 42px;
   font-weight: 200;
   letter-spacing: -0.025em;
   line-height: 1.15;
   color: var(--text-1);
   margin-bottom: 20px;
+  padding-top: 8px;
 }
 .section-subtitle {
   font-size: 16px;
@@ -565,7 +579,7 @@ const landingStyles = `
   margin: 0 auto;
 }
 
-/* ─── Hero ─── */
+/* ─── 4. Hero — text side ─── */
 .hero {
   max-width: 1320px;
   margin: 0 auto;
@@ -577,7 +591,7 @@ const landingStyles = `
   position: relative;
   overflow: visible;
 }
-/* Dots — covers entire hero including text and cards */
+/* Dots - covers entire hero including text and cards */
 .hero::before {
   content: '';
   position: absolute;
@@ -587,25 +601,74 @@ const landingStyles = `
   -webkit-mask-image: radial-gradient(ellipse 78% 72% at 50% 50%, black 30%, transparent 72%);
   mask-image: radial-gradient(ellipse 78% 72% at 50% 50%, black 30%, transparent 72%);
   pointer-events: none;
-  z-index: 0;
+  z-index: -100;
 }
 .hero > * { position: relative; z-index: 1; }
 .landing-page { --dot-color: rgba(0, 0, 0, 0.13); }
 .dark .landing-page { --dot-color: rgba(255, 255, 255, 0.10); }
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); margin-bottom: 22px; opacity: 0.7; }
 .eyebrow::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--violet-bright); opacity: 0.5; }
-.hero h1 { font-size: 76px; font-weight: 200; line-height: 1.02; letter-spacing: -0.03em; margin-bottom: 26px; color: var(--text-1); }
-.hero h1 b { font-weight: 600; background: linear-gradient(120deg, var(--violet-bright), var(--violet-deep)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.hero p.lead { font-size: 17px; color: var(--text-2); line-height: 1.6; max-width: 460px; margin-bottom: 34px; }
+
+
+.hero h1 { font-family: 'inter', sans-serif; font-size: 81px; font-weight: 350; line-height: 1.02; letter-spacing: -0.03em; margin-bottom: 26px; color: var(--text-1); }
+
+.hero .h1-2 { color: #7C3AED;; }
+
+:root .landing-page .hero h1 b,
+:not(.dark) .landing-page .hero h1 b {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  color: #7C3AED;
+}
+.dark .landing-page .hero h1 b {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  color: #7C3AED;
+}
+.hero p.lead { font-family: "Figtree", sans-serif; font-size: 16px; color: var(--text-2); line-height: 1.6; max-width: 460px; margin-bottom: 34px; }
 .hero-ctas { display: flex; gap: 14px; align-items: center; }
 
 /* Landing btn-primary with gradient */
-.landing-page .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, var(--violet), var(--violet-deep)); color: #fff; border: none; padding: 14px 24px; border-radius: 999px; font-size: 14.5px; font-weight: 600; cursor: pointer; box-shadow: 0 8px 24px rgba(139,92,246,0.35); transition: transform .18s ease, box-shadow .18s ease; text-decoration: none; }
-.landing-page .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(139,92,246,0.42); }
-.btn-ghost { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--text-1); border: 1px solid var(--hairline); padding: 14px 22px; border-radius: 999px; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: all .18s ease; text-decoration: none; }
-.btn-ghost:hover { border-color: var(--violet); color: var(--violet-bright); }
+.landing-page .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: #7C3AED; color: #fff; border: none; padding: 14px 24px; border-radius: 999px; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; text-decoration: none; }
+.landing-page .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(139,92,246,0.32); }
 
-/* ─── Hero Visual: Stacked / Overlapping card layout (2x size) ─── */
+:root .landing-page .btn-primary,
+
+:not(.dark) .landing-page .btn-primary {
+  background: #7C3AED;
+}
+.dark .landing-page .btn-primary {
+  background: #7C3AED;
+}
+
+.btn-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 14px 22px; border-radius: 999px; font-size: 14.5px; font-weight: 600;
+          cursor: pointer; transition: all .18s ease; text-decoration: none; }
+
+.dark .landing-page .btn-ghost {
+  background: #000000 !important;
+  color: #fff !important;
+  border: 1px solid #5a5a5a !important;
+}
+
+.dark .landing-page .btn-ghost:hover {
+  border-color: var(--violet) !important;
+  color: var(--violet-bright) !important;
+}
+
+:not(.dark) .landing-page .btn-ghost {
+  color: #1a1a1a !important;
+  background: #ffffff !important;
+  border: 1px solid #d1d1d1 !important;
+}
+
+:not(.dark) .landing-page .btn-ghost:hover {
+  border-color: var(--violet) !important;
+  color: var(--violet) !important;
+}
+
+/* ─── 5. Hero — visual side (stacked / overlapping card layout, 2x size) ─── */
 .hero-visual {
   position: relative;
   height: 580px;
@@ -622,6 +685,10 @@ const landingStyles = `
   filter: blur(14px);
   pointer-events: none;
 }
+:root .landing-page .glow-blob,
+:not(.dark) .landing-page .glow-blob {
+  background: radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%);
+}
 .float-card {
   position: absolute;
   background: var(--surface-raised);
@@ -630,8 +697,18 @@ const landingStyles = `
   box-shadow: var(--shadow-2);
   z-index: 3;
 }
+:root .landing-page .float-card,
+:not(.dark) .landing-page .float-card {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.10);
+  border-color: rgba(0,0,0,0.06);
+}
+.dark .landing-page .float-card {
+  background: #1C1C1F;
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 8px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+}
 
-/* Back card 1 — top-right position (highest in the ladder) */
+/* Back card 1 - top-right position (highest in the ladder) */
 .float-card.back1 {
   width: 380px;
   height: 230px;
@@ -639,9 +716,8 @@ const landingStyles = `
   left: 50%;
   margin-left: -60px;
   transform: rotate(4deg);
-  opacity: .5;
 }
-/* Back card 2 — bottom-left position (lowest in the ladder) */
+/* Back card 2 - bottom-left position (lowest in the ladder) */
 .float-card.back2 {
   width: 400px;
   height: 220px;
@@ -649,9 +725,16 @@ const landingStyles = `
   left: 50%;
   margin-left: -340px;
   transform: rotate(-5deg);
-  opacity: .45;
 }
-/* Main card (front) — center-middle position */
+:not(.dark) .landing-page .float-card.back1,
+:not(.dark) .landing-page .float-card.back2 {
+  background: #E4E4E7;
+}
+.dark .landing-page .float-card.back1,
+.dark .landing-page .float-card.back2 {
+  background: #131316;
+}
+/* Main card (front) - center-middle position */
 .float-card.main {
   width: 440px;
   padding: 18px 20px 24px;
@@ -661,6 +744,16 @@ const landingStyles = `
   transform: rotate(-2deg);
   animation: floatIdle 6s ease-in-out infinite;
   z-index: 5;
+}
+:root .landing-page .float-card.main,
+:not(.dark) .landing-page .float-card.main {
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.14), 0 6px 16px rgba(0,0,0,0.10);
+}
+.dark .landing-page .float-card.main {
+  background: #151517;
+  border-color: rgba(255,255,255,0.08);
 }
 
 @keyframes floatIdle {
@@ -673,29 +766,40 @@ const landingStyles = `
 .mini-dots { display: flex; gap: 6px; }
 .mini-dots span { width: 9px; height: 9px; border-radius: 50%; }
 .mini-url { flex: 1; background: var(--ink); border-radius: 6px; padding: 5px 12px; font-size: 11px; color: var(--text-3); text-align: center; }
+:root .landing-page .mini-url,
+:not(.dark) .landing-page .mini-url {
+  background: #F5F5F6;
+}
+.dark .landing-page .mini-url {
+  background: #0A0A0B;
+}
 .mini-graph { display: flex; align-items: flex-start; gap: 20px; padding-top: 4px; }
 .mini-branch { display: flex; flex-direction: column; align-items: center; gap: 9px; }
 .mini-node { background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px; padding: 9px 14px; }
+.dark .landing-page .mini-node {
+  background: #1C1C1F;
+  border-color: rgba(255,255,255,0.08);
+}
 .mini-node.done { background: rgba(139,92,246,0.12); border-color: var(--violet); }
 .mini-bar { height: 6px; border-radius: 99px; background: var(--violet-bright); margin-bottom: 5px; }
 .mini-track { height: 4px; border-radius: 99px; background: var(--hairline); }
 .mini-stem { width: 1.5px; height: 14px; background: var(--hairline); }
 
-/* ─── Social Proof ─── */
+/* ─── 6. Social Proof ─── */
 .social-proof { max-width: 1320px; margin: 30px auto 0; padding: 0 48px 60px; text-align: center; }
 .social-proof .lbl { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 26px; }
 .logo-row { display: flex; justify-content: center; gap: 56px; flex-wrap: wrap; opacity: .5; font-weight: 700; font-size: 18px; letter-spacing: -0.01em; color: var(--text-1); }
 
-/* ─── Feature Rows ─── */
+/* ─── 7. Feature Rows ─── */
 .feature-row { max-width: 1320px; margin: 0 auto; padding: 80px 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; }
 .feature-row.rev .f-text { order: 2; }
 .feature-row.rev .f-visual { order: 1; }
-.f-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--violet-bright); margin-bottom: 14px; }
+.f-eyebrow { font-family: "DM Sans", serif ;font-size: 15px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #7C3AED; margin-bottom: 14px; }
 .f-text h3 { font-size: 34px; font-weight: 300; letter-spacing: -0.01em; margin-bottom: 16px; line-height: 1.15; color: var(--text-1); }
 .f-text p { font-size: 15.5px; color: var(--text-2); line-height: 1.65; max-width: 420px; }
 .f-visual { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-xl); box-shadow: var(--shadow-1); padding: 36px; min-height: 260px; display: flex; align-items: center; justify-content: center; }
 
-/* ─── Testimonials ─── */
+/* ─── 8. Testimonials ─── */
 .testimonial-section { max-width: 1320px; margin: 0 auto; padding: 40px 48px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
 .stars { display: flex; gap: 3px; color: var(--violet-bright); margin-bottom: 16px; }
 .quote-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-lg); padding: 30px; box-shadow: var(--shadow-1); }
@@ -705,12 +809,12 @@ const landingStyles = `
 .quote-name { font-size: 13.5px; font-weight: 600; color: var(--text-1); }
 .quote-role { font-size: 12px; color: var(--text-3); }
 
-/* ─── Stats ─── */
+/* ─── 9. Stats ─── */
 .stats-row { max-width: 640px; margin: 0 auto; padding: 60px 48px 40px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; text-align: center; }
 .stat-value { font-size: 32px; font-weight: 300; letter-spacing: -0.01em; color: var(--text-1); }
 .stat-label { font-size: 11.5px; color: var(--text-3); margin-top: 6px; }
 
-/* ─── Contact Section ─── */
+/* ─── 10. Contact Section ─── */
 .contact-section {
   max-width: 1320px;
   margin: 0 auto;
@@ -761,12 +865,19 @@ const landingStyles = `
   line-height: 1.5;
 }
 
-/* ─── Final CTA ─── */
+/* ─── 11. Final CTA ─── */
 .final-cta { max-width: 1000px; margin: 60px auto 110px; padding: 70px 48px; text-align: center; background: linear-gradient(160deg, var(--surface), var(--surface-raised)); border: 1px solid var(--hairline); border-radius: var(--radius-xl); box-shadow: var(--shadow-2); }
+:root .landing-page .final-cta,
+:not(.dark) .landing-page .final-cta {
+  background: linear-gradient(160deg, var(--surface-raised), var(--surface));
+}
+.dark .landing-page .final-cta {
+  background: linear-gradient(160deg, var(--surface), var(--surface-raised));
+}
 .final-cta h2 { font-size: 40px; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 16px; color: var(--text-1); }
 .final-cta p { color: var(--text-2); margin-bottom: 30px; font-size: 15.5px; }
 
-/* ─── Footer ─── */
+/* ─── 12. Footer ─── */
 .land-footer { max-width: 1320px; margin: 0 auto; padding: 48px 48px; }
 .foot-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
 .foot-brand { display: flex; align-items: center; gap: 16px; }
@@ -780,76 +891,7 @@ const landingStyles = `
 .footer-links a { color: var(--text-2); text-decoration: none; transition: color .15s ease; }
 .footer-links a:hover { color: var(--text-1); }
 
-/* ─── Task 5: Gradient Direction Fix (subtle) ─── */
-/* Light mode: darker → lighter (left to right), softened */
-:root .landing-page .hero h1 b,
-:not(.dark) .landing-page .hero h1 b {
-  background: linear-gradient(120deg, #7C3AED, #C4B5FD);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-:root .landing-page .btn-primary,
-:not(.dark) .landing-page .btn-primary {
-  background: linear-gradient(135deg, #7C3AED, #C4B5FD);
-}
-/* Dark mode: lighter → darker (left to right), softened */
-.dark .landing-page .hero h1 b {
-  background: linear-gradient(120deg, #C4B5FD, #7C3AED);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.dark .landing-page .btn-primary {
-  background: linear-gradient(135deg, #C4B5FD, #7C3AED);
-}
-
-/* ─── Light/Dark Mode Card Overrides ─── */
-:root .landing-page .final-cta,
-:not(.dark) .landing-page .final-cta {
-  background: linear-gradient(160deg, var(--surface-raised), var(--surface));
-}
-:root .landing-page .float-card,
-:not(.dark) .landing-page .float-card {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.10);
-  border-color: rgba(0,0,0,0.06);
-}
-:root .landing-page .float-card.main,
-:not(.dark) .landing-page .float-card.main {
-  background: #FFFFFF;
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.14), 0 6px 16px rgba(0,0,0,0.10);
-}
-:root .landing-page .mini-url,
-:not(.dark) .landing-page .mini-url {
-  background: #F5F5F6;
-}
-:root .landing-page .glow-blob,
-:not(.dark) .landing-page .glow-blob {
-  background: radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%);
-}
-
-.dark .landing-page .final-cta {
-  background: linear-gradient(160deg, var(--surface), var(--surface-raised));
-}
-.dark .landing-page .float-card {
-  background: #1C1C1F;
-  border-color: rgba(255,255,255,0.08);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 8px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
-}
-.dark .landing-page .float-card.main {
-  background: #151517;
-  border-color: rgba(255,255,255,0.08);
-}
-.dark .landing-page .mini-url {
-  background: #0A0A0B;
-}
-.dark .landing-page .mini-node {
-  background: #1C1C1F;
-  border-color: rgba(255,255,255,0.08);
-}
-
-/* ─── Responsive ─── */
+/* ─── 13. Responsive ─── */
 @media (max-width: 900px) {
   .land-nav { padding: 16px 24px; }
   .land-links { display: none; }

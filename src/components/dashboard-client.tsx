@@ -340,7 +340,7 @@ export function DashboardClient({
         </div>
       )}
 
-      {/* ─── Your Projects — Horizontal Scroll ─── */}
+      {/* ─── Your Projects - Horizontal Scroll ─── */}
       {projects.length > 0 && (
         <section style={{ marginBottom: "32px" }}>
           <h2 style={{ fontSize: "14.5px", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em", marginBottom: "16px" }}>
@@ -514,7 +514,7 @@ export function DashboardClient({
             )}
           </div>
           {filteredAttention.length === 0 ? (
-            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>Nothing urgent — nice work!</p>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>Nothing urgent - nice work!</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
               {filteredAttention.slice(0, 5).map((task) => (
@@ -813,7 +813,7 @@ function ProjectCard({
         </div>
       </Link>
 
-      {/* Tag button — positioned at top-right of card */}
+      {/* Tag button - positioned at top-right of card */}
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLabelPickerOpen(!labelPickerOpen); }}
         style={{

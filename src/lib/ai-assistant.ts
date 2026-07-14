@@ -1,5 +1,5 @@
 // =============================================================================
-// AI Assistant — Heuristic-based task prioritization & scheduling
+// AI Assistant - Heuristic-based task prioritization & scheduling
 // Advisory only: does NOT modify graph data, only suggests actions.
 // =============================================================================
 
@@ -103,7 +103,7 @@ export function generatePrioritySuggestion(tasks: TaskData[]): string {
     .slice(0, 7);
 
   if (scoredTasks.length === 0) {
-    return '✨ You have no pending tasks — nice work!';
+    return '✨ You have no pending tasks - nice work!';
   }
 
   const lines: string[] = ['🎯 **Here\'s what to focus on:**\n'];
@@ -129,7 +129,7 @@ export function generateScheduleSuggestion(tasks: TaskData[]): string {
   const activeTasks = tasks.filter((t) => t.status !== 'COMPLETE');
 
   if (activeTasks.length === 0) {
-    return '✨ No active tasks to schedule — you\'re all caught up!';
+    return '✨ No active tasks to schedule - you\'re all caught up!';
   }
 
   const { doFirst, doNext, flexible } = groupTasksByDependency(activeTasks);
@@ -139,7 +139,7 @@ export function generateScheduleSuggestion(tasks: TaskData[]): string {
   if (doFirst.length > 0) {
     lines.push('🚀 **Do first** _(these unblock other tasks):_');
     sortByDueDate(doFirst).forEach((t) => {
-      lines.push(`   • ${t.title} ${formatDueTag(t.dueDate)} — unblocks ${t.blocks.length} task(s)`);
+      lines.push(`   • ${t.title} ${formatDueTag(t.dueDate)} - unblocks ${t.blocks.length} task(s)`);
     });
     lines.push('');
   }
@@ -147,7 +147,7 @@ export function generateScheduleSuggestion(tasks: TaskData[]): string {
   if (doNext.length > 0) {
     lines.push('⏭️ **Do next** _(after dependencies clear):_');
     sortByDueDate(doNext).forEach((t) => {
-      lines.push(`   • ${t.title} ${formatDueTag(t.dueDate)} — waiting on ${t.dependsOn.length} task(s)`);
+      lines.push(`   • ${t.title} ${formatDueTag(t.dueDate)} - waiting on ${t.dependsOn.length} task(s)`);
     });
     lines.push('');
   }
@@ -220,7 +220,7 @@ function handleGreeting(context: AssistantContext): AssistantResponse {
   if (urgentCount > 0) {
     greeting += `You have ${urgentCount} urgent/overdue task${urgentCount > 1 ? 's' : ''}. Want me to help you prioritize?`;
   } else if (context.tasks.filter((t) => t.status !== 'COMPLETE').length === 0) {
-    greeting += 'Looks like you\'re all caught up — nice! 🎉';
+    greeting += 'Looks like you\'re all caught up - nice! 🎉';
   } else {
     greeting += 'Ready to help you stay on track. Ask me to prioritize, schedule, or set a reminder!';
   }
@@ -231,13 +231,13 @@ function handleGreeting(context: AssistantContext): AssistantResponse {
 function handleHelp(): AssistantResponse {
   const content = [
     '🤖 **Here\'s what I can help with:**\n',
-    '• **Prioritize** — "What should I focus on?" / "Prioritize my tasks"',
-    '• **Schedule** — "Plan my day" / "What order should I work in?"',
-    '• **Remind** — "Remind me about [task] tomorrow" / "Set a reminder in 2 hours"',
+    '• **Prioritize** - "What should I focus on?" / "Prioritize my tasks"',
+    '• **Schedule** - "Plan my day" / "What order should I work in?"',
+    '• **Remind** - "Remind me about [task] tomorrow" / "Set a reminder in 2 hours"',
     '',
     '💡 I analyze your tasks across all projects using due dates, dependencies, and urgency to give suggestions.',
     '',
-    '_I\'m advisory only — I won\'t change your graph, just help you decide what matters most._',
+    '_I\'m advisory only - I won\'t change your graph, just help you decide what matters most._',
   ].join('\n');
 
   return { type: 'text', content };

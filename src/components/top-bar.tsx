@@ -25,7 +25,7 @@ export function TopBar({ currentUserId }: { currentUserId: string }) {
       >
         {/* Left: Mobile menu button + Search trigger */}
         <div className="flex items-center gap-2">
-          {/* Mobile hamburger — visible only below md */}
+          {/* Mobile hamburger - visible only below md */}
           <button
             onClick={() => setMobileMenuOpen(true)}
             className={cn(

@@ -113,7 +113,7 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
 
   return (
     <div className="space-y-5">
-      {/* Search-first add-friend bar — floats results below, no permanent boxed panel */}
+      {/* Search-first add-friend bar - floats results below, no permanent boxed panel */}
       <div className="relative">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dim" />
@@ -168,7 +168,7 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
         )}
       </div>
 
-      {/* Friends list — open, not nested inside another card */}
+      {/* Friends list - open, not nested inside another card */}
       <div>
         <div className="mb-3 flex items-center gap-2">
           <h2 className="text-[13px] font-medium uppercase tracking-wide text-dim">Your Friends</h2>

@@ -182,7 +182,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [canUndo, performUndo]);
 
-  // 7.1 — Spacebar-to-pan (Figma-style)
+  // 7.1 - Spacebar-to-pan (Figma-style)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space" && !e.repeat && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
@@ -725,7 +725,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             fitViewOptions={{ padding: 0.4, maxZoom: 1 }}
             deleteKeyCode={isReadOnly ? null : ["Delete", "Backspace"]}
             className={`bg-page [&_.react-flow__pane]:!cursor-default [&_.react-flow__pane.dragging]:!cursor-grabbing ${isPanning ? "[&_.react-flow__pane]:!cursor-grab [&_.react-flow__pane.dragging]:!cursor-grabbing" : ""}`}
-            /* 7.1 — Marquee select by default, spacebar-to-pan */
+            /* 7.1 - Marquee select by default, spacebar-to-pan */
             selectionOnDrag={!isPanning}
             panOnDrag={isPanning ? [0, 2] : [2]}
             panOnScroll={true}
@@ -744,7 +744,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             </Panel>
           </ReactFlow>
 
-          {/* 7.2 — Controls at z-5, below task detail panel */}
+          {/* 7.2 - Controls at z-5, below task detail panel */}
           <CustomControls />
 
           {/* Recently Deleted Panel */}
@@ -756,7 +756,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             />
           )}
 
-          {/* 7.1 — Multi-select batch actions panel */}
+          {/* 7.1 - Multi-select batch actions panel */}
           {showMultiSelect && (
             <MultiSelectPanel
               selectedNodeIds={selectedNodeIds}
@@ -808,7 +808,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
           )}
         </div>
 
-        {/* 7.2 — Task detail panel renders at z-20, above controls */}
+        {/* 7.2 - Task detail panel renders at z-20, above controls */}
         {selectedNodeId && selectedNode && (
           <TaskDetailPanel
             key={selectedNodeId}

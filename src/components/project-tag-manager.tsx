@@ -123,7 +123,7 @@ export function ProjectTagManager({ projectId, projectName, currentTags, availab
       </button>
 
       {/* Tag management dialog */}
-      <Dialog open={open} onClose={() => setOpen(false)} title={`Tags — ${projectName}`}>
+      <Dialog open={open} onClose={() => setOpen(false)} title={`Tags - ${projectName}`}>
         <div
           style={{ display: "flex", flexDirection: "column", gap: "20px" }}
           onClick={(e) => e.stopPropagation()}

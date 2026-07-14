@@ -6,7 +6,7 @@ export default function SignUpPage() {
     <>
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
       <div className="auth-page flex min-h-screen">
-        {/* Left panel — dark branding, immune to theme toggle */}
+        {/* Left panel - dark branding, immune to theme toggle */}
         <div className="auth-left relative hidden flex-1 flex-col justify-between overflow-hidden p-12 lg:flex">
           <div className="relative z-10">
             <Link href="/" className="inline-flex items-center" style={{ textDecoration: "none" }}>
@@ -21,7 +21,7 @@ export default function SignUpPage() {
               Stop asking<br/><span className="auth-gradient-text">what&apos;s next.</span>
             </h2>
             <p className="auth-subtext">
-              Join thousands of teams who manage projects as visual dependency graphs. Set up in under 60 seconds — no credit card required.
+              Join thousands of teams who manage projects as visual dependency graphs. Set up in under 60 seconds - no credit card required.
             </p>
 
             <div className="auth-stats">
@@ -54,7 +54,7 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        {/* Right panel — form area, responds to theme toggle */}
+        {/* Right panel - form area, responds to theme toggle */}
         <div className="auth-right flex flex-1 flex-col items-center justify-center px-6 py-12">
           <div className="mb-8 flex items-center lg:hidden">
             <span className="auth-logo-t1-right">Thread</span>
@@ -127,7 +127,7 @@ const authStyles = `
 /* ===== PAGE LAYOUT ===== */
 .auth-page { background: var(--bg-base); }
 
-/* ===== LEFT PANEL — hardcoded dark, immune to theme ===== */
+/* ===== LEFT PANEL - hardcoded dark, immune to theme ===== */
 .auth-left {
   background-color: #0A0A0B;
   background-image:
@@ -160,7 +160,7 @@ const authStyles = `
   color: transparent;
 }
 
-/* ===== RIGHT PANEL — responds to theme toggle ===== */
+/* ===== RIGHT PANEL - responds to theme toggle ===== */
 .auth-right {
   background: var(--auth-right-bg);
 }
@@ -215,7 +215,7 @@ a[href*="clerk.com"],
   display: none !important;
 }
 
-/* ===== DEV MODE BANNER — white bg in light mode ===== */
+/* ===== DEV MODE BANNER - white bg in light mode ===== */
 .cl-internal-17z82o4,
 [class*="development-mode"],
 .cl-dev-mode-notice {
@@ -224,7 +224,7 @@ a[href*="clerk.com"],
   color: var(--text-secondary) !important;
 }
 
-/* ===== CLERK CARD — no overflow clipping ===== */
+/* ===== CLERK CARD - no overflow clipping ===== */
 .cl-card,
 .cl-cardBox,
 .cl-rootBox {
@@ -248,7 +248,7 @@ a[href*="clerk.com"],
 }
 
 /* globals.css defines .cl-card.cl-card (2 classes) for the UserProfile modal,
-   which outranks the single-class rule above regardless of stylesheet order —
+   which outranks the single-class rule above regardless of stylesheet order -
    this is why the card kept its opaque background. Match that specificity. */
 .cl-card.cl-card.cl-card {
   background-color: transparent !important;
@@ -294,7 +294,7 @@ a[href*="clerk.com"],
 }
 
 /* ===== CLERK CARD INTERACTIONS ===== */
-/* Social buttons (Continue with Google) — visible solid border on all sides */
+/* Social buttons (Continue with Google) - visible solid border on all sides */
 .cl-socialButtonsBlockButton {
   border: 1.5px solid #D4D4D8 !important;
   border-radius: 10px !important;
@@ -309,7 +309,7 @@ a[href*="clerk.com"],
   border-color: #8B5CF6 !important;
 }
 
-/* Primary button (Continue) — clean purple, subtle darken on hover, no lift */
+/* Primary button (Continue) - clean purple, subtle darken on hover, no lift */
 .cl-formButtonPrimary {
   background-color: #8B5CF6 !important;
   border-radius: 10px !important;
@@ -321,7 +321,7 @@ a[href*="clerk.com"],
   background-color: #7C3AED !important;
 }
 
-/* Input fields — solid visible border + focus purple ring */
+/* Input fields - solid visible border + focus purple ring */
 .cl-formFieldInput {
   border: 1.5px solid #D4D4D8 !important;
   border-radius: 10px !important;

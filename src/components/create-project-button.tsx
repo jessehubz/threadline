@@ -85,7 +85,7 @@ export function CreateProjectButton() {
           <Input name="name" label="Project Name" placeholder="My new project" required />
           <Textarea name="description" label="Description (optional)" placeholder="What is this project about?" rows={2} />
 
-          {/* Invite Members — Tabbed UI */}
+          {/* Invite Members - Tabbed UI */}
           <div>
             <label className="block text-sm font-medium text-heading mb-2">
               <span className="flex items-center gap-1.5"><UserPlus className="h-4 w-4 accent-color" /> Invite Members</span>

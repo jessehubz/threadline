@@ -11,7 +11,7 @@ import { useState } from "react";
 import { MobileSidebar } from "@/components/mobile-sidebar";
 import { cn } from "@/lib/utils";
 
-// Primary workflow nav — lives in the center pill (kept lean: max 4-5 items).
+// Primary workflow nav - lives in the center pill (kept lean: max 4-5 items).
 const primaryNavItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Overview", href: "/overview", icon: ClipboardList },
@@ -19,14 +19,14 @@ const primaryNavItems = [
   { name: "Messages", href: "/messages", icon: MessageSquare },
 ];
 
-// Secondary nav — accessible via the "More" button or mobile sidebar.
+// Secondary nav - accessible via the "More" button or mobile sidebar.
 const moreNavItems = [
   { name: "Calendar", href: "/calendar", icon: Calendar },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Team", href: "/team", icon: Users },
 ];
 
-// Account nav — lives in the profile menu (and the mobile sidebar).
+// Account nav - lives in the profile menu (and the mobile sidebar).
 const secondaryNavItems = [
   { name: "Friends", href: "/friends", icon: UserPlus },
   { name: "Settings", href: "/settings", icon: Settings },
@@ -49,7 +49,7 @@ export function Header({ currentUserId }: { currentUserId: string }) {
             <span className="text-[15px] font-bold tracking-tight accent-color font-logo">line</span>
           </Link>
 
-          {/* Center: primary nav pills — icon-only from md, labels join at lg */}
+          {/* Center: primary nav pills - icon-only from md, labels join at lg */}
           <div className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 md:flex">
             {primaryNavItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");

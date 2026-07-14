@@ -286,7 +286,7 @@ export function TaskDetailPanel({
           <FileUpload nodeId={node.id} projectId={projectId} attachments={node.attachments} isReadOnly={isReadOnly} />
         </div>
 
-        {/* Comments — all project members can comment regardless of graph edit role */}
+        {/* Comments - all project members can comment regardless of graph edit role */}
         <div>
           <TaskComments nodeId={node.id} currentUserId={currentUserId} isReadOnly={false} />
         </div>

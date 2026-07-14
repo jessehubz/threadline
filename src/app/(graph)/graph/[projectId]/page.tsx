@@ -36,7 +36,7 @@ export default async function GraphPage({ params, searchParams }: GraphPageProps
   await prisma.project.update({
     where: { id: projectId },
     data: { lastOpenedAt: new Date() },
-  }).catch(() => { /* non-critical — silently ignore permission errors */ });
+  }).catch(() => { /* non-critical - silently ignore permission errors */ });
 
   // Get members for share dialog and assignment
   const members = await prisma.projectMember.findMany({
