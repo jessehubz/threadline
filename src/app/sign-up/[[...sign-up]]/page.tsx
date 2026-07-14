@@ -75,13 +75,15 @@ export default function SignUpPage() {
               appearance={{
                 variables: {
                   colorPrimary: "#8B5CF6",
+                  colorBackground: "transparent",
                 },
                 elements: {
-                  cardBox: { boxShadow: "none" },
+                  cardBox: { boxShadow: "none", background: "transparent" },
                   card: { backgroundColor: "transparent", boxShadow: "none", border: "none", padding: 0 },
                   headerTitle: { display: "none" },
                   headerSubtitle: { display: "none" },
                   header: { display: "none" },
+                  main: { background: "transparent" },
                   socialButtonsBlockButton: {
                     border: "1px solid var(--border-default)",
                     borderRadius: "10px",
@@ -163,7 +165,7 @@ const authStyles = `
   background: var(--auth-right-bg);
 }
 :root { 
-  --auth-right-bg: #FFFFFF;
+  --auth-right-bg: var(--bg-base);
   --clerk-card-bg: transparent;
   --clerk-body-text: #1A1A1A;
 }
@@ -229,12 +231,74 @@ a[href*="clerk.com"],
   overflow: visible !important;
 }
 
+/* ===== FORCE CLERK BACKGROUND TO MATCH RIGHT PANEL ===== */
+.cl-card,
+.cl-cardBox,
+.cl-rootBox,
+.cl-signIn-root,
+.cl-signUp-root,
+.cl-formFieldRow,
+.cl-formField,
+.cl-identityPreview,
+.cl-identityPreviewEditButton,
+.cl-otpCodeField,
+.cl-main {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* globals.css defines .cl-card.cl-card (2 classes) for the UserProfile modal,
+   which outranks the single-class rule above regardless of stylesheet order —
+   this is why the card kept its opaque background. Match that specificity. */
+.cl-card.cl-card.cl-card {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Force all Clerk internal container backgrounds */
+.auth-right .cl-internal-b97m6y,
+.auth-right .cl-internal-vqda6,
+.auth-right [class^="cl-internal"],
+.auth-right [class*="__internal"] {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Clerk text colors to match theme */
+.cl-formFieldLabel,
+.cl-formFieldLabelRow label,
+.cl-dividerText,
+.cl-socialButtonsBlockButtonText,
+.cl-formFieldAction,
+.cl-otpCodeFieldInput,
+.cl-alternativeMethods button,
+.cl-identityPreviewText {
+  color: var(--text-primary) !important;
+}
+.cl-dividerLine {
+  background: var(--border-default) !important;
+}
+.cl-formFieldHintText,
+.cl-footerActionText {
+  color: var(--text-secondary) !important;
+}
+.cl-formFieldSuccessText {
+  color: var(--accent) !important;
+}
+
+/* Clerk link colors */
+.cl-formFieldAction .cl-formFieldActionLink,
+.cl-footer a,
+.cl-alternativeMethods button {
+  color: #8B5CF6 !important;
+}
+
 /* ===== CLERK CARD INTERACTIONS ===== */
 /* Social buttons (Continue with Google) — visible solid border on all sides */
 .cl-socialButtonsBlockButton {
   border: 1.5px solid #D4D4D8 !important;
   border-radius: 10px !important;
-  background: var(--auth-right-bg) !important;
+  background: var(--bg-elevated) !important;
   transition: border-color 0.2s ease !important;
 }
 .dark .cl-socialButtonsBlockButton {
@@ -261,7 +325,7 @@ a[href*="clerk.com"],
 .cl-formFieldInput {
   border: 1.5px solid #D4D4D8 !important;
   border-radius: 10px !important;
-  background: var(--auth-right-bg) !important;
+  background: var(--bg-elevated) !important;
   transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 .dark .cl-formFieldInput {
