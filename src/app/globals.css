@@ -35,7 +35,7 @@
 /* ─── Theme CSS Custom Properties ─────────────────────────────────────────── */
 
 :root {
-  --bg-base: #F5F5F6;
+  --bg-base: #fefefe;
   --bg-elevated: #FFFFFF;
   --bg-surface: #FFFFFF;
   --bg-muted: #F7F7F8;
@@ -456,6 +456,10 @@ main > * {
 .text-dim { color: var(--text-muted); }
 .accent-color { color: var(--accent); }
 .accent-bg { background-color: var(--accent-soft); }
+
+/* Threadline wordmark - shared everywhere the logo appears (matches landing-nav.tsx .word) */
+.logo-word { font-family: 'Inter', sans-serif; font-weight: 450; letter-spacing: 0.05em; }
+.logo-word-accent { color: #7C3AED; }
 .shadow-themed { box-shadow: var(--shadow-sm); }
 .shadow-themed-md { box-shadow: var(--shadow-md); }
 

@@ -8,20 +8,6 @@ const team = [
     bio: "Previously led product at two YC-backed startups. Passionate about tools that let teams focus on building instead of managing.",
     color: "var(--accent)",
   },
-  {
-    name: "Mei Sato",
-    role: "Co-Founder & CTO",
-    initials: "MS",
-    bio: "Former senior engineer at Vercel. Obsessed with performance, developer experience, and beautiful real-time systems.",
-    color: "#7C3AED",
-  },
-  {
-    name: "Theo Bramwell",
-    role: "Co-Founder & Design Lead",
-    initials: "TB",
-    bio: "10 years of product design across B2B SaaS. Believes the best software is invisible - it just works.",
-    color: "#A78BFA",
-  },
 ];
 
 export default function AboutPage() {

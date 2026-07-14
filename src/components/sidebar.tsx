@@ -80,15 +80,15 @@ export function Sidebar() {
           className="flex items-center gap-0 transition-opacity duration-150 hover:opacity-80"
         >
           {collapsed ? (
-            <span className="text-[18px] font-bold tracking-tight accent-color font-logo">
-              T
+            <span className="text-[18px] logo-word logo-word-accent">
+              t
             </span>
           ) : (
             <>
-              <span className="text-[18px] font-bold tracking-tight text-heading font-logo">
-                Thread
+              <span className="text-[18px] logo-word text-heading">
+                thread
               </span>
-              <span className="text-[18px] font-bold tracking-tight accent-color font-logo">
+              <span className="text-[18px] logo-word logo-word-accent">
                 line
               </span>
             </>

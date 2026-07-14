@@ -45,8 +45,8 @@ export function Header({ currentUserId }: { currentUserId: string }) {
         <nav className="flex w-full max-w-5xl items-center gap-2 rounded-full border border-themed-subtle bg-[var(--bg-surface)] px-3 py-1.5 shadow-themed-md">
           {/* Left: Logo + Name */}
           <Link href="/dashboard" className="flex flex-shrink-0 items-center gap-0 pl-2 hover:opacity-80 transition-opacity">
-            <span className="text-[15px] font-bold tracking-tight text-heading font-logo">Thread</span>
-            <span className="text-[15px] font-bold tracking-tight accent-color font-logo">line</span>
+            <span className="text-[15px] logo-word text-heading">thread</span>
+            <span className="text-[15px] logo-word logo-word-accent">line</span>
           </Link>
 
           {/* Center: primary nav pills - icon-only from md, labels join at lg */}

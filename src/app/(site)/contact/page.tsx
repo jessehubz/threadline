@@ -1,28 +1,28 @@
 "use client";
 
-import { Mail, MessageCircle, MapPin } from "lucide-react";
+import { Mail, ExternalLink, Code2 } from "lucide-react";
 
 const contactMethods = [
   {
     icon: Mail,
     title: "Email",
     description: "For general inquiries and support.",
-    value: "hello@threadline.app",
-    href: "mailto:hello@threadline.app",
+    value: "jdfrancisco5@up.edu.ph",
+    href: "mailto:jdfrancisco5@up.edu.ph",
   },
   {
-    icon: MessageCircle,
-    title: "Community",
-    description: "Join our community for discussions and tips.",
-    value: "Join Discord",
-    href: "#",
+    icon: ExternalLink,
+    title: "LinkedIn",
+    description: "Connect with us on LinkedIn.",
+    value: "linkedin.com/in/jessedavidf",
+    href: "https://www.linkedin.com/in/jessedavidf/",
   },
   {
-    icon: MapPin,
-    title: "Office",
-    description: "Visit us in San Francisco.",
-    value: "548 Market St, SF, CA 94104",
-    href: "#",
+    icon: Code2,
+    title: "GitHub",
+    description: "Check out our projects on GitHub.",
+    value: "github.com/jessehubz",
+    href: "https://github.com/jessehubz",
   },
 ];
 

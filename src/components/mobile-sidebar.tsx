@@ -62,8 +62,8 @@ export function MobileSidebar({ open, onClose }: { open: boolean; onClose: () =>
         {/* Header */}
         <div className="flex h-14 items-center justify-between px-5 border-b border-themed-subtle">
           <a href="/dashboard" className="flex items-center gap-0">
-            <span className="text-[20px] font-bold tracking-tight text-heading font-logo">Thread</span>
-            <span className="text-[20px] font-bold tracking-tight accent-color font-logo">line</span>
+            <span className="text-[20px] logo-word text-heading">thread</span>
+            <span className="text-[20px] logo-word logo-word-accent">line</span>
           </a>
           <button onClick={handleClose} className="rounded-lg p-1.5 text-dim transition-transform duration-150 hover:scale-105 hover:bg-hover" aria-label="Close menu">
             <X className="h-5 w-5" />

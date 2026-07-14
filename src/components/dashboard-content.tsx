@@ -344,7 +344,7 @@ export function DashboardContent(props: DashboardContentProps) {
         /* Section separator - subtle hairline between major blocks */
         .dash-separator {
           height: 1px;
-          margin: 24px 0 28px;
+          margin: 36px 0 40px;
           background: var(--border-subtle);
           border: none;
         }
@@ -709,7 +709,7 @@ export function DashboardContent(props: DashboardContentProps) {
           borderRadius: "var(--radius-lg)",
           boxShadow: "var(--shadow-sm)",
           padding: "16px 22px",
-          marginBottom: "20px",
+          marginBottom: "24px",
           cursor: "pointer",
           transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
         }}
@@ -776,7 +776,7 @@ export function DashboardContent(props: DashboardContentProps) {
 
       {/* ═══ 4. SECOND ROW ═══ */}
       <div className="dash-reveal">
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }} className="dash-second-row">
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px" }} className="dash-second-row">
         {/* Needs Attention */}
         <NeedsAttentionPanel items={needsAttention} />
         {/* Friends / Team */}

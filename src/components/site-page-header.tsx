@@ -30,16 +30,14 @@ export function SitePageHeader() {
         {/* Logo / Brand */}
         <Link
           href="/dashboard"
+          className="logo-word"
           style={{
             fontSize: "18px",
-            fontWeight: 700,
-            color: "var(--text-primary)",
             textDecoration: "none",
-            letterSpacing: "-0.02em",
           }}
         >
-          <span>Thread</span>
-          <span style={{ color: "var(--accent)" }}>line</span>
+          <span className="text-heading">thread</span>
+          <span className="logo-word-accent">line</span>
         </Link>
 
         {/* Back to Dashboard button */}

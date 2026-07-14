@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Globe, MessageCircle, Mail } from "lucide-react";
+import { Mail, ExternalLink, Phone, Code2 } from "lucide-react";
 
 const footerLinks = {
   product: [
@@ -20,9 +20,10 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { Icon: Mail, href: "#", label: "Email" },
-  { Icon: Globe, href: "#", label: "Website" },
-  { Icon: MessageCircle, href: "#", label: "Community" },
+  { Icon: Mail, href: "mailto:jdfrancisco5@up.edu.ph", label: "Email" },
+  { Icon: ExternalLink, href: "https://www.linkedin.com/in/jessedavidf/", label: "LinkedIn" },
+  { Icon: Phone, href: "tel:09356428539", label: "Phone" },
+  { Icon: Code2, href: "https://github.com/jessehubz", label: "GitHub" },
 ];
 
 export function SiteFooter() {
@@ -51,16 +52,14 @@ export function SiteFooter() {
         {/* Brand */}
         <div>
           <div
+            className="logo-word"
             style={{
               fontSize: "20px",
-              fontWeight: 700,
-              color: "var(--text-primary)",
-              letterSpacing: "-0.02em",
               marginBottom: "12px",
             }}
           >
-            <span style={{ fontWeight: 700 }}>Thread</span>
-            <span style={{ fontWeight: 700, color: "var(--accent)" }}>line</span>
+            <span className="text-heading">thread</span>
+            <span className="logo-word-accent">line</span>
           </div>
           <p
             style={{
@@ -92,11 +91,7 @@ export function SiteFooter() {
               lineHeight: 1.8,
             }}
           >
-            <strong style={{ color: "var(--text-primary)", fontWeight: 600 }}>Jordan Vale</strong>
-            <span style={{ color: "var(--text-muted)", margin: "0 8px" }}>·</span>
-            <strong style={{ color: "var(--text-primary)", fontWeight: 600 }}>Mei Sato</strong>
-            <span style={{ color: "var(--text-muted)", margin: "0 8px" }}>·</span>
-            <strong style={{ color: "var(--text-primary)", fontWeight: 600 }}>Theo Bramwell</strong>
+            <strong style={{ color: "var(--text-primary)", fontWeight: 600 }}>Jesse David Francisco</strong>
           </div>
           {/* Social */}
           <div style={{ display: "flex", gap: "10px" }}>
@@ -324,12 +319,21 @@ export function SiteFooter() {
       <style>{`
         @media (max-width: 900px) {
           .site-footer-grid {
-            grid-template-columns: 1fr 1fr !important;
+            grid-template-columns: 1fr 1fr 1fr !important;
+          }
+          .site-footer-grid > div:first-child {
+            grid-column: 1 / -1 !important;
+            margin-bottom: 12px;
           }
         }
         @media (max-width: 640px) {
           .site-footer-grid {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: 1fr 1fr 1fr !important;
+            gap: 20px !important;
+          }
+          .site-footer-grid > div:first-child {
+            grid-column: 1 / -1 !important;
+            margin-bottom: 8px;
           }
           .site-footer-bottom {
             flex-direction: column !important;

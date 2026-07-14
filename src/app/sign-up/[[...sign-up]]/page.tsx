@@ -7,21 +7,21 @@ export default function SignUpPage() {
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
       <div className="auth-page flex min-h-screen">
         {/* Left panel - dark branding, immune to theme toggle */}
-        <div className="auth-left relative hidden flex-1 flex-col justify-between overflow-hidden p-12 lg:flex">
+        <div className="auth-left relative hidden flex-col justify-between overflow-hidden p-12 lg:flex lg:w-1/2 lg:flex-none">
           <div className="relative z-10">
             <Link href="/" className="inline-flex items-center" style={{ textDecoration: "none" }}>
-              <span className="auth-logo-t1">Thread</span>
+              <span className="auth-logo-t1">thread</span>
               <span className="auth-logo-t2">line</span>
             </Link>
           </div>
 
-          <div className="relative z-10 max-w-md">
+          <div className="relative z-10 max-w-none">
             <p className="auth-eyebrow">Free for teams up to 5</p>
             <h2 className="auth-heading">
               Stop asking<br/><span className="auth-gradient-text">what&apos;s next.</span>
             </h2>
             <p className="auth-subtext">
-              Join thousands of teams who manage projects as visual dependency graphs. Set up in under 60 seconds - no credit card required.
+              Join thousands of teams who manage projects as visual dependency graphs. Set up in under 60 seconds with no credit card required.
             </p>
 
             <div className="auth-stats">
@@ -42,8 +42,7 @@ export default function SignUpPage() {
             <div className="auth-quote">
               <p>&ldquo;The graph view makes complex dependencies actually manageable.&rdquo;</p>
               <div className="auth-quote-person">
-                <div className="auth-quote-avatar"></div>
-                <span className="auth-quote-name">Sarah Chen</span>
+                <span className="auth-quote-name">  Sarah Chen</span>
                 <span className="auth-quote-role">Engineering Lead</span>
               </div>
             </div>
@@ -55,19 +54,24 @@ export default function SignUpPage() {
         </div>
 
         {/* Right panel - form area, responds to theme toggle */}
-        <div className="auth-right flex flex-1 flex-col items-center justify-center px-6 py-12">
-          <div className="mb-8 flex items-center lg:hidden">
-            <span className="auth-logo-t1-right">Thread</span>
+        <div className="auth-right flex flex-1 flex-col items-center justify-center px-6 py-12 lg:w-1/2 lg:flex-none">
+          <Link
+            href="/"
+            className="auth-mobile-logo mb-7 flex items-center lg:hidden"
+            style={{ textDecoration: "none" }}
+          >
+            <span className="auth-logo-t1-right">thread</span>
             <span className="auth-logo-t2-right">line</span>
-          </div>
+          </Link>
+          <div className="auth-mobile-divider lg:hidden" />
 
-          <div className="w-full max-w-[400px]">
+          <div className="w-full max-w-110">
             <div className="auth-custom-header">
               <h1 className="auth-custom-title">
-                Get started<span className="auth-title-dot">.</span>
+                Get started
               </h1>
               <p className="auth-custom-subtitle">
-                Create your free workspace and start mapping dependencies in seconds.
+                Create your free workspace and start mapping dependencies
               </p>
             </div>
 
@@ -138,26 +142,23 @@ const authStyles = `
   background-repeat: repeat, no-repeat, no-repeat;
   border-right: 1px solid rgba(255,255,255,0.06);
 }
-.auth-logo-t1 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: #F2F2F4; }
-.auth-logo-t2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: #8B5CF6; }
-.auth-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8B5CF6; margin-bottom: 18px; }
-.auth-heading { font-size: 57px; font-weight: 200; letter-spacing: -0.03em; line-height: 1.1; color: #F2F2F4; margin-bottom: 22px; }
-.auth-subtext { font-size: 22px; color: #98989F; line-height: 1.65; max-width: 460px; }
-.auth-stats { margin-top: 36px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-.auth-stat-value { display: block; font-size: 26px; font-weight: 300; letter-spacing: -0.01em; color: #F2F2F4; }
-.auth-stat-label { display: block; font-size: 11px; color: #626268; margin-top: 4px; }
+.auth-logo-t1 { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 450; letter-spacing: 0.05em; color: #F2F2F4; }
+.auth-logo-t2 { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 450; letter-spacing: 0.05em; color: #7C3AED; }
+.auth-eyebrow { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8B5CF6; margin-bottom: 20px; }
+.auth-heading { font-family: "Inter", sans-serif; font-size: 54px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.15; color: #F2F2F4; margin-bottom: 24px; }
+.auth-subtext { font-family: "Figtree", sans-serif; font-size: 17px; font-weight: 400; color: #98989F; line-height: 1.6; max-width: 480px; }
+.auth-stats { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.auth-stat-value { display: block; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif; font-size: 28px; font-weight: 400; letter-spacing: -0.01em; color: #F2F2F4; }
+.auth-stat-label { display: block; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #626268; margin-top: 4px; }
 .auth-quote { margin-top: 32px; padding: 18px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); background: #151517; }
-.auth-quote p { font-size: 13.5px; line-height: 1.6; color: #F2F2F4; font-style: italic; margin-bottom: 10px; }
+.auth-quote p { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif; font-size: 14.5px; font-weight: 300; letter-spacing: -0.005em; line-height: 1.6; color: #F2F2F4; margin-bottom: 10px; }
 .auth-quote-person { display: flex; align-items: center; gap: 8px; }
 .auth-quote-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #A78BFA, #4C1D95); flex-shrink: 0; }
-.auth-quote-name { font-size: 12px; font-weight: 600; color: #F2F2F4; }
-.auth-quote-role { font-size: 11px; color: #626268; }
+.auth-quote-name { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif; font-size: 12.5px; font-weight: 600; color: #F2F2F4; }
+.auth-quote-role { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif; font-size: 11px; color: #626268; }
 .auth-gradient-text {
+  color: #7C3AED;
   font-weight: 600;
-  background: linear-gradient(120deg, #C4B5FD, #6D28D9);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 /* ===== RIGHT PANEL - responds to theme toggle ===== */
@@ -176,24 +177,38 @@ const authStyles = `
 }
 
 /* Mobile logo (only shows when left panel hidden) */
-.auth-logo-t1-right { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); }
-.auth-logo-t2-right { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: #8B5CF6; }
+.auth-mobile-logo { transition: opacity 0.15s ease; }
+.auth-mobile-logo:hover { opacity: 0.75; }
+.auth-logo-t1-right { font-family: 'Inter', sans-serif; font-size: 25px; font-weight: 450; letter-spacing: 0.05em; color: var(--text-primary); margin-bottom: 0; }
+.auth-logo-t2-right { font-family: 'Inter', sans-serif; font-size: 25px; font-weight: 450; letter-spacing: 0.05em; color: #7C3AED; margin-bottom: 0; }
+
+/* Mobile divider between logo and form - fades at the edges instead of a hard-stopped rule */
+.auth-mobile-divider {
+  width: 100%;
+  max-width: 440px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
+  margin-bottom: 28px;
+}
 
 /* ===== CUSTOM HEADER ===== */
-.auth-custom-header { margin-bottom: 32px; }
+.auth-custom-header { margin-bottom: 40px; }
 .auth-custom-title {
-  font-size: 28px;
-  font-weight: 700;
+  font-family: "Inter", sans-serif;
+  font-size: 36px;
+  font-weight: 350;
   letter-spacing: -0.03em;
   color: var(--text-primary);
-  margin-bottom: 10px;
-  line-height: 1.2;
+  margin-bottom: 12px;
+  line-height: 1.15;
 }
 .auth-title-dot {
-  color: #8B5CF6;
+  color: #7C3AED;
 }
 .auth-custom-subtitle {
-  font-size: 15px;
+  font-family: "Figtree", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
   color: var(--text-secondary);
   line-height: 1.6;
 }
@@ -300,6 +315,8 @@ a[href*="clerk.com"],
   border-radius: 10px !important;
   background: var(--bg-elevated) !important;
   transition: border-color 0.2s ease !important;
+  font-size: 14.5px !important;
+  padding: 11px 14px !important;
 }
 .dark .cl-socialButtonsBlockButton {
   border-color: rgba(255,255,255,0.12) !important;
@@ -314,6 +331,8 @@ a[href*="clerk.com"],
   background-color: #8B5CF6 !important;
   border-radius: 10px !important;
   font-weight: 600 !important;
+  font-size: 14.5px !important;
+  padding: 12px 20px !important;
   border: none !important;
   transition: background-color 0.15s ease !important;
 }
@@ -327,6 +346,8 @@ a[href*="clerk.com"],
   border-radius: 10px !important;
   background: var(--bg-elevated) !important;
   transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  font-size: 14.5px !important;
+  padding: 11px 14px !important;
 }
 .dark .cl-formFieldInput {
   border-color: rgba(255,255,255,0.12) !important;
@@ -335,6 +356,9 @@ a[href*="clerk.com"],
 .cl-formFieldInput:focus {
   border-color: #8B5CF6 !important;
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1) !important;
+}
+.cl-formFieldLabel {
+  font-size: 13.5px !important;
 }
 
 /* Hide Clerk's footer action (Don't have an account?) but keep dev mode */
@@ -345,7 +369,9 @@ a[href*="clerk.com"],
 /* ===== ACCOUNT LINK ===== */
 .auth-account-link {
   margin-top: 28px;
-  font-size: 14px;
+  font-family: "Figtree", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
   color: var(--text-secondary);
   text-align: center;
 }
@@ -380,5 +406,46 @@ a[href*="clerk.com"],
 }
 .auth-footer-line a:hover {
   color: #8B5CF6;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .auth-right {
+    padding: 32px 24px;
+  }
+  .auth-custom-title {
+    font-size: 30px;
+    font-weight: 400;
+  }
+}
+@media (max-width: 640px) {
+  .auth-right {
+    padding: 24px 18px;
+  }
+  .auth-custom-header {
+    margin-bottom: 28px;
+  }
+  .auth-custom-title {
+    font-size: 26px;
+    font-weight: 400;
+  }
+  .auth-custom-subtitle {
+    font-size: 14.5px;
+  }
+  .auth-logo-t1-right {
+    font-size: 21px;
+  }
+  .auth-logo-t2-right {
+    font-size: 21px;
+  }
+  .auth-account-link {
+    font-size: 14px;
+    margin-top: 22px;
+  }
+  .auth-footer-line {
+    margin-top: 24px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
 }
 `;
