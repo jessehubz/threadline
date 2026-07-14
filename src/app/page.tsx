@@ -561,7 +561,7 @@ const landingStyles = `
 :root .landing-page .btn-ghost,
 :not(.dark) .landing-page .btn-ghost {
   color: #1a1a1a;
-  background: #ffffff;
+  background: var(--bg-base);
   border: 1px solid #555555;
 }
 
@@ -571,7 +571,7 @@ const landingStyles = `
 }
 
 .dark .landing-page .btn-ghost {
-  background: #000000;
+  background: var(--bg-base);
   color: #fff;
   border: 1px solid #5a5a5a;
 }

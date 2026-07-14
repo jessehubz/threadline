@@ -1,13 +1,66 @@
+"use client";
+
 import { SignIn } from "@clerk/nextjs";
 import Link from "next/link";
+import { useCallback, useRef, useState } from "react";
+
+const MIN_LEFT_PERCENT = 25;
+const MAX_LEFT_PERCENT = 65;
+const CENTER_PERCENT = 50;
+const SNAP_THRESHOLD = 3; // snaps to center when within ±3% of 50%
 
 export default function SignInPage() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [leftWidth, setLeftWidth] = useState(50);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Pointer Events approach: setPointerCapture ensures all subsequent pointer
+  // events (move, up) are delivered to the divider element itself — no window
+  // listeners needed, no timing gap with React 19 concurrent rendering.
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const target = e.currentTarget;
+    target.setPointerCapture(e.pointerId);
+    setIsDragging(true);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    // Only process if we have pointer capture (i.e., dragging)
+    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    let percent = ((e.clientX - rect.left) / rect.width) * 100;
+    percent = Math.min(MAX_LEFT_PERCENT, Math.max(MIN_LEFT_PERCENT, percent));
+    // Snap to center when within threshold
+    if (Math.abs(percent - CENTER_PERCENT) < SNAP_THRESHOLD) {
+      percent = CENTER_PERCENT;
+    }
+    setLeftWidth(percent);
+  }, []);
+
+  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.hasPointerCapture(e.pointerId)) {
+      target.releasePointerCapture(e.pointerId);
+    }
+    setIsDragging(false);
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+  }, []);
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-      <div className="auth-page flex min-h-screen">
+      <div ref={containerRef} className="auth-page flex min-h-screen">
         {/* Left panel - dark branding, immune to theme toggle */}
-        <div className="auth-left relative hidden flex-col justify-between overflow-hidden p-12 lg:flex lg:w-1/2 lg:flex-none">
+        <div
+          className="auth-left relative hidden flex-none flex-col justify-between overflow-hidden p-12 lg:flex"
+          style={{ width: `${leftWidth}%` }}
+        >
           <div className="relative z-10">
             <Link href="/" className="inline-flex items-center" style={{ textDecoration: "none" }}>
               <span className="auth-logo-t1">thread</span>
@@ -16,7 +69,6 @@ export default function SignInPage() {
           </div>
 
           <div className="relative z-10 max-w-none">
-            <p className="auth-eyebrow">Visual dependency graphs</p>
             <h2 className="auth-heading">
               See how every task<br />
               <span className="auth-gradient-text">connects.</span>
@@ -37,8 +89,17 @@ export default function SignInPage() {
           </p>
         </div>
 
+        {/* Draggable divider - lg+ only, matches the left/right split */}
+        <div
+          className={`auth-divider hidden lg:flex${isDragging ? " auth-divider-active" : ""}`}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+        />
+
         {/* Right panel - form area, responds to theme toggle */}
-        <div className="auth-right flex flex-1 flex-col items-center justify-center px-6 py-12 lg:w-1/2 lg:flex-none">
+        <div className="auth-right flex flex-1 flex-col items-center justify-center px-6 py-12">
           <Link
             href="/"
             className="auth-mobile-logo mb-7 flex items-center lg:hidden"
@@ -76,6 +137,14 @@ export default function SignInPage() {
                     border: "1px solid var(--border-default)",
                     borderRadius: "10px",
                     transition: "all 0.2s ease",
+                    overflow: "visible",
+                    whiteSpace: "normal",
+                    minHeight: "auto",
+                  },
+                  socialButtonsBlockButtonText: {
+                    overflow: "visible",
+                    textOverflow: "unset",
+                    whiteSpace: "normal",
                   },
                   formButtonPrimary: {
                     backgroundColor: "#8B5CF6",
@@ -129,25 +198,52 @@ const authStyles = `
 /* ===== LEFT PANEL - hardcoded dark, immune to theme ===== */
 .auth-left {
   background-color: #0A0A0B;
-  background-image:
-    radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px),
-    radial-gradient(ellipse 500px 400px at 15% 10%, rgba(139,92,246,0.06), transparent 65%),
-    radial-gradient(ellipse 450px 350px at 85% 90%, rgba(139,92,246,0.045), transparent 65%);
-  background-size: 28px 28px, auto, auto;
-  background-repeat: repeat, no-repeat, no-repeat;
-  border-right: 1px solid rgba(255,255,255,0.06);
+  background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-repeat: repeat;
+}
+
+/* ===== DRAGGABLE DIVIDER between left/right panels ===== */
+.auth-divider {
+  position: relative;
+  flex: none;
+  width: 16px;
+  margin-left: -8px;
+  margin-right: -8px;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 30;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.auth-divider::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: rgba(255,255,255,0.10);
+  transform: translateX(-50%);
+  transition: background-color 0.15s ease, width 0.15s ease, box-shadow 0.15s ease;
+}
+.auth-divider:hover::after,
+.auth-divider-active::after {
+  background: #8B5CF6;
+  width: 3px;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
 }
 .auth-logo-t1 { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 450; letter-spacing: 0.05em; color: #F2F2F4; }
 .auth-logo-t2 { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 450; letter-spacing: 0.05em; color: #7C3AED; }
 .auth-eyebrow { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8B5CF6; margin-bottom: 20px; }
-.auth-heading { font-family: "Inter", sans-serif; font-size: 54px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.15; color: #F2F2F4; margin-bottom: 24px; }
+.auth-heading { font-family: "Inter", sans-serif; font-size: 54px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.15; color: #F2F2F4; margin-bottom: 24px; }
 .auth-subtext { font-family: "Figtree", sans-serif; font-size: 17px; font-weight: 400; color: #98989F; line-height: 1.6; max-width: 480px; }
 .auth-features { margin-top: 36px; padding-top: 26px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 18px; }
 .auth-feature-item { display: flex; align-items: center; gap: 12px; font-family: "Figtree", sans-serif; font-size: 15px; font-weight: 500; color: #C4C4CC; }
 .auth-feature-icon { width: 21px; height: 21px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #A78BFA; }
 .auth-gradient-text {
   color: #7C3AED;
-  font-weight: 600;
 }
 
 /* ===== RIGHT PANEL - responds to theme toggle ===== */
@@ -306,6 +402,8 @@ a[href*="clerk.com"],
   transition: border-color 0.2s ease !important;
   font-size: 14.5px !important;
   padding: 11px 14px !important;
+  overflow: visible !important;
+  min-height: auto !important;
 }
 .dark .cl-socialButtonsBlockButton {
   border-color: rgba(255,255,255,0.12) !important;
@@ -313,6 +411,17 @@ a[href*="clerk.com"],
 }
 .cl-socialButtonsBlockButton:hover {
   border-color: #8B5CF6 !important;
+}
+/* Prevent text truncation inside social buttons (fixes "Continue with Google" cutoff) */
+.cl-socialButtonsBlockButton * {
+  overflow: visible !important;
+  text-overflow: unset !important;
+  white-space: normal !important;
+}
+.cl-socialButtonsBlockButtonText {
+  overflow: visible !important;
+  text-overflow: unset !important;
+  white-space: normal !important;
 }
 
 /* Primary button (Continue) - clean purple, subtle darken on hover, no lift */
