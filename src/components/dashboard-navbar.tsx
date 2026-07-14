@@ -106,6 +106,17 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    name: "Trash",
+    href: "/trash",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 5h12" />
+        <path d="M5 5v10a2 2 0 002 2h6a2 2 0 002-2V5" />
+        <path d="M8 3h4" />
+      </svg>
+    ),
+  },
 ];
 
 // ─── Component ───────────────────────────────────────────────────────────────

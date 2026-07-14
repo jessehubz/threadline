@@ -173,6 +173,14 @@ export default async function DashboardPage() {
     .slice(0, 15)
     .map((t) => toTaskItem(t));
 
+  const overdue = allTasks
+    .filter((t) => t.status !== "COMPLETE" && t.dueDate && t.dueDate < now)
+    .sort((a, b) => a.dueDate!.getTime() - b.dueDate!.getTime())
+    .map((t) => {
+      const daysOverdue = Math.floor((now.getTime() - t.dueDate!.getTime()) / (1000 * 60 * 60 * 24));
+      return toTaskItem(t, daysOverdue);
+    });
+
   // ─── Workload per person ───────────────────────────────────────────────────
   const workloadMap = new Map<string, { id: string; name: string; initials: string; notStarted: number; inProgress: number; blocked: number; awaitingApproval: number; total: number }>();
   const workloadByProjectMap = new Map<string, Map<string, { id: string; name: string; initials: string; notStarted: number; inProgress: number; blocked: number; awaitingApproval: number; total: number }>>();
@@ -218,6 +226,8 @@ export default async function DashboardPage() {
     totalTasks: p.totalTasks,
     completedTasks: p.completedTasks,
     memberCount: p.memberCount,
+    lastOpenedAt: p.lastOpenedAt ? p.lastOpenedAt.toISOString() : null,
+    displayOrder: p.displayOrder,
     labels: p.labels.map((l) => ({ id: l.id, name: l.name, color: l.color })),
     tags: p.tags.map((t) => ({ id: t.id, name: t.name, color: t.color, isSystem: t.isSystem })),
   }));
@@ -247,6 +257,7 @@ export default async function DashboardPage() {
       dueToday={dueToday}
       dueThisWeek={dueThisWeek}
       dueLater={dueLater}
+      overdue={overdue}
       workload={workloadData}
       workloadByProject={workloadByProject}
       pendingReminderCount={pendingReminderCount}

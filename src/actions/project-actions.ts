@@ -44,12 +44,12 @@ export async function getProjects() {
         orderBy: { tag: { name: "asc" } },
       },
     },
-    orderBy: { updatedAt: "desc" },
+    orderBy: [{ lastOpenedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
   });
 
   const now = new Date();
 
-  return projects.map((project) => {
+  const mapped = projects.map((project) => {
     const allNodes = project.graphs.flatMap((g) => g.nodes);
     const totalTasks = allNodes.length;
     const completedTasks = allNodes.filter((n) => n.status === "COMPLETE").length;
@@ -68,6 +68,8 @@ export async function getProjects() {
       needsAttention,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
+      lastOpenedAt: project.lastOpenedAt,
+      displayOrder: project.members.find((m) => m.userId === user.id)?.displayOrder ?? 0,
       role: project.members.find((m) => m.userId === user.id)?.role || "MEMBER",
       labels: project.labels || [],
       tags: (project.projectTags || []).map((pt) => ({
@@ -78,6 +80,14 @@ export async function getProjects() {
       })),
     };
   });
+
+  // If user has customized order (any non-zero displayOrder), sort by that
+  const hasCustomOrder = mapped.some((p) => p.displayOrder !== 0);
+  if (hasCustomOrder) {
+    mapped.sort((a, b) => a.displayOrder - b.displayOrder);
+  }
+
+  return mapped;
 }
 
 export async function createProject(formData: FormData) {
@@ -97,6 +107,7 @@ export async function createProject(formData: FormData) {
       name: parsed.data.name,
       description: parsed.data.description || null,
       shareToken: generateSecureToken(),
+      lastOpenedAt: new Date(),
       members: {
         create: {
           userId: user.id,
@@ -121,7 +132,7 @@ export async function updateProject(formData: FormData) {
   const parsed = updateProjectSchema.safeParse({
     id: formData.get("id"),
     name: formData.get("name"),
-    description: formData.get("description"),
+    description: formData.get("description") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -215,4 +226,21 @@ export async function getDeletedProjects() {
     select: { id: true, name: true, deletedAt: true, deleteAfter: true },
     orderBy: { deletedAt: "desc" },
   });
+}
+
+export async function reorderProjects(projectIds: string[]) {
+  const user = await requireUser();
+
+  // Update displayOrder for each project membership
+  await Promise.all(
+    projectIds.map((projectId, index) =>
+      prisma.projectMember.updateMany({
+        where: { userId: user.id, projectId },
+        data: { displayOrder: index },
+      })
+    )
+  );
+
+  revalidatePath("/dashboard");
+  return { success: true };
 }

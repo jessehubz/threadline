@@ -32,6 +32,12 @@ export default async function GraphPage({ params, searchParams }: GraphPageProps
     select: { shareToken: true },
   });
 
+  // Record that this project was opened (for chronological ordering on dashboard)
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { lastOpenedAt: new Date() },
+  }).catch(() => { /* non-critical — silently ignore permission errors */ });
+
   // Get members for share dialog and assignment
   const members = await prisma.projectMember.findMany({
     where: { projectId },

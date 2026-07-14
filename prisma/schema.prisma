@@ -97,6 +97,7 @@ model Project {
   visibility  ProjectVisibility @default(PRIVATE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  lastOpenedAt DateTime?
   deletedAt   DateTime?
   deleteAfter DateTime?
 
@@ -109,11 +110,12 @@ model Project {
 }
 
 model ProjectMember {
-  id        String     @id @default(cuid())
-  userId    String
-  projectId String
-  role      MemberRole @default(MEMBER)
-  createdAt DateTime   @default(now())
+  id           String     @id @default(cuid())
+  userId       String
+  projectId    String
+  role         MemberRole @default(MEMBER)
+  displayOrder Int        @default(0)
+  createdAt    DateTime   @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
