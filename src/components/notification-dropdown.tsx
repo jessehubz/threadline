@@ -56,10 +56,10 @@ export function NotificationDropdown() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative rounded-xl p-2 text-body transition-colors hover:bg-hover hover:text-heading"
+        className="relative flex items-center justify-center w-[38px] h-[38px] rounded-full cursor-pointer text-[var(--text-secondary)] transition-all duration-[180ms] ease-in-out hover:bg-[rgba(139,92,246,0.08)] hover:text-[var(--text-primary)] hover:-translate-y-px"
         aria-label="Notifications"
       >
-        <Bell className="h-5 w-5" />
+        <Bell className="h-[18px] w-[18px]" />
         {unreadCount > 0 && (
           <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--danger)] text-[10px] font-bold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}

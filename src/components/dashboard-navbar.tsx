@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/components/theme-provider";
@@ -115,6 +115,13 @@ export function DashboardNavbar() {
   const { resolvedTheme, setTheme } = useTheme();
   const [aiChatOpen, setAiChatOpen] = useState(false);
 
+  // Listen for custom event from hero banner and scroll launcher
+  useEffect(() => {
+    const handleOpenAiChat = () => setAiChatOpen(true);
+    window.addEventListener("open-ai-chat", handleOpenAiChat);
+    return () => window.removeEventListener("open-ai-chat", handleOpenAiChat);
+  }, []);
+
   return (
     <>
       <nav
@@ -149,8 +156,8 @@ export function DashboardNavbar() {
 
           {/* Utility group */}
           <div className="flex items-center gap-2">
-            {/* Search */}
-            <SearchDropdown />
+            {/* Search — always-visible inline input, fills available space */}
+            <SearchDropdown className="hidden sm:flex min-w-[180px] max-w-[280px]" />
 
             {/* Message icon button with notification dot */}
             <Link
@@ -171,18 +178,6 @@ export function DashboardNavbar() {
             {/* Notification bell */}
             <NotificationDropdown />
 
-            {/* AI Sparkle button */}
-            <button
-              onClick={() => setAiChatOpen(true)}
-              className="relative flex items-center justify-center w-[38px] h-[38px] rounded-full text-[var(--text-secondary)] transition-all duration-[180ms] ease-in-out hover:bg-[rgba(139,92,246,0.08)] hover:text-[var(--text-primary)] hover:-translate-y-px hover:shadow-[0_0_12px_rgba(139,92,246,0.3)]"
-              aria-label="AI Assistant"
-            >
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M10 2l1.5 4.5L16 8l-4.5 1.5L10 14l-1.5-4.5L4 8l4.5-1.5L10 2z" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M15 13l0.75 2.25L18 16l-2.25 0.75L15 19l-0.75-2.25L12 16l2.25-0.75L15 13z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-
             {/* Theme switch */}
             <div
               className="flex items-center"
@@ -196,10 +191,10 @@ export function DashboardNavbar() {
               <button
                 onClick={() => setTheme("light")}
                 className={cn(
-                  "flex items-center justify-center w-[30px] h-[30px] rounded-full transition-all duration-[180ms] ease-in-out",
+                  "flex items-center justify-center w-[30px] h-[30px] rounded-full cursor-pointer transition-all duration-[180ms] ease-in-out",
                   resolvedTheme === "light"
                     ? "text-white"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(139,92,246,0.08)]"
                 )}
                 style={{
                   background: resolvedTheme === "light" ? "var(--accent)" : "transparent",
@@ -223,10 +218,10 @@ export function DashboardNavbar() {
               <button
                 onClick={() => setTheme("dark")}
                 className={cn(
-                  "flex items-center justify-center w-[30px] h-[30px] rounded-full transition-all duration-[180ms] ease-in-out",
+                  "flex items-center justify-center w-[30px] h-[30px] rounded-full cursor-pointer transition-all duration-[180ms] ease-in-out",
                   resolvedTheme === "dark"
                     ? "text-white"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(139,92,246,0.08)]"
                 )}
                 style={{
                   background: resolvedTheme === "dark" ? "var(--accent)" : "transparent",
@@ -249,12 +244,229 @@ export function DashboardNavbar() {
               }}
             />
 
-            {/* User avatar (Clerk UserButton) */}
-            <div className="flex items-center gap-1">
+            {/* User avatar (Clerk UserButton) with avatar-group hover */}
+            <div className="flex items-center gap-1 cursor-pointer rounded-full px-1.5 py-1 transition-all duration-[180ms] hover:bg-[rgba(139,92,246,0.07)]">
               <UserButton
                 appearance={{
+                  options: {
+                    unsafe_disableDevelopmentModeWarnings: true,
+                  },
                   elements: {
+                    // Trigger avatar
                     avatarBox: "h-[34px] w-[34px]",
+                    // Popover card container
+                    userButtonPopoverCard: {
+                      backgroundColor: resolvedTheme === "dark" ? "#151517" : "#FFFFFF",
+                      border: resolvedTheme === "dark" ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(20, 20, 25, 0.08)",
+                      borderRadius: "16px",
+                      boxShadow: resolvedTheme === "dark"
+                        ? "0 2px 4px rgba(0,0,0,0.4), 0 8px 18px rgba(0,0,0,0.5)"
+                        : "0 2px 4px rgba(0,0,0,0.08), 0 8px 18px rgba(0,0,0,0.12)",
+                    },
+                    // Action rows (Manage account, Sign out)
+                    userButtonPopoverActionButton: {
+                      borderRadius: "10px",
+                      transition: "all 180ms ease",
+                    },
+                    userButtonPopoverActionButton__manageAccount: {
+                      color: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                    },
+                    userButtonPopoverActionButton__signOut: {
+                      color: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                    },
+                    // Action button text
+                    userButtonPopoverActionButtonText: {
+                      color: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                      fontSize: "13.5px",
+                      fontWeight: "500",
+                    },
+                    // Action button icons
+                    userButtonPopoverActionButtonIcon: {
+                      color: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                      opacity: 0.8,
+                    },
+                    // Footer area (Clerk branding)
+                    userButtonPopoverFooter: {
+                      display: "none",
+                    },
+                  },
+                  variables: {
+                    colorBackground: resolvedTheme === "dark" ? "#151517" : "#FFFFFF",
+                    colorForeground: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                    colorMutedForeground: resolvedTheme === "dark" ? "#98989F" : "#75757C",
+                    colorNeutral: resolvedTheme === "dark" ? "white" : "black",
+                    colorPrimary: "#8B5CF6",
+                    colorDanger: resolvedTheme === "dark" ? "#E5484D" : "#DC4C4C",
+                    colorBorder: resolvedTheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(20, 20, 25, 0.08)",
+                    borderRadius: "16px",
+                    fontFamily: "General Sans, Inter, ui-sans-serif, system-ui, sans-serif",
+                  },
+                }}
+                userProfileProps={{
+                  appearance: {
+                    options: {
+                      unsafe_disableDevelopmentModeWarnings: true,
+                    },
+                    elements: {
+                      // Outermost container
+                      rootBox: {
+                        background: resolvedTheme === "dark" ? "#0A0A0B" : "#F5F5F6",
+                      },
+                      // Main card — fills modal, flex row for sidebar + content
+                      card: {
+                        border: "none",
+                        boxShadow: "none",
+                        background: resolvedTheme === "dark" ? "#151517" : "#FFFFFF",
+                        flex: "1",
+                        display: "flex",
+                        overflow: "hidden",
+                        minHeight: "0",
+                        borderRadius: "0",
+                      },
+                      // Sidebar navigation panel
+                      navbar: {
+                        background: resolvedTheme === "dark" ? "#0A0A0B" : "#F5F5F6",
+                        borderRight: `1px solid ${resolvedTheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(20, 20, 25, 0.08)"}`,
+                        padding: "40px 28px 24px 28px",
+                        width: "240px",
+                        minWidth: "240px",
+                        maxWidth: "240px",
+                        flexShrink: "0",
+                        overflowY: "auto" as const,
+                        position: "relative" as const,
+                      },
+                      // Individual nav buttons
+                      navbarButton: {
+                        color: resolvedTheme === "dark" ? "#98989F" : "#75757C",
+                        borderRadius: "8px",
+                        transition: "background 0.15s ease, color 0.15s ease",
+                      },
+                      // Active nav button
+                      navbarButton__active: {
+                        background: resolvedTheme === "dark" ? "#1C1C1F" : "#F0F0F2",
+                        color: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                        fontWeight: 600,
+                      },
+                      // Main content area
+                      page: {
+                        background: resolvedTheme === "dark" ? "#151517" : "#FFFFFF",
+                        flex: "1",
+                        minHeight: "0",
+                        display: "flex",
+                        flexDirection: "column" as const,
+                        maxWidth: "100%",
+                      },
+                      // Scrollable content area
+                      pageScrollBox: {
+                        background: resolvedTheme === "dark" ? "#151517" : "#FFFFFF",
+                        padding: "40px 48px",
+                        flex: "1",
+                        overflowY: "auto" as const,
+                        minHeight: "0",
+                      },
+                      // Each settings section — flat with separator, no box
+                      profileSection: {
+                        background: "transparent",
+                        borderRadius: "0",
+                        padding: "0 0 28px 0",
+                        border: "none",
+                        borderBottom: `1px solid ${resolvedTheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(20, 20, 25, 0.08)"}`,
+                        boxShadow: "none",
+                        marginBottom: "28px",
+                      },
+                      // Section titles
+                      profileSectionTitleText: {
+                        color: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                        fontWeight: 600,
+                        fontSize: "14px",
+                      },
+                      // Section body content
+                      profileSectionContent: {
+                        color: resolvedTheme === "dark" ? "#98989F" : "#75757C",
+                      },
+                      // Text inputs
+                      formFieldInput: {
+                        background: resolvedTheme === "dark" ? "#0A0A0B" : "#F5F5F6",
+                        border: `1px solid ${resolvedTheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(20, 20, 25, 0.08)"}`,
+                        borderRadius: "10px",
+                        color: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                        transition: "border-color 0.15s ease",
+                      },
+                      // Input labels
+                      formFieldLabel: {
+                        color: resolvedTheme === "dark" ? "#98989F" : "#75757C",
+                        fontSize: "13px",
+                        fontWeight: 500,
+                      },
+                      // Primary action button (Update Profile)
+                      formButtonPrimary: {
+                        background: "#8B5CF6",
+                        color: "#FFFFFF",
+                        padding: "10px 20px",
+                        borderRadius: "10px",
+                        fontWeight: 600,
+                        border: "none",
+                        transition: "opacity 0.15s ease, transform 0.15s ease",
+                        boxShadow: "none",
+                      },
+                      // "Update profile" link button — must always look like a button
+                      profileSectionPrimaryButton: {
+                        background: "#8B5CF6",
+                        backgroundColor: "#8B5CF6",
+                        color: "#FFFFFF",
+                        padding: "8px 16px",
+                        borderRadius: "8px",
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        border: "none",
+                        cursor: "pointer",
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        boxShadow: "none",
+                        transition: "all 180ms ease",
+                      },
+                      // Page header title
+                      headerTitle: {
+                        color: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                        fontWeight: 700,
+                      },
+                      // Page header subtitle
+                      headerSubtitle: {
+                        color: resolvedTheme === "dark" ? "#98989F" : "#75757C",
+                      },
+                      // Badges
+                      badge: {
+                        background: resolvedTheme === "dark" ? "rgba(139, 92, 246, 0.2)" : "rgba(139, 92, 246, 0.15)",
+                        color: resolvedTheme === "dark" ? "#A78BFA" : "#8B5CF6",
+                        border: `1px solid ${resolvedTheme === "dark" ? "rgba(139, 92, 246, 0.3)" : "rgba(139, 92, 246, 0.2)"}`,
+                        borderRadius: "999px",
+                      },
+                      // Accordion items
+                      accordionTriggerButton: {
+                        color: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                        borderBottom: `1px solid ${resolvedTheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(20, 20, 25, 0.08)"}`,
+                      },
+                      // Footer — let Clerk branding show
+                      footer: {
+                        color: resolvedTheme === "dark" ? "#626268" : "#A6A6AD",
+                        fontSize: "11px",
+                      },
+                    },
+                    variables: {
+                      colorBackground: resolvedTheme === "dark" ? "#151517" : "#FFFFFF",
+                      colorForeground: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                      colorMutedForeground: resolvedTheme === "dark" ? "#98989F" : "#75757C",
+                      colorMuted: resolvedTheme === "dark" ? "#1C1C1F" : "#F7F7F8",
+                      colorNeutral: resolvedTheme === "dark" ? "white" : "black",
+                      colorPrimary: "#8B5CF6",
+                      colorDanger: resolvedTheme === "dark" ? "#E5484D" : "#DC4C4C",
+                      colorBorder: resolvedTheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(20, 20, 25, 0.08)",
+                      colorInput: resolvedTheme === "dark" ? "#1C1C1F" : "#F7F7F8",
+                      colorInputForeground: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
+                      borderRadius: "10px",
+                      fontFamily: "General Sans, Inter, ui-sans-serif, system-ui, sans-serif",
+                    },
                   },
                 }}
               />
@@ -301,7 +513,7 @@ export function DashboardNavbar() {
                   href={item.href}
                   className={cn(
                     "flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 transition-all duration-[180ms] ease-in-out",
-                    !isActive && "hover:text-[var(--text-primary)] hover:bg-[rgba(139,92,246,0.08)]"
+                    !isActive && "hover:text-[var(--text-primary)] hover:bg-[rgba(139,92,246,0.12)] hover:-translate-y-px hover:shadow-[0_2px_8px_rgba(139,92,246,0.15)]"
                   )}
                   style={{
                     padding: "8px 15px",

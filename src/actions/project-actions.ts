@@ -39,6 +39,10 @@ export async function getProjects() {
         },
       },
       labels: true,
+      projectTags: {
+        include: { tag: true },
+        orderBy: { tag: { name: "asc" } },
+      },
     },
     orderBy: { updatedAt: "desc" },
   });
@@ -66,6 +70,12 @@ export async function getProjects() {
       updatedAt: project.updatedAt,
       role: project.members.find((m) => m.userId === user.id)?.role || "MEMBER",
       labels: project.labels || [],
+      tags: (project.projectTags || []).map((pt) => ({
+        id: pt.tag.id,
+        name: pt.tag.name,
+        color: pt.tag.color,
+        isSystem: pt.tag.isSystem,
+      })),
     };
   });
 }

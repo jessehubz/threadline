@@ -86,6 +86,7 @@ model User {
   friendOf       Friendship[] @relation("FriendOf")
   auditLogs      NodeAuditLog[]
   commentReads   CommentRead[]
+  tags           Tag[]
 }
 
 model Project {
@@ -104,6 +105,7 @@ model Project {
   messages    Message[]
   labels      ProjectLabel[]
   permissions ProjectPermission[]
+  projectTags ProjectTag[]
 }
 
 model ProjectMember {
@@ -343,6 +345,32 @@ model ProjectLabel {
   createdAt DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#8B5CF6")
+  isSystem  Boolean  @default(false)
+  userId    String?
+  createdAt DateTime @default(now())
+
+  user        User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectTags ProjectTag[]
+
+  @@unique([name, userId])
+}
+
+model ProjectTag {
+  id        String   @id @default(cuid())
+  projectId String
+  tagId     String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, tagId])
 }
 
 model Friendship {

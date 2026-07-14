@@ -1,9 +1,9 @@
 import { getProjects } from "@/actions/project-actions";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { DashboardNavbar } from "@/components/dashboard-navbar";
 import { DashboardContent } from "@/components/dashboard-content";
 import { getPendingReminders } from "@/actions/ai-assistant-actions";
+import { getUserTags } from "@/actions/tag-actions";
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -219,35 +219,42 @@ export default async function DashboardPage() {
     completedTasks: p.completedTasks,
     memberCount: p.memberCount,
     labels: p.labels.map((l) => ({ id: l.id, name: l.name, color: l.color })),
+    tags: p.tags.map((t) => ({ id: t.id, name: t.name, color: t.color, isSystem: t.isSystem })),
   }));
 
   // Active tasks = not completed
   const activeTasks = totalTasks - completedTasks;
 
+  // ─── Available tags for tag management ─────────────────────────────────────
+  let availableTags: Array<{ id: string; name: string; color: string; isSystem: boolean }> = [];
+  try {
+    availableTags = await getUserTags();
+  } catch {
+    // Non-critical — default to empty
+  }
+
   return (
-    <div className="dash-wrap">
-      <DashboardNavbar />
-      <DashboardContent
-        user={user}
-        greeting={greeting}
-        firstName={firstName}
-        healthScore={healthScore}
-        activeTasks={activeTasks}
-        completionRate={completionRate}
-        insights={insightsForWidget}
-        projects={projectList}
-        needsAttention={needsAttention}
-        dueToday={dueToday}
-        dueThisWeek={dueThisWeek}
-        dueLater={dueLater}
-        workload={workloadData}
-        workloadByProject={workloadByProject}
-        pendingReminderCount={pendingReminderCount}
-        totalProjects={projects.length}
-        needsAttentionCount={needsAttention.length}
-        inProgressTasks={inProgressTasks}
-        blockedTasksCount={blockedTasksCount}
-      />
-    </div>
+    <DashboardContent
+      user={user}
+      greeting={greeting}
+      firstName={firstName}
+      healthScore={healthScore}
+      activeTasks={activeTasks}
+      completionRate={completionRate}
+      insights={insightsForWidget}
+      projects={projectList}
+      needsAttention={needsAttention}
+      dueToday={dueToday}
+      dueThisWeek={dueThisWeek}
+      dueLater={dueLater}
+      workload={workloadData}
+      workloadByProject={workloadByProject}
+      pendingReminderCount={pendingReminderCount}
+      totalProjects={projects.length}
+      needsAttentionCount={needsAttention.length}
+      inProgressTasks={inProgressTasks}
+      blockedTasksCount={blockedTasksCount}
+      availableTags={availableTags}
+    />
   );
 }

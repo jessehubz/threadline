@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 import {
   Sparkles,
   Search,
@@ -14,9 +15,13 @@ import {
   MessageCircle,
   Link2,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { AIChatPanel } from "@/components/ai-chat-panel";
 import { CreateProjectButton } from "@/components/create-project-button";
+import { TagChip } from "@/components/ui/tag-chip";
+import { TagScrollContainer } from "@/components/ui/tag-scroll-container";
+import { ProjectTagManager } from "@/components/project-tag-manager";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -35,6 +40,7 @@ interface DashboardContentProps {
     completedTasks: number;
     memberCount: number;
     labels: Array<{ id: string; name: string; color: string }>;
+    tags: Array<{ id: string; name: string; color: string; isSystem: boolean }>;
   }>;
   needsAttention: Array<{
     id: string;
@@ -93,6 +99,7 @@ interface DashboardContentProps {
   needsAttentionCount: number;
   inProgressTasks: number;
   blockedTasksCount: number;
+  availableTags: Array<{ id: string; name: string; color: string; isSystem: boolean }>;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -143,16 +150,64 @@ export function DashboardContent(props: DashboardContentProps) {
     needsAttentionCount,
     inProgressTasks,
     blockedTasksCount,
+    availableTags,
   } = props;
 
+  // Use Clerk's live user data so display name updates reactively
+  // without needing a page reload after the user edits their profile.
+  const { user: clerkUser } = useUser();
+  const liveFirstName = clerkUser?.firstName || firstName;
+
   // State
-  const [aiOpen, setAiOpen] = useState(false);
+  const [showLauncher, setShowLauncher] = useState(false);
   const [projectTab, setProjectTab] = useState("all");
   const [projectSearch, setProjectSearch] = useState("");
   const [showAllProjects, setShowAllProjects] = useState(false);
   const [deadlineTab, setDeadlineTab] = useState<"today" | "week" | "later">("today");
   const [healthRingOffset, setHealthRingOffset] = useState(251.2);
   const [friendRingOffsets, setFriendRingOffsets] = useState<number[]>([]);
+
+  // Helper to open the AI chat (single instance lives in DashboardNavbar)
+  const openAiChat = () => {
+    window.dispatchEvent(new CustomEvent("open-ai-chat"));
+  };
+
+  // Scroll-triggered launcher: appears after 200px scroll, stays visible
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 200) {
+        setShowLauncher(true);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    // Check initial scroll position (e.g. page restored with scroll)
+    if (window.scrollY > 200) setShowLauncher(true);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Scroll-reveal: IntersectionObserver triggers once per section
+  const revealContainerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const container = revealContainerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("revealed");
+            observer.unobserve(entry.target); // trigger once only
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    const sections = container.querySelectorAll(".dash-reveal");
+    sections.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
 
   // Health ring animation
   const circumference = 251.2; // 2 * PI * 40
@@ -179,12 +234,18 @@ export function DashboardContent(props: DashboardContentProps) {
 
   // Filter projects
   const filteredProjects = projects.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(projectSearch.toLowerCase());
+    const matchesSearch = p.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
+      p.tags.some((t) => t.name.toLowerCase().includes(projectSearch.toLowerCase()));
     if (!matchesSearch) return false;
     if (projectTab === "all") return true;
     if (projectTab === "ongoing") return p.completedTasks > 0 && p.completedTasks < p.totalTasks;
     if (projectTab === "not_started") return p.completedTasks === 0 && p.totalTasks > 0;
     if (projectTab === "draft") return p.totalTasks === 0;
+    // Custom tag filter: tab id starts with "tag:"
+    if (projectTab.startsWith("tag:")) {
+      const tagId = projectTab.slice(4);
+      return p.tags.some((t) => t.id === tagId);
+    }
     return true;
   });
 
@@ -204,6 +265,45 @@ export function DashboardContent(props: DashboardContentProps) {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.4; transform: scale(0.8); }
         }
+        /* Scroll-reveal: sections start invisible and slide up on viewport entry */
+        .dash-reveal {
+          opacity: 0;
+          transform: translateY(20px);
+          transition: opacity 380ms ease-out, transform 380ms ease-out;
+        }
+        .dash-reveal.revealed {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        /* Section separator — subtle hairline between major blocks */
+        .dash-separator {
+          height: 1px;
+          margin: 24px 0 28px;
+          background: var(--border-subtle);
+          border: none;
+        }
+        /* Filter tab bar container */
+        .dash-filter-tabs {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          background: var(--bg-muted);
+          border: 1px solid var(--border-default);
+          border-radius: 999px;
+          padding: 4px;
+          margin-bottom: 20px;
+          overflow-x: auto;
+          scrollbar-width: none;
+          -webkit-overflow-scrolling: touch;
+        }
+        .dash-filter-tabs::-webkit-scrollbar { display: none; }
+        @media (prefers-reduced-motion: reduce) {
+          .dash-reveal {
+            opacity: 1;
+            transform: none;
+            transition: none;
+          }
+        }
         @media (max-width: 900px) {
           .dash-hero { grid-template-columns: 1fr !important; }
           .dash-second-row { grid-template-columns: 1fr !important; }
@@ -217,10 +317,13 @@ export function DashboardContent(props: DashboardContentProps) {
         }
       `}</style>
 
+      <div ref={revealContainerRef}>
+
       {/* ═══ 1. HERO SECTION ═══ */}
+      <div className="dash-reveal">
       <HeroSection
         greeting={greeting}
-        firstName={firstName}
+        firstName={liveFirstName}
         healthScore={healthScore}
         activeTasks={activeTasks}
         totalProjects={totalProjects}
@@ -231,10 +334,12 @@ export function DashboardContent(props: DashboardContentProps) {
         healthRingOffset={healthRingOffset}
         circumference={circumference}
       />
+      </div>
 
       {/* ═══ 2. AI BANNER ═══ */}
+      <div className="dash-reveal">
       <div
-        onClick={() => setAiOpen(true)}
+        onClick={openAiChat}
         style={{
           display: "flex",
           alignItems: "center",
@@ -278,15 +383,20 @@ export function DashboardContent(props: DashboardContentProps) {
           }}
         >
           <Sparkles style={{ width: "13px", height: "13px" }} />
-          LOOM
+          AI ASSISTANT
         </span>
         <span style={{ fontSize: "14px", color: "var(--text-secondary)", flex: 1 }}>
-          {insights[0]?.text || "Ask Loom anything about your projects..."}
+          {insights[0]?.text || "Ask AI Assistant anything about your projects..."}
         </span>
         <ArrowRight style={{ width: "16px", height: "16px", color: "var(--text-muted)", flexShrink: 0 }} />
       </div>
+      </div>
+
+      {/* Separator: after AI Banner / before Projects */}
+      <div className="dash-separator" />
 
       {/* ═══ 3. PROJECTS SECTION ═══ */}
+      <div className="dash-reveal">
       <ProjectsSection
         projects={filteredProjects}
         visibleProjects={visibleProjects}
@@ -296,17 +406,28 @@ export function DashboardContent(props: DashboardContentProps) {
         setProjectSearch={setProjectSearch}
         showAllProjects={showAllProjects}
         setShowAllProjects={setShowAllProjects}
+        availableTags={availableTags}
       />
+      </div>
+
+      {/* Separator: after Projects / before Needs Attention + Friends */}
+      <div className="dash-separator" />
 
       {/* ═══ 4. SECOND ROW ═══ */}
+      <div className="dash-reveal">
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }} className="dash-second-row">
         {/* Needs Attention */}
         <NeedsAttentionPanel items={needsAttention} />
         {/* Friends / Team */}
         <FriendsPanel workload={workload} friendRingOffsets={friendRingOffsets} smallCircumference={smallCircumference} />
       </div>
+      </div>
+
+      {/* Separator: after Second Row / before Deadlines */}
+      <div className="dash-separator" />
 
       {/* ═══ 5. DEADLINES PANEL ═══ */}
+      <div className="dash-reveal">
       <DeadlinesPanel
         deadlineTab={deadlineTab}
         setDeadlineTab={setDeadlineTab}
@@ -315,12 +436,26 @@ export function DashboardContent(props: DashboardContentProps) {
         dueLater={dueLater}
         deadlineItems={deadlineItems}
       />
+      </div>
 
       {/* ═══ 6. FOOTER ═══ */}
+      <div className="dash-reveal">
       <FooterSection />
+      </div>
 
-      {/* AI Chat Panel */}
-      <AIChatPanel open={aiOpen} onClose={() => setAiOpen(false)} />
+      </div>{/* end revealContainerRef */}
+
+      {/* AI Assistant Launcher — slides in after 200px scroll */}
+      {showLauncher && (
+        <button
+          onClick={openAiChat}
+          className="ai-launcher-visible fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-[var(--shadow-md)] transition-all duration-150 hover:scale-110 hover:shadow-[var(--elevation-3)] active:scale-95 cursor-pointer"
+          aria-label="Open AI Assistant"
+          title="AI Assistant"
+        >
+          <Sparkles className="h-5 w-5" />
+        </button>
+      )}
     </>
   );
 }
@@ -429,6 +564,7 @@ function HeroSection({
           {greeting},{" "}
           <b
             style={{
+              fontFamily: '"Outfit", "Inter", sans-serif',
               fontWeight: 700,
               background: "linear-gradient(135deg, var(--accent-hover), #4c1d95)",
               WebkitBackgroundClip: "text",
@@ -457,6 +593,20 @@ function HeroSection({
           borderRadius: "var(--radius-lg)",
           boxShadow: "var(--shadow-md)",
           padding: "28px",
+          transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+          cursor: "default",
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget;
+          el.style.transform = "translateY(-4px)";
+          el.style.boxShadow = "var(--elevation-3)";
+          el.style.borderColor = "rgba(139,92,246,0.28)";
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget;
+          el.style.transform = "translateY(0)";
+          el.style.boxShadow = "var(--shadow-md)";
+          el.style.borderColor = "var(--border-default)";
         }}
       >
         {/* Health ring row */}
@@ -510,15 +660,57 @@ function HeroSection({
 
         {/* Breakdown grid */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
-          <div style={{ textAlign: "center", padding: "10px 0", background: "var(--bg-muted)", borderRadius: "var(--radius-sm)" }}>
+          <div
+            style={{ textAlign: "center", padding: "10px 0", background: "var(--bg-muted)", borderRadius: "var(--radius-sm)", border: "1px solid transparent", transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease", cursor: "default" }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget;
+              el.style.transform = "translateY(-4px)";
+              el.style.boxShadow = "var(--elevation-2)";
+              el.style.borderColor = "rgba(139,92,246,0.28)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget;
+              el.style.transform = "translateY(0)";
+              el.style.boxShadow = "none";
+              el.style.borderColor = "transparent";
+            }}
+          >
             <div style={{ fontSize: "18px", fontWeight: 600, color: "var(--text-primary)" }}>{dueToday.length}</div>
             <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Today</div>
           </div>
-          <div style={{ textAlign: "center", padding: "10px 0", background: "var(--bg-muted)", borderRadius: "var(--radius-sm)" }}>
+          <div
+            style={{ textAlign: "center", padding: "10px 0", background: "var(--bg-muted)", borderRadius: "var(--radius-sm)", border: "1px solid transparent", transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease", cursor: "default" }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget;
+              el.style.transform = "translateY(-4px)";
+              el.style.boxShadow = "var(--elevation-2)";
+              el.style.borderColor = "rgba(139,92,246,0.28)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget;
+              el.style.transform = "translateY(0)";
+              el.style.boxShadow = "none";
+              el.style.borderColor = "transparent";
+            }}
+          >
             <div style={{ fontSize: "18px", fontWeight: 600, color: "var(--text-primary)" }}>{dueThisWeek.length}</div>
             <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>This Week</div>
           </div>
-          <div style={{ textAlign: "center", padding: "10px 0", background: "var(--bg-muted)", borderRadius: "var(--radius-sm)" }}>
+          <div
+            style={{ textAlign: "center", padding: "10px 0", background: "var(--bg-muted)", borderRadius: "var(--radius-sm)", border: "1px solid transparent", transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease", cursor: "default" }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget;
+              el.style.transform = "translateY(-4px)";
+              el.style.boxShadow = "var(--elevation-2)";
+              el.style.borderColor = "rgba(139,92,246,0.28)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget;
+              el.style.transform = "translateY(0)";
+              el.style.boxShadow = "none";
+              el.style.borderColor = "transparent";
+            }}
+          >
             <div style={{ fontSize: "18px", fontWeight: 600, color: "var(--text-primary)" }}>{dueLater.length}</div>
             <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Later</div>
           </div>
@@ -539,6 +731,7 @@ function ProjectsSection({
   setProjectSearch,
   showAllProjects,
   setShowAllProjects,
+  availableTags,
 }: {
   projects: DashboardContentProps["projects"];
   visibleProjects: DashboardContentProps["projects"];
@@ -548,13 +741,19 @@ function ProjectsSection({
   setProjectSearch: (s: string) => void;
   showAllProjects: boolean;
   setShowAllProjects: (b: boolean) => void;
+  availableTags: DashboardContentProps["availableTags"];
 }) {
-  const tabs = [
+  // System view filters + custom user tags as filter tabs
+  const systemTabs = [
     { id: "all", label: "All Projects" },
     { id: "not_started", label: "Not Started" },
     { id: "ongoing", label: "Ongoing" },
     { id: "draft", label: "Draft" },
   ];
+  const tagTabs = availableTags
+    .filter((t) => !t.isSystem)
+    .map((t) => ({ id: `tag:${t.id}`, label: t.name, color: t.color }));
+  const tabs = [...systemTabs, ...tagTabs];
 
   return (
     <section style={{ marginBottom: "20px" }}>
@@ -600,46 +799,13 @@ function ProjectsSection({
         </div>
       </div>
 
-      {/* Tab bar */}
-      <div style={{ display: "flex", gap: "4px", marginBottom: "20px", flexWrap: "wrap" }}>
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setProjectTab(tab.id)}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "999px",
-              fontSize: "12.5px",
-              fontWeight: 500,
-              border: "1px solid transparent",
-              cursor: "pointer",
-              transition: "all .18s ease",
-              background: projectTab === tab.id ? "var(--accent-soft)" : "transparent",
-              color: projectTab === tab.id ? "var(--accent)" : "var(--text-secondary)",
-              borderColor: projectTab === tab.id ? "rgba(139,92,246,0.2)" : "transparent",
-            }}
-            onMouseEnter={(e) => {
-              if (projectTab !== tab.id) {
-                (e.currentTarget as HTMLElement).style.background = "var(--bg-muted)";
-                (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (projectTab !== tab.id) {
-                (e.currentTarget as HTMLElement).style.background = "transparent";
-                (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
-              }
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Tab bar with chevron scroll controls */}
+      <FilterTabBar tabs={tabs} projectTab={projectTab} setProjectTab={setProjectTab} />
 
       {/* Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
         {visibleProjects.map((project, idx) => (
-          <ProjectCard key={project.id} project={project} index={idx} />
+          <ProjectCard key={project.id} project={project} index={idx} availableTags={availableTags} />
         ))}
       </div>
 
@@ -686,16 +852,167 @@ function ProjectsSection({
   );
 }
 
+// ─── Filter Tab Bar with Chevron Scroll Controls ─────────────────────────────
+
+function FilterTabBar({
+  tabs,
+  projectTab,
+  setProjectTab,
+}: {
+  tabs: Array<{ id: string; label: string; color?: string }>;
+  projectTab: string;
+  setProjectTab: (t: string) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(false);
+
+  const checkOverflow = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setShowLeft(el.scrollLeft > 4);
+    setShowRight(el.scrollWidth - el.clientWidth - el.scrollLeft > 4);
+  };
+
+  useEffect(() => {
+    checkOverflow();
+    const el = scrollRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(checkOverflow);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [tabs.length]);
+
+  const scrollBy = (dir: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * 150, behavior: "smooth" });
+  };
+
+  return (
+    <div style={{ position: "relative", marginBottom: "20px" }}>
+      {/* Left chevron */}
+      {showLeft && (
+        <button
+          type="button"
+          onClick={() => scrollBy(-1)}
+          aria-label="Scroll tabs left"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 2,
+            width: "28px",
+            height: "28px",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--border-default)",
+            boxShadow: "var(--shadow-sm)",
+            color: "var(--text-secondary)",
+            cursor: "pointer",
+            transition: "all .15s ease",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent)"; e.currentTarget.style.borderColor = "var(--accent)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.borderColor = "var(--border-default)"; }}
+        >
+          <ChevronLeft style={{ width: "14px", height: "14px" }} />
+        </button>
+      )}
+
+      {/* Scrollable tab container */}
+      <div
+        ref={scrollRef}
+        onScroll={checkOverflow}
+        className="dash-filter-tabs"
+        style={{ margin: 0 }}
+      >
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setProjectTab(tab.id)}
+            style={{
+              padding: "8px 18px",
+              borderRadius: "999px",
+              fontSize: "13px",
+              fontWeight: 600,
+              border: "none",
+              cursor: "pointer",
+              transition: "all .18s ease",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+              background: projectTab === tab.id ? "var(--accent)" : "transparent",
+              color: projectTab === tab.id ? "#fff" : "var(--text-secondary)",
+            }}
+            onMouseEnter={(e) => {
+              if (projectTab !== tab.id) {
+                (e.currentTarget as HTMLElement).style.background = "var(--bg-elevated)";
+                (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (projectTab !== tab.id) {
+                (e.currentTarget as HTMLElement).style.background = "transparent";
+                (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+              }
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Right chevron */}
+      {showRight && (
+        <button
+          type="button"
+          onClick={() => scrollBy(1)}
+          aria-label="Scroll tabs right"
+          style={{
+            position: "absolute",
+            right: 0,
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 2,
+            width: "28px",
+            height: "28px",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--border-default)",
+            boxShadow: "var(--shadow-sm)",
+            color: "var(--text-secondary)",
+            cursor: "pointer",
+            transition: "all .15s ease",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent)"; e.currentTarget.style.borderColor = "var(--accent)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.borderColor = "var(--border-default)"; }}
+        >
+          <ChevronRight style={{ width: "14px", height: "14px" }} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── Project Card ────────────────────────────────────────────────────────────
 
-function ProjectCard({ project, index }: { project: DashboardContentProps["projects"][number]; index: number }) {
+function ProjectCard({ project, index, availableTags }: { project: DashboardContentProps["projects"][number]; index: number; availableTags: DashboardContentProps["availableTags"] }) {
   const progress = project.totalTasks > 0 ? Math.round((project.completedTasks / project.totalTasks) * 100) : 0;
   const statusLabel = project.totalTasks === 0 ? "Draft" : project.completedTasks === project.totalTasks ? "Complete" : progress > 0 ? "Ongoing" : "Not Started";
 
   return (
-    <Link
-      href={`/graph/${project.id}`}
-      style={{ textDecoration: "none" }}
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={() => { window.location.href = `/graph/${project.id}`; }}
+      onKeyDown={(e) => { if (e.key === "Enter") window.location.href = `/graph/${project.id}`; }}
+      style={{ textDecoration: "none", cursor: "pointer" }}
     >
       <div
         style={{
@@ -784,6 +1101,17 @@ function ProjectCard({ project, index }: { project: DashboardContentProps["proje
           </div>
         </div>
 
+        {/* Tags */}
+        {project.tags.length > 0 && (
+          <div style={{ marginBottom: "14px" }}>
+            <TagScrollContainer>
+              {project.tags.map((tag) => (
+                <TagChip key={tag.id} name={tag.name} color={tag.color} isSystem={tag.isSystem} />
+              ))}
+            </TagScrollContainer>
+          </div>
+        )}
+
         {/* Divider */}
         <div style={{ height: "1px", background: "var(--border-subtle)", marginBottom: "14px" }} />
 
@@ -793,25 +1121,35 @@ function ProjectCard({ project, index }: { project: DashboardContentProps["proje
             <Clock style={{ width: "12px", height: "12px" }} />
             {project.completedTasks}/{project.totalTasks} complete
           </span>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "4px",
-              fontSize: "12px",
-              fontWeight: 600,
-              color: "var(--accent)",
-              transition: "gap .18s ease",
-            }}
-          >
-            Open
-            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 10h11M11 5l5 5-5 5" />
-            </svg>
-          </span>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} onMouseDown={(e) => e.stopPropagation()}>
+            <ProjectTagManager
+              projectId={project.id}
+              projectName={project.name}
+              currentTags={project.tags}
+              availableTags={availableTags}
+            />
+            </span>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--accent)",
+                transition: "gap .18s ease",
+              }}
+            >
+              Open
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 10h11M11 5l5 5-5 5" />
+              </svg>
+            </span>
+          </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

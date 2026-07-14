@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { X, Send, Sparkles, Bell, CheckCircle2 } from "lucide-react";
-import { parseUserMessage, type AssistantContext, type AssistantResponse } from "@/lib/ai-assistant";
-import { getAssistantContext, createReminder } from "@/actions/ai-assistant-actions";
+import { chatWithAssistant, createReminder } from "@/actions/ai-assistant-actions";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -33,7 +32,7 @@ const GREETING_MESSAGE: ChatMessage = {
   id: "greeting",
   role: "assistant",
   content:
-    "Hi! 👋 I'm your planning assistant. I can help you figure out what to focus on across all your projects. Try asking me:\n\n• \"What should I prioritize?\"\n• \"Help me plan my schedule\"\n• \"Remind me about [task] tomorrow\"",
+    "Hi, I'm Loom! 👋 I'm your planning assistant. I can help you figure out what to focus on across all your projects. Try asking me:\n\n• \"What should I prioritize?\"\n• \"Help me plan my schedule\"\n• \"Remind me about [task] tomorrow\"",
   type: "text",
 };
 
@@ -56,7 +55,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
   // Focus input when panel opens
   useEffect(() => {
     if (open) {
-      setTimeout(() => inputRef.current?.focus(), 300);
+      setTimeout(() => inputRef.current?.focus(), 200);
     }
   }, [open]);
 
@@ -82,18 +81,20 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
     setIsProcessing(true);
 
     try {
-      // Fetch current context from server
-      const context: AssistantContext = await getAssistantContext();
+      // Build conversation history for the AI (last 20 messages for context window)
+      const conversationHistory = [...messages, userMessage]
+        .filter((m) => m.id !== "greeting")
+        .slice(-20)
+        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
 
-      // Parse the user's message using the local AI logic
-      const response: AssistantResponse = parseUserMessage(trimmed, context);
+      // Call the LLM-powered assistant (falls back to heuristic if no API key)
+      const response = await chatWithAssistant(conversationHistory);
 
       const assistantMessage: ChatMessage = {
         id: generateId(),
         role: "assistant",
         content: response.content,
-        type: response.type === "clarify" ? "text" : response.type,
-        reminderData: response.reminderData,
+        type: "text",
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -101,7 +102,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
       const errorMessage: ChatMessage = {
         id: generateId(),
         role: "assistant",
-        content: "Sorry, I ran into an issue fetching your task data. Please try again in a moment.",
+        content: "Sorry, I ran into an issue. Please try again in a moment.",
         type: "text",
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -155,105 +156,93 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
     [handleSend],
   );
 
+  if (!open) return null;
+
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className={cn(
-          "fixed inset-0 z-40 bg-black/20 backdrop-blur-sm transition-opacity duration-300",
-          open ? "opacity-100" : "pointer-events-none opacity-0",
-        )}
-        onClick={onClose}
-        aria-hidden="true"
-      />
+    <div
+      className={cn(
+        "fixed bottom-4 right-4 z-50 flex flex-col",
+        "w-[360px] max-h-[520px]",
+        "rounded-2xl border border-[var(--border-default)]",
+        "bg-[var(--bg-elevated)] shadow-[var(--shadow-md)]",
+        "ai-chat-popup",
+      )}
+      role="dialog"
+      aria-modal="false"
+      aria-label="AI Assistant chat"
+    >
+      {/* Header */}
+      <header className="flex items-center justify-between border-b border-[var(--border-default)] px-4 py-3 shrink-0">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-[var(--accent)]" />
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+            AI Assistant
+          </h2>
+        </div>
+        <button
+          onClick={onClose}
+          className="rounded-lg p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)] cursor-pointer"
+          aria-label="Close AI Assistant"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </header>
 
-      {/* Panel */}
-      <aside
-        className={cn(
-          "fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l bg-[var(--bg-elevated)] shadow-[var(--shadow-md)] transition-transform duration-300 ease-out",
-          "border-[var(--border-default)]",
-          open ? "translate-x-0" : "translate-x-full",
-        )}
-        role="dialog"
-        aria-modal="true"
-        aria-label="AI Assistant chat panel"
-      >
-        {/* Header */}
-        <header className="flex items-center justify-between border-b border-[var(--border-default)] px-5 py-4">
-          <div className="flex items-center gap-2.5">
-            <Sparkles className="h-5 w-5 text-[var(--accent)]" />
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">
-              ✨ AI Assistant
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)]"
-            aria-label="Close AI Assistant"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </header>
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 min-h-0">
+        <div className="space-y-3">
+          {messages.map((message) => (
+            <MessageBubble
+              key={message.id}
+              message={message}
+              onConfirmReminder={handleConfirmReminder}
+            />
+          ))}
 
-        {/* Messages area */}
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                onConfirmReminder={handleConfirmReminder}
-              />
-            ))}
-
-            {/* Loading indicator */}
-            {isProcessing && (
-              <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)]">
-                  <Sparkles className="h-4 w-4 text-[var(--accent)]" />
-                </div>
-                <div className="rounded-2xl rounded-tl-sm bg-[var(--accent-soft)] px-4 py-3">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--accent)] [animation-delay:0ms]" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--accent)] [animation-delay:150ms]" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--accent)] [animation-delay:300ms]" />
-                  </div>
+          {/* Loading indicator */}
+          {isProcessing && (
+            <div className="flex items-start gap-2">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)]">
+                <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+              </div>
+              <div className="rounded-xl rounded-tl-sm bg-[var(--accent-soft)] px-3 py-2">
+                <div className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--accent)] [animation-delay:0ms]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--accent)] [animation-delay:150ms]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--accent)] [animation-delay:300ms]" />
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            <div ref={messagesEndRef} />
-          </div>
+          <div ref={messagesEndRef} />
         </div>
+      </div>
 
-        {/* Input area */}
-        <div className="border-t border-[var(--border-default)] px-5 py-4">
-          <div className="flex items-center gap-3">
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask about priorities, schedule, or reminders..."
-              disabled={isProcessing}
-              className="flex-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none transition-colors focus:border-[var(--accent)] disabled:opacity-50"
-            />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || isProcessing}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent)] text-white transition-all duration-200 hover:-translate-y-px hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
-              aria-label="Send message"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
-          <p className="mt-2 text-[11px] text-[var(--text-muted)]">
-            Advisory only — I won't change your tasks, just help you decide.
-          </p>
+      {/* Input area */}
+      <div className="border-t border-[var(--border-default)] px-4 py-3 shrink-0">
+        <div className="flex items-center gap-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask about priorities, schedule..."
+            disabled={isProcessing}
+            className="flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-muted)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none transition-colors focus:border-[var(--accent)] disabled:opacity-50"
+          />
+          <button
+            onClick={handleSend}
+            disabled={!input.trim() || isProcessing}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)] text-white transition-all duration-150 hover:-translate-y-px hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer"
+            aria-label="Send message"
+          >
+            <Send className="h-4 w-4" />
+          </button>
         </div>
-      </aside>
-    </>
+      </div>
+    </div>
   );
 }
 
@@ -276,8 +265,8 @@ function MessageBubble({
   if (isUser) {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[var(--accent)] px-4 py-3 text-white shadow-sm">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed">
+        <div className="max-w-[80%] rounded-xl rounded-br-sm bg-[var(--accent)] px-3 py-2 text-white shadow-sm">
+          <p className="whitespace-pre-wrap text-[13px] leading-relaxed">
             {message.content}
           </p>
         </div>
@@ -287,13 +276,13 @@ function MessageBubble({
 
   // Assistant message
   return (
-    <div className="flex items-start gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)]">
-        <Sparkles className="h-4 w-4 text-[var(--accent)]" />
+    <div className="flex items-start gap-2">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)]">
+        <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
       </div>
       <div className="max-w-[85%] space-y-2">
-        <div className="rounded-2xl rounded-tl-sm bg-[var(--accent-soft)] px-4 py-3 shadow-sm">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-primary)]">
+        <div className="rounded-xl rounded-tl-sm bg-[var(--accent-soft)] px-3 py-2 shadow-sm">
+          <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--text-primary)]">
             {message.content}
           </p>
         </div>
@@ -351,20 +340,20 @@ function ReminderCard({
   };
 
   return (
-    <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] p-3.5 shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-soft)]">
-          <Bell className="h-4 w-4 text-[var(--accent)]" />
+    <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated)] p-3 shadow-sm">
+      <div className="flex items-start gap-2.5">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-soft)]">
+          <Bell className="h-3.5 w-3.5 text-[var(--accent)]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+          <p className="text-[13px] font-medium text-[var(--text-primary)] truncate">
             {reminderData.description}
           </p>
-          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
             {formattedDate}
           </p>
           {reminderData.taskId && (
-            <p className="mt-1 text-xs text-[var(--text-muted)] italic">
+            <p className="mt-1 text-[11px] text-[var(--text-muted)] italic">
               Linked to a task
             </p>
           )}
@@ -372,20 +361,20 @@ function ReminderCard({
       </div>
 
       {confirmed ? (
-        <div className="mt-3 flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
-          <CheckCircle2 className="h-4 w-4" />
+        <div className="mt-2.5 flex items-center gap-2 text-[13px] font-medium text-green-600 dark:text-green-400">
+          <CheckCircle2 className="h-3.5 w-3.5" />
           Reminder set
         </div>
       ) : (
         <button
           onClick={handleClick}
           disabled={isConfirming}
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-px hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+          className="mt-2.5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[13px] font-semibold text-white transition-all duration-150 hover:-translate-y-px hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer"
         >
           {isConfirming ? (
             <>
               <svg
-                className="h-4 w-4 animate-spin"
+                className="h-3.5 w-3.5 animate-spin"
                 viewBox="0 0 24 24"
                 fill="none"
               >
@@ -407,7 +396,7 @@ function ReminderCard({
             </>
           ) : (
             <>
-              <Bell className="h-4 w-4" />
+              <Bell className="h-3.5 w-3.5" />
               Set Reminder
             </>
           )}

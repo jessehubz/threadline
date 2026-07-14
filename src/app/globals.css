@@ -412,9 +412,15 @@ main > * {
 /* ─── Dashboard Wrap ──────────────────────────────────────────────────────── */
 
 .dash-wrap {
-  max-width: 1520px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px 28px 90px;
+}
+
+@media (max-width: 640px) {
+  .dash-wrap {
+    padding: 14px 14px 90px;
+  }
 }
 
 /* ─── Scrollbar ───────────────────────────────────────────────────────────── */
@@ -641,4 +647,707 @@ main > * {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
   border: 1px solid var(--accent);
   border-radius: 4px;
+}
+
+/* ─── Clerk Overrides ─────────────────────────────────────────────────────── */
+/* Comprehensive restyle: layout-driven, minimalist, matches the app's
+   design system. Real design judgment — not just token-swapping. */
+
+/* ── 0. Hide ALL Clerk branding, footers, dev badges — NUCLEAR ─────────────── */
+
+/* Hide footer on popover and sign-in/sign-up pages, but NOT inside UserProfile modal */
+.cl-userButtonPopoverFooter,
+.cl-signIn-root .cl-footer,
+.cl-signUp-root .cl-footer,
+.cl-internal-b9z16x,
+.cl-internal-1dauvt6,
+.cl-internal-2x2xxf,
+[data-localization-key="footerPageLink__help"],
+[data-localization-key="footerPageLink__privacy"],
+[data-localization-key="footerPageLink__terms"],
+[data-localization-key="signUp.start.actionLink"] {
+  display: none !important;
+}
+
+/* Footer links on sign-in/sign-up pages only */
+.cl-signIn-root .cl-footerAction,
+.cl-signUp-root .cl-footerAction,
+.cl-signIn-root .cl-footerPages,
+.cl-signUp-root .cl-footerPages,
+.cl-signIn-root .cl-footerPagesLink,
+.cl-signUp-root .cl-footerPagesLink {
+  display: none !important;
+}
+
+/* Development mode badge — styled to match */
+.cl-badge[data-color="warning"],
+.cl-badge[data-variant="warning"],
+.cl-developerBadge {
+  font-size: 10px !important;
+  border-radius: 999px !important;
+  padding: 2px 8px !important;
+}
+
+/* Clerk powered-by / branding at the bottom of any component */
+/* Hide Clerk branding link outside UserProfile (e.g. in popover) */
+.cl-userButtonPopoverCard a[href*="clerk.com"],
+.cl-signIn-root a[href*="clerk.com"],
+.cl-signUp-root a[href*="clerk.com"],
+.cl-brandingLogo {
+  display: none !important;
+}
+
+/* ── 1. Popover (Manage account / Sign out dropdown) ───────────────────────── */
+
+.cl-userButtonPopoverCard {
+  font-family: var(--font-sans) !important;
+  border-radius: 14px !important;
+  border: 1px solid var(--border-default) !important;
+  box-shadow: var(--shadow-md) !important;
+  overflow: hidden !important;
+  padding: 4px !important;
+}
+
+.cl-userButtonPopoverActionButton {
+  border-radius: 8px !important;
+  transition: all 150ms ease !important;
+  margin: 2px 0 !important;
+  padding: 8px 12px !important;
+}
+
+.cl-userButtonPopoverActionButton:hover {
+  background-color: rgba(139, 92, 246, 0.08) !important;
+}
+
+.cl-userButtonPopoverActionButton:hover .cl-userButtonPopoverActionButtonText,
+.cl-userButtonPopoverActionButton:hover .cl-userButtonPopoverActionButtonIcon {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+/* ── 2. Modal container & backdrop ──────────────────────────────────────────── */
+
+.cl-modalBackdrop {
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+.cl-modalContent {
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  border: 1px solid var(--border-default) !important;
+  box-shadow: var(--elevation-4) !important;
+  animation: clerkModalIn 200ms ease-out !important;
+  max-width: 960px !important;
+  width: 92vw !important;
+  min-height: 580px !important;
+  max-height: 88vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.cl-card {
+  font-family: var(--font-sans) !important;
+  border: none !important;
+  box-shadow: none !important;
+  flex: 1 !important;
+  display: flex !important;
+  overflow: hidden !important;
+  min-height: 0 !important;
+}
+
+/* ── 3. Sidebar — narrower, proper top spacing, tighter rhythm ─────────────── */
+
+.cl-navbar {
+  background-color: var(--bg-base) !important;
+  border-right: 1px solid var(--border-default) !important;
+  padding: 40px 28px 24px 28px !important;
+  width: 240px !important;
+  min-width: 240px !important;
+  max-width: 240px !important;
+  flex-shrink: 0 !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+}
+
+/* Sidebar heading + subheading spacing */
+.cl-navbar .cl-headerTitle {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  letter-spacing: -0.02em !important;
+  margin-bottom: 2px !important;
+}
+
+.cl-navbar .cl-headerSubtitle {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+  margin-bottom: 20px !important;
+}
+
+/* ── 4. Nav item boxes — refined, compact, clear states ────────────────────── */
+
+.cl-navbarButton {
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary) !important;
+  transition: all 150ms ease !important;
+  padding: 7px 10px !important;
+  margin-bottom: 2px !important;
+  cursor: pointer !important;
+}
+
+.cl-navbarButton:hover {
+  background-color: rgba(139, 92, 246, 0.06) !important;
+  color: var(--text-primary) !important;
+}
+
+.cl-navbarButton[data-active="true"],
+.cl-navbarButton.cl-active {
+  background-color: var(--accent-soft) !important;
+  color: var(--accent) !important;
+  font-weight: 600 !important;
+}
+
+/* ── 5. Page / Content area ─────────────────────────────────────────────────── */
+
+.cl-pageScrollBox {
+  background-color: var(--bg-elevated) !important;
+  padding: 40px 48px !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  min-height: 0 !important;
+}
+
+.cl-page {
+  background-color: var(--bg-elevated) !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* ── 6. Headers — tight, hierarchical ──────────────────────────────────────── */
+
+.cl-headerTitle {
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+  font-size: 20px !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.3 !important;
+}
+
+.cl-headerSubtitle {
+  color: var(--text-muted) !important;
+  font-size: 13.5px !important;
+  font-weight: 400 !important;
+  margin-top: 4px !important;
+  line-height: 1.4 !important;
+}
+
+/* ── 7. Profile sections — cleaner dividers, tighter spacing ───────────────── */
+
+.cl-profileSection {
+  border-bottom: 1px solid var(--border-default) !important;
+  padding-bottom: 28px !important;
+  margin-bottom: 28px !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: none !important;
+  padding-top: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.cl-profileSection:last-child {
+  border-bottom: none !important;
+  margin-bottom: 0 !important;
+}
+
+.cl-profileSectionTitle {
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 12px !important;
+}
+
+.cl-profileSectionTitleText {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cl-profileSectionContent {
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.cl-profileSectionPrimaryButton,
+.cl-profileSectionPrimaryButton.cl-profileSectionPrimaryButton,
+button.cl-profileSectionPrimaryButton,
+a.cl-profileSectionPrimaryButton {
+  background-color: var(--accent) !important;
+  background: var(--accent) !important;
+  color: #FFFFFF !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  cursor: pointer !important;
+  border: none !important;
+  transition: all 180ms ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+  min-height: 34px !important;
+  line-height: 1 !important;
+}
+
+.cl-profileSectionPrimaryButton:hover,
+.cl-profileSectionPrimaryButton.cl-profileSectionPrimaryButton:hover,
+button.cl-profileSectionPrimaryButton:hover,
+a.cl-profileSectionPrimaryButton:hover {
+  background-color: var(--accent-hover) !important;
+  background: var(--accent-hover) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+  text-decoration: none !important;
+}
+
+.cl-profileSectionPrimaryButton:active,
+.cl-profileSectionPrimaryButton.cl-profileSectionPrimaryButton:active {
+  transform: translateY(0) scale(0.97) !important;
+  box-shadow: 0 1px 2px rgba(139, 92, 246, 0.15) !important;
+}
+
+/* ── 8. Form elements — inputs refined, BUTTONS look like buttons ───────────── */
+
+.cl-formFieldInput {
+  background-color: var(--bg-muted) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 8px !important;
+  color: var(--text-primary) !important;
+  font-size: 13.5px !important;
+  padding: 9px 12px !important;
+  transition: border-color 150ms ease, box-shadow 150ms ease !important;
+}
+
+.cl-formFieldInput:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--ring-color) !important;
+  outline: none !important;
+}
+
+.cl-formFieldInput::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.cl-formFieldLabel {
+  color: var(--text-secondary) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+  margin-bottom: 4px !important;
+}
+
+/* Primary form button — MUST look obviously clickable
+   Uses doubled class selector for higher specificity to beat Clerk's defaults */
+.cl-formButtonPrimary.cl-formButtonPrimary {
+  background: var(--accent) !important;
+  background-color: var(--accent) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  padding: 10px 20px !important;
+  border-radius: var(--radius-sm, 8px) !important;
+  border: none !important;
+  font-size: 13.5px !important;
+  letter-spacing: -0.01em !important;
+  transition: all 180ms ease !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 38px !important;
+}
+
+.cl-formButtonPrimary.cl-formButtonPrimary:hover {
+  background: var(--accent-hover) !important;
+  background-color: var(--accent-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+}
+
+.cl-formButtonPrimary.cl-formButtonPrimary:active {
+  transform: translateY(0) scale(0.98) !important;
+  box-shadow: none !important;
+}
+
+/* Secondary / reset button */
+.cl-formButtonReset {
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  border: 1px solid var(--border-default) !important;
+  background-color: transparent !important;
+  cursor: pointer !important;
+  transition: all 150ms ease !important;
+}
+
+.cl-formButtonReset:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-muted) !important;
+  border-color: var(--border-default) !important;
+}
+
+/* ── 9. Badges — subtle, pill-shaped ───────────────────────────────────────── */
+
+.cl-badge {
+  background-color: rgba(139, 92, 246, 0.15) !important;
+  color: var(--accent) !important;
+  border-radius: 999px !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  padding: 3px 9px !important;
+  border: 1px solid rgba(139, 92, 246, 0.2) !important;
+  letter-spacing: 0.02em !important;
+}
+
+.dark .cl-badge {
+  background-color: rgba(139, 92, 246, 0.2) !important;
+  color: #A78BFA !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+}
+
+/* ── 10. Avatar ────────────────────────────────────────────────────────────── */
+
+.cl-avatarBox {
+  border-radius: 999px !important;
+}
+
+.cl-avatarImageActionsUpload {
+  color: var(--accent) !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+}
+
+/* ── 11. Danger zone / destructive ─────────────────────────────────────────── */
+
+.cl-formButtonPrimary[data-variant="destructive"],
+.cl-formButtonPrimary.cl-danger {
+  background-color: var(--danger) !important;
+}
+
+.cl-formButtonPrimary[data-variant="destructive"]:hover,
+.cl-formButtonPrimary.cl-danger:hover {
+  background-color: var(--danger-hover) !important;
+  box-shadow: 0 2px 8px rgba(220, 76, 76, 0.2) !important;
+}
+
+/* ── 12. Scrollbar — minimal ───────────────────────────────────────────────── */
+
+.cl-scrollBox::-webkit-scrollbar {
+  width: 5px;
+}
+
+.cl-scrollBox::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cl-scrollBox::-webkit-scrollbar-thumb {
+  background-color: var(--border-default);
+  border-radius: 999px;
+}
+
+/* ── 13. Menus (connected accounts, etc.) ──────────────────────────────────── */
+
+.cl-menuButton {
+  border-radius: 8px !important;
+  transition: all 150ms ease !important;
+}
+
+.cl-menuButton:hover {
+  background-color: rgba(139, 92, 246, 0.06) !important;
+}
+
+.cl-menuList {
+  background-color: var(--bg-elevated) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--shadow-md) !important;
+  padding: 4px !important;
+}
+
+.cl-menuItem {
+  font-size: 13px !important;
+  color: var(--text-primary) !important;
+  border-radius: 6px !important;
+  padding: 7px 10px !important;
+  transition: background-color 150ms ease !important;
+}
+
+.cl-menuItem:hover {
+  background-color: rgba(139, 92, 246, 0.06) !important;
+}
+
+/* ── 14. Modal entrance animation ──────────────────────────────────────────── */
+
+@keyframes clerkModalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── 15. Additional cleanup — internal Clerk elements ──────────────────────── */
+
+/* Tighten spacing on user info rows */
+.cl-userPreview {
+  gap: 8px !important;
+}
+
+/* Make links inside profile look like links */
+.cl-formFieldAction {
+  color: var(--accent) !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+}
+
+.cl-formFieldAction:hover {
+  color: var(--accent-hover) !important;
+}
+
+/* Accordion / expandable sections */
+.cl-accordionTriggerButton {
+  color: var(--text-primary) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  padding: 8px 0 !important;
+}
+
+/* General text / paragraph */
+.cl-text {
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* Tag list items (emails, phone numbers) */
+.cl-tagInputContainer {
+  background-color: var(--bg-muted) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 8px !important;
+}
+
+/* Internal dividers */
+.cl-dividerLine {
+  background-color: var(--border-default) !important;
+}
+
+.cl-dividerText {
+  color: var(--text-muted) !important;
+  font-size: 11px !important;
+}
+
+/* ── 16. Clerk UserProfile — belt-and-suspenders CSS overrides ─────────────── */
+/* Doubled selectors for specificity; these guarantee our styles win over
+   Clerk's defaults regardless of stylesheet load order. */
+
+.cl-userProfile-root.cl-userProfile-root {
+  background: var(--bg-base) !important;
+}
+
+.cl-card.cl-card {
+  background: var(--bg-elevated) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  flex: 1 !important;
+  display: flex !important;
+  overflow: hidden !important;
+  min-height: 0 !important;
+}
+
+.cl-navbar.cl-navbar {
+  background: var(--bg-base) !important;
+  border-right: 1px solid var(--border-default) !important;
+  padding: 40px 28px 24px 28px !important;
+  width: 240px !important;
+  min-width: 240px !important;
+  max-width: 240px !important;
+  flex-shrink: 0 !important;
+  overflow-y: auto !important;
+  position: relative !important;
+}
+
+.cl-navbarButton.cl-navbarButton {
+  color: var(--text-secondary) !important;
+  border-radius: var(--radius-sm, 8px) !important;
+  transition: all 180ms ease !important;
+}
+
+.cl-navbarButton.cl-navbarButton:hover {
+  background: var(--bg-muted) !important;
+  color: var(--text-primary) !important;
+}
+
+.cl-navbarButton[data-active="true"].cl-navbarButton,
+.cl-active.cl-active {
+  background: var(--accent-soft) !important;
+  color: var(--accent) !important;
+}
+
+.cl-pageScrollBox.cl-pageScrollBox {
+  background: var(--bg-elevated) !important;
+  padding: 40px 48px !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  min-height: 0 !important;
+}
+
+.cl-profileSection.cl-profileSection {
+  border-bottom: 1px solid var(--border-default) !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: none !important;
+  padding: 0 0 28px 0 !important;
+  margin-bottom: 28px !important;
+}
+
+.cl-formFieldInput.cl-formFieldInput {
+  background: var(--bg-muted) !important;
+  border: 1px solid var(--border-default) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-sm, 8px) !important;
+}
+
+.cl-formFieldInput.cl-formFieldInput:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--ring-color, rgba(139, 92, 246, 0.15)) !important;
+}
+
+.cl-headerTitle.cl-headerTitle {
+  color: var(--text-primary) !important;
+}
+
+.cl-headerSubtitle.cl-headerSubtitle {
+  color: var(--text-secondary) !important;
+}
+
+.cl-profileSectionTitleText.cl-profileSectionTitleText {
+  color: var(--text-primary) !important;
+}
+
+.cl-formFieldLabel.cl-formFieldLabel {
+  color: var(--text-secondary) !important;
+}
+
+.cl-badge.cl-badge {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(139, 92, 246, 0.2) !important;
+}
+
+.dark .cl-badge.cl-badge {
+  background: rgba(139, 92, 246, 0.2) !important;
+  color: #A78BFA !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+}
+
+.cl-accordionTriggerButton.cl-accordionTriggerButton {
+  color: var(--text-primary) !important;
+}
+
+.cl-accordionTriggerButton.cl-accordionTriggerButton:hover {
+  background: var(--bg-muted) !important;
+}
+
+/* Ensure ANY button inside Clerk with primary styling gets our accent treatment */
+[data-clerk-component] button[data-variant="solid"],
+[data-clerk-component] button.cl-formButtonPrimary {
+  background: var(--accent) !important;
+  background-color: var(--accent) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  border: none !important;
+  border-radius: var(--radius-sm, 8px) !important;
+  cursor: pointer !important;
+  transition: all 180ms ease !important;
+}
+
+[data-clerk-component] button[data-variant="solid"]:hover,
+[data-clerk-component] button.cl-formButtonPrimary:hover {
+  background: var(--accent-hover) !important;
+  background-color: var(--accent-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-clerk-component] button[data-variant="solid"]:active,
+[data-clerk-component] button.cl-formButtonPrimary:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* ─── AI Chat Popup ───────────────────────────────────────────────────────── */
+
+@keyframes chatPopupIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ai-chat-popup {
+  animation: chatPopupIn 0.2s ease-out both;
+}
+
+@keyframes launcherSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-launcher-visible {
+  animation: launcherSlideUp 0.3s ease-out both;
+}
+
+/* Mobile: chat popup takes more width */
+@media (max-width: 640px) {
+  .ai-chat-popup {
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-width: calc(100vw - 16px) !important;
+  }
 }

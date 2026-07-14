@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
-import { FloatingThemeToggle } from "@/components/floating-theme-toggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -35,7 +34,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        options: {
+          unsafe_disableDevelopmentModeWarnings: true,
+        },
+        elements: {
+          footer: { display: "none" },
+          footerAction: { display: "none" },
+          footerPages: { display: "none" },
+        },
+      }}
+    >
       <html lang="en" className="dark" suppressHydrationWarning>
         <head>
           <script dangerouslySetInnerHTML={{ __html: themeScript }} />
@@ -57,7 +67,6 @@ export default function RootLayout({
         <body className="min-h-screen antialiased">
           <ThemeProvider>
             {children}
-            <FloatingThemeToggle />
           </ThemeProvider>
           <Toaster position="bottom-right" richColors />
         </body>

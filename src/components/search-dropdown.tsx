@@ -53,10 +53,10 @@ interface SearchDropdownProps {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export function SearchDropdown({ className }: SearchDropdownProps) {
-  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [focused, setFocused] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,18 +64,14 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
-  // ── Open / Close ────────────────────────────────────────────────────────
-
-  const openDropdown = useCallback(() => {
-    setOpen(true);
-    setTimeout(() => inputRef.current?.focus(), 30);
-  }, []);
+  // ── Close ───────────────────────────────────────────────────────────────
 
   const closeDropdown = useCallback(() => {
-    setOpen(false);
+    setFocused(false);
     setQuery("");
     setResults([]);
     setActiveIndex(-1);
+    inputRef.current?.blur();
   }, []);
 
   // ── Global ⌘K shortcut ─────────────────────────────────────────────────
@@ -84,21 +80,17 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        if (open) {
-          closeDropdown();
-        } else {
-          openDropdown();
-        }
+        inputRef.current?.focus();
       }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, openDropdown, closeDropdown]);
+  }, []);
 
   // ── Click-away ──────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!open) return;
+    if (!focused) return;
 
     function handleClickOutside(e: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
@@ -107,7 +99,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open, closeDropdown]);
+  }, [focused, closeDropdown]);
 
   // ── Debounced search ────────────────────────────────────────────────────
 
@@ -117,8 +109,10 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
     const trimmed = query.trim().toLowerCase();
 
     if (!trimmed) {
-      setResults([]);
-      setActiveIndex(-1);
+      debounceRef.current = setTimeout(() => {
+        setResults([]);
+        setActiveIndex(-1);
+      }, 0);
       return;
     }
 
@@ -200,34 +194,48 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
   const pagesGroup = results.filter((r) => r.type === "page");
   const hasQuery = query.trim().length > 0;
   const noResults = hasQuery && !isPending && results.length === 0;
-
-  // Flat index for keyboard navigation
   const flatResults = [...peopleGroup, ...pagesGroup];
+
+  // Show dropdown when focused AND there's a query with content to show
+  const showDropdown = focused && hasQuery;
 
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
     <div ref={wrapperRef} className={cn("relative", className)}>
-      {/* Search trigger button */}
-      <button
-        onClick={openDropdown}
+      {/* 
+        The search bar itself — always visible, full width, inline. 
+        Clicking focuses the same input in-place. No popup, no modal.
+      */}
+      <div
         className={cn(
-          "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] transition-all duration-200 cursor-text",
-          "border hover:scale-[1.01]",
-          open && "ring-1 ring-[var(--accent)]"
+          "flex items-center gap-2.5 rounded-full transition-all duration-200",
+          "border",
+          focused && "ring-1 ring-[var(--accent)]"
         )}
         style={{
           borderColor: "var(--border-default)",
           color: "var(--text-muted)",
-          backgroundColor: open ? "var(--bg-elevated)" : "transparent",
+          backgroundColor: "var(--bg-base)",
+          padding: "9px 16px",
         }}
-        aria-label="Search"
-        title="Search (⌘K)"
       >
-        <Search className="h-3.5 w-3.5" />
-        <span className="hidden lg:inline">Search...</span>
+        <Search className="h-4 w-4 flex-shrink-0" style={{ color: "var(--text-muted)" }} />
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onKeyDown={handleKeyDown}
+          placeholder="Search..."
+          className="flex-1 min-w-0 bg-transparent text-[13.5px] outline-none placeholder:text-[var(--text-muted)]"
+          style={{ color: "var(--text-primary)" }}
+          aria-label="Search"
+          title="Search (⌘K)"
+        />
         <kbd
-          className="ml-2 hidden lg:inline rounded px-1.5 py-0.5 text-[10px] font-medium border"
+          className="hidden sm:inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium border"
           style={{
             borderColor: "var(--border-default)",
             color: "var(--text-muted)",
@@ -236,59 +244,30 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
         >
           ⌘K
         </kbd>
-      </button>
+      </div>
 
-      {/* Inline dropdown */}
-      {open && (
+      {/* 
+        Suggestions dropdown — anchored directly beneath the search bar,
+        matching its width. Think Safari address bar behavior.
+      */}
+      {showDropdown && (
         <div
-          className="absolute top-full left-0 z-50 mt-2 w-72 sm:w-80 overflow-hidden rounded-xl border animate-[fadeInDown_180ms_ease-out]"
+          className="absolute top-full left-0 right-0 z-50 mt-1.5 overflow-hidden rounded-xl border"
           style={{
             borderColor: "var(--border-default)",
             backgroundColor: "var(--bg-elevated)",
             boxShadow: "var(--shadow-md)",
+            maxHeight: "min(320px, calc(100vh - 120px))",
           }}
         >
-          {/* Input area */}
-          <div
-            className="flex items-center gap-2.5 border-b px-3 py-2.5"
-            style={{ borderColor: "var(--border-default)" }}
-          >
-            <Search
-              className="h-3.5 w-3.5 flex-shrink-0"
-              style={{ color: "var(--text-muted)" }}
-            />
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Search people & pages..."
-              className="flex-1 bg-transparent text-sm outline-none"
-              style={{ color: "var(--text-primary)" }}
-              autoFocus
-            />
-            <kbd
-              className="rounded border px-1 py-0.5 text-[10px] font-medium"
-              style={{
-                borderColor: "var(--border-default)",
-                color: "var(--text-muted)",
-                backgroundColor: "var(--bg-elevated)",
-              }}
-            >
-              Esc
-            </kbd>
-          </div>
-
-          {/* Results */}
-          <div className="max-h-72 overflow-y-auto py-1">
+          <div className="max-h-[320px] overflow-y-auto py-1">
             {/* No results */}
             {noResults && (
               <p
                 className="px-4 py-6 text-center text-sm"
                 style={{ color: "var(--text-muted)" }}
               >
-                No results
+                No results for &ldquo;{query.trim()}&rdquo;
               </p>
             )}
 
@@ -310,8 +289,8 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
                       className={cn(
                         "flex w-full items-center gap-3 px-3 py-2 text-sm transition-colors duration-150",
                         flatIdx === activeIndex
-                          ? "bg-[var(--accent-soft)]"
-                          : "hover:bg-[var(--accent-soft)]"
+                          ? "bg-[rgba(139,92,246,0.08)]"
+                          : "hover:bg-[rgba(139,92,246,0.08)]"
                       )}
                       style={{
                         color:
@@ -321,7 +300,6 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
                       }}
                       onMouseEnter={() => setActiveIndex(flatIdx)}
                     >
-                      {/* Avatar */}
                       {result.imageUrl ? (
                         <img
                           src={result.imageUrl}
@@ -374,8 +352,8 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
                       className={cn(
                         "flex w-full items-center gap-3 px-3 py-2 text-sm transition-colors duration-150",
                         flatIdx === activeIndex
-                          ? "bg-[var(--accent-soft)]"
-                          : "hover:bg-[var(--accent-soft)]"
+                          ? "bg-[rgba(139,92,246,0.08)]"
+                          : "hover:bg-[rgba(139,92,246,0.08)]"
                       )}
                       style={{
                         color:
@@ -409,7 +387,6 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
           </div>
         </div>
       )}
-
     </div>
   );
 }
