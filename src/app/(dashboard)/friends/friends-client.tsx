@@ -1,10 +1,20 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
-import { Search, Users, FolderPlus, Trash2 } from "lucide-react";
-import { searchUsers, addFriend, removeFriend, getFriends, addFriendToProject } from "@/actions/friend-actions";
+import { useState, useTransition, useEffect, useRef } from "react";
+import { Search, Users, FolderPlus, Trash2, MessageCircle, X, UserCheck, UserX, Clock } from "lucide-react";
+import {
+  searchUsers,
+  addFriend,
+  removeFriend,
+  getFriends,
+  addFriendToProject,
+  getPendingFriendRequests,
+  acceptFriendRequest,
+  declineFriendRequest,
+} from "@/actions/friend-actions";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface Project {
   id: string;
@@ -15,20 +25,115 @@ interface FriendData {
   id: string;
   friendId: string;
   name: string | null;
+  username: string | null;
   email: string;
   imageUrl: string | null;
-  projects: Project[];
+  bio: string | null;
+}
+
+interface PendingRequest {
+  id: string;
+  requesterId: string;
+  name: string | null;
+  username: string | null;
+  email: string;
+  imageUrl: string | null;
+  createdAt: string;
 }
 
 interface SearchResult {
   id: string;
   name: string | null;
+  username: string | null;
   email: string;
   imageUrl: string | null;
 }
 
+// ─── Friend Profile Popup ───────────────────────────────────────────────────
+
+function FriendProfilePopup({
+  friend,
+  anchorRect,
+  onClose,
+}: {
+  friend: FriendData;
+  anchorRect: DOMRect | null;
+  onClose: () => void;
+}) {
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose]);
+
+  // Position popup near the clicked element
+  const style: React.CSSProperties = {};
+  if (anchorRect) {
+    style.position = "fixed";
+    style.top = Math.min(anchorRect.bottom + 8, window.innerHeight - 320);
+    style.left = Math.min(anchorRect.left, window.innerWidth - 320);
+    style.zIndex = 50;
+  }
+
+  return (
+    <div
+      ref={popupRef}
+      style={style}
+      className="animate-entrance w-[300px] rounded-2xl border border-themed bg-card p-5 shadow-2xl"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full accent-bg text-lg font-medium accent-color overflow-hidden">
+            {friend.imageUrl ? (
+              <img src={friend.imageUrl} alt="" className="h-14 w-14 rounded-full object-cover" />
+            ) : (
+              (friend.name || friend.email).charAt(0).toUpperCase()
+            )}
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="rounded-lg p-1 text-dim hover:bg-hover hover:text-body transition-colors"
+          aria-label="Close profile popup"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <div>
+          <p className="text-[15px] font-semibold text-heading">
+            {friend.name || friend.email.split("@")[0]}
+          </p>
+          {friend.username && (
+            <p className="text-[12px] accent-color">@{friend.username}</p>
+          )}
+          <p className="text-[12px] text-dim">{friend.email}</p>
+        </div>
+
+        {friend.bio && (
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-dim mb-0.5">Bio</p>
+            <p className="text-[12px] text-body">{friend.bio}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Friends Client ────────────────────────────────────────────────────
+
 export function FriendsClient({ projects, currentUserId }: { projects: Project[]; currentUserId: string }) {
+  const router = useRouter();
   const [friends, setFriends] = useState<FriendData[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -36,13 +141,23 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
   const [addToProjectFriend, setAddToProjectFriend] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(true);
+  const [profilePopup, setProfilePopup] = useState<{ friend: FriendData; rect: DOMRect } | null>(null);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [decliningId, setDecliningId] = useState<string | null>(null);
+  const [addingToProjectId, setAddingToProjectId] = useState<string | null>(null);
 
-  // Load friends
+  // Load friends and pending requests
   useEffect(() => {
     setLoading(true);
-    getFriends()
-      .then((data) => setFriends(data as FriendData[]))
-      .catch(() => setFriends([]))
+    Promise.all([getFriends(), getPendingFriendRequests()])
+      .then(([friendsData, requestsData]) => {
+        setFriends(friendsData as FriendData[]);
+        setPendingRequests(requestsData as PendingRequest[]);
+      })
+      .catch(() => {
+        setFriends([]);
+        setPendingRequests([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -72,14 +187,51 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
     startTransition(async () => {
       try {
         await addFriend(userId);
-        toast.success("Friend added!");
+        toast.success("Friend request sent!");
         setSearchQuery("");
         setShowAddFriend(false);
-        // Reload friends
-        const data = await getFriends();
-        setFriends(data as FriendData[]);
+        // Reload
+        const [friendsData, requestsData] = await Promise.all([getFriends(), getPendingFriendRequests()]);
+        setFriends(friendsData as FriendData[]);
+        setPendingRequests(requestsData as PendingRequest[]);
       } catch (error) {
-        toast.error((error as Error).message || "Failed to add friend");
+        toast.error((error as Error).message || "Failed to send friend request");
+      }
+    });
+  }
+
+  function handleAcceptRequest(requesterId: string) {
+    setAcceptingId(requesterId);
+    startTransition(async () => {
+      try {
+        await acceptFriendRequest(requesterId);
+        toast.success("Friend request accepted!");
+        // Reload
+        const [friendsData, requestsData] = await Promise.all([getFriends(), getPendingFriendRequests()]);
+        setFriends(friendsData as FriendData[]);
+        setPendingRequests(requestsData as PendingRequest[]);
+      } catch (error) {
+        toast.error((error as Error).message || "Failed to accept friend request");
+      } finally {
+        setAcceptingId(null);
+      }
+    });
+  }
+
+  function handleDeclineRequest(requesterId: string) {
+    setDecliningId(requesterId);
+    startTransition(async () => {
+      try {
+        await declineFriendRequest(requesterId);
+        toast.success("Friend request declined");
+        // Reload
+        const [friendsData, requestsData] = await Promise.all([getFriends(), getPendingFriendRequests()]);
+        setFriends(friendsData as FriendData[]);
+        setPendingRequests(requestsData as PendingRequest[]);
+      } catch (error) {
+        toast.error((error as Error).message || "Failed to decline friend request");
+      } finally {
+        setDecliningId(null);
       }
     });
   }
@@ -97,23 +249,41 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
   }
 
   function handleAddToProject(friendId: string, projectId: string) {
+    setAddingToProjectId(`${friendId}-${projectId}`);
     startTransition(async () => {
       try {
         await addFriendToProject(friendId, projectId);
         toast.success("Added to project!");
         setAddToProjectFriend(null);
-        // Reload friends to update project tags
-        const data = await getFriends();
-        setFriends(data as FriendData[]);
       } catch (error) {
         toast.error((error as Error).message || "Failed to add to project");
+      } finally {
+        setAddingToProjectId(null);
       }
     });
   }
 
+  function handleOpenProfile(friend: FriendData, event: React.MouseEvent) {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    setProfilePopup({ friend, rect });
+  }
+
+  function handleDM(friendId: string) {
+    router.push(`/messages?dm=${friendId}`);
+  }
+
   return (
     <div className="space-y-5">
-      {/* Search-first add-friend bar - floats results below, no permanent boxed panel */}
+      {/* Profile popup */}
+      {profilePopup && (
+        <FriendProfilePopup
+          friend={profilePopup.friend}
+          anchorRect={profilePopup.rect}
+          onClose={() => setProfilePopup(null)}
+        />
+      )}
+
+      {/* Search-first add-friend bar */}
       <div className="relative">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dim" />
@@ -122,7 +292,7 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setShowAddFriend(true); }}
             onFocus={() => setShowAddFriend(true)}
-            placeholder="Search by name or email to add a friend..."
+            placeholder="Search by name, username, or email to add a friend..."
             className="input-field pl-10"
           />
         </div>
@@ -139,7 +309,7 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                 searchResults.map((user) => (
                   <div key={user.id} className="flex items-center justify-between rounded-xl px-3 py-2.5 transition-colors hover:bg-hover">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full accent-bg text-xs font-medium accent-color">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full accent-bg text-xs font-medium accent-color overflow-hidden">
                         {user.imageUrl ? (
                           <img src={user.imageUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
                         ) : (
@@ -148,15 +318,18 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                       </div>
                       <div>
                         <p className="text-[13px] font-medium text-heading">{user.name || user.email.split("@")[0]}</p>
+                        {user.username && (
+                          <p className="text-[11px] accent-color">@{user.username}</p>
+                        )}
                         <p className="text-[11px] text-dim">{user.email}</p>
                       </div>
                     </div>
                     <button
                       onClick={() => handleAddFriend(user.id)}
                       disabled={isPending}
-                      className="btn-primary text-[11px] px-3 py-1"
+                      className="btn-primary text-[11px] px-3 py-1 disabled:opacity-50"
                     >
-                      Add
+                      {isPending ? "Sending..." : "Add"}
                     </button>
                   </div>
                 ))
@@ -168,7 +341,61 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
         )}
       </div>
 
-      {/* Friends list - open, not nested inside another card */}
+      {/* Pending friend requests */}
+      {pendingRequests.length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <Clock className="h-4 w-4 text-dim" />
+            <h2 className="text-[13px] font-medium uppercase tracking-wide text-dim">Pending Requests</h2>
+            <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-medium accent-color">
+              {pendingRequests.length}
+            </span>
+          </div>
+
+          <div className="divide-y divide-[var(--border-subtle)] rounded-2xl border border-themed-subtle">
+            {pendingRequests.map((request) => (
+              <div key={request.id} className="p-3.5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full accent-bg text-sm font-medium accent-color overflow-hidden">
+                    {request.imageUrl ? (
+                      <img src={request.imageUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                    ) : (
+                      (request.name || request.email).charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-medium text-heading">{request.name || request.email.split("@")[0]}</p>
+                    {request.username && (
+                      <p className="text-[11px] accent-color">@{request.username}</p>
+                    )}
+                    <p className="text-[11px] text-dim">{request.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleAcceptRequest(request.requesterId)}
+                    disabled={isPending || acceptingId === request.requesterId}
+                    className="flex items-center gap-1 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[11px] font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
+                  >
+                    <UserCheck className="h-3.5 w-3.5" />
+                    {acceptingId === request.requesterId ? "Accepting..." : "Accept"}
+                  </button>
+                  <button
+                    onClick={() => handleDeclineRequest(request.requesterId)}
+                    disabled={isPending || decliningId === request.requesterId}
+                    className="flex items-center gap-1 rounded-lg border border-themed px-3 py-1.5 text-[11px] font-medium text-dim transition-colors hover:bg-hover hover:text-body disabled:opacity-50"
+                  >
+                    <UserX className="h-3.5 w-3.5" />
+                    {decliningId === request.requesterId ? "Declining..." : "Decline"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Friends list */}
       <div>
         <div className="mb-3 flex items-center gap-2">
           <h2 className="text-[13px] font-medium uppercase tracking-wide text-dim">Your Friends</h2>
@@ -192,8 +419,14 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
             {friends.map((friend, i) => (
               <div key={friend.id} className={cn("p-3.5 transition-colors hover:bg-hover", `animate-entrance-${Math.min(i + 1, 6)}`)}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full accent-bg text-sm font-medium accent-color">
+                  <div
+                    className="flex items-center gap-3 cursor-pointer"
+                    onClick={(e) => handleOpenProfile(friend, e)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View profile of ${friend.name || friend.email}`}
+                  >
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full accent-bg text-sm font-medium accent-color overflow-hidden">
                       {friend.imageUrl ? (
                         <img src={friend.imageUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
                       ) : (
@@ -202,10 +435,20 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                     </div>
                     <div>
                       <p className="text-[13px] font-medium text-heading">{friend.name || friend.email.split("@")[0]}</p>
+                      {friend.username && (
+                        <p className="text-[11px] accent-color">@{friend.username}</p>
+                      )}
                       <p className="text-[11px] text-dim">{friend.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleDM(friend.friendId)}
+                      className="rounded-lg p-1.5 text-dim transition-all duration-150 hover:scale-105 hover:bg-[var(--bg-muted)] hover:text-body"
+                      title="Send message"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </button>
                     <button
                       onClick={() => setAddToProjectFriend(addToProjectFriend === friend.friendId ? null : friend.friendId)}
                       className="rounded-lg p-1.5 text-dim transition-all duration-150 hover:scale-105 hover:bg-[var(--bg-muted)] hover:text-body"
@@ -216,7 +459,7 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                     <button
                       onClick={() => handleRemoveFriend(friend.friendId)}
                       disabled={isPending}
-                      className="rounded-lg p-1.5 text-dim transition-all duration-150 hover:scale-105 hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
+                      className="rounded-lg p-1.5 text-dim transition-all duration-150 hover:scale-105 hover:bg-[var(--danger-soft)] hover:text-[var(--danger)] disabled:opacity-50"
                       title="Remove friend"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -224,39 +467,34 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                   </div>
                 </div>
 
-                {/* Project tags */}
-                {friend.projects.length > 0 && (
-                  <div className="mt-2 ml-12 flex flex-wrap gap-1.5">
-                    {friend.projects.map((p) => (
-                      <span key={p.id} className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-medium accent-color">
-                        {p.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
                 {/* Add to project dropdown */}
                 {addToProjectFriend === friend.friendId && (
                   <div className="mt-3 ml-12 rounded-xl border border-themed-subtle bg-[var(--bg-surface)] p-2">
-                    <p className="text-[11px] font-medium text-dim mb-1.5 px-2">Add to project:</p>
+                    <div className="flex items-center justify-between mb-1.5 px-2">
+                      <p className="text-[11px] font-medium text-dim">Add to project:</p>
+                      <button
+                        onClick={() => setAddToProjectFriend(null)}
+                        className="rounded p-0.5 text-dim hover:bg-hover hover:text-body transition-colors"
+                        aria-label="Close add to project"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                     {projects.length === 0 ? (
                       <p className="text-[11px] text-dim px-2 py-1">No projects available</p>
                     ) : (
                       <div className="space-y-0.5">
-                        {projects.filter((p) => !friend.projects.some((fp) => fp.id === p.id)).map((project) => (
+                        {projects.map((project) => (
                           <button
                             key={project.id}
                             onClick={() => handleAddToProject(friend.friendId, project.id)}
-                            disabled={isPending}
-                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] text-body hover:bg-hover hover:text-heading transition-colors"
+                            disabled={isPending || addingToProjectId === `${friend.friendId}-${project.id}`}
+                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] text-body hover:bg-hover hover:text-heading transition-colors disabled:opacity-50"
                           >
                             <FolderPlus className="h-3 w-3" />
-                            {project.name}
+                            {addingToProjectId === `${friend.friendId}-${project.id}` ? "Adding..." : project.name}
                           </button>
                         ))}
-                        {projects.filter((p) => !friend.projects.some((fp) => fp.id === p.id)).length === 0 && (
-                          <p className="text-[11px] text-dim px-2 py-1">Already in all projects</p>
-                        )}
                       </div>
                     )}
                   </div>

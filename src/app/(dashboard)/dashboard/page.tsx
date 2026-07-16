@@ -223,6 +223,7 @@ export default async function DashboardPage() {
   const projectList = projects.map((p) => ({
     id: p.id,
     name: p.name,
+    visibility: p.visibility,
     totalTasks: p.totalTasks,
     completedTasks: p.completedTasks,
     memberCount: p.memberCount,

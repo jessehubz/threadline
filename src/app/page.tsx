@@ -544,7 +544,7 @@ const landingStyles = `
 
 /* Landing btn-primary with gradient */
 .landing-page .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: #7C3AED; color: #fff; border: none; padding: 14px 24px; border-radius: 999px; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; text-decoration: none; }
-.landing-page .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(139,92,246,0.32); }
+.landing-page .btn-primary:hover { transform: translateY(-2px); }
 
 :root .landing-page .btn-primary,
 

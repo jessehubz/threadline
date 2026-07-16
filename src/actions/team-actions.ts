@@ -50,6 +50,12 @@ export async function inviteMember(projectId: string, email: string, role: strin
       return { error: "User is already a member of this project" };
     }
 
+    // Get project name for the notification message
+    const project = await prisma.project.findUnique({
+      where: { id: parsed.data.projectId },
+      select: { name: true },
+    });
+
     // Add directly
     await prisma.projectMember.create({
       data: {
@@ -59,12 +65,14 @@ export async function inviteMember(projectId: string, email: string, role: strin
       },
     });
 
-    // Create notification
+    // Create notification with inviter name and project name
+    const inviterName = user.name || user.email.split("@")[0];
+    const projectName = project?.name || "a project";
     await prisma.notification.create({
       data: {
         userId: existingUser.id,
         type: "INVITED",
-        message: `You've been added to a project`,
+        message: `${inviterName} added you to ${projectName}`,
         relatedProjectId: parsed.data.projectId,
       },
     });

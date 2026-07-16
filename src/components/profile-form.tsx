@@ -13,6 +13,7 @@ import { toast } from "sonner";
 interface User {
   id: string;
   name: string | null;
+  username: string | null;
   email: string;
   imageUrl: string | null;
   bio: string | null;
@@ -24,6 +25,7 @@ interface User {
 
 export function ProfileForm({ user }: { user: User }) {
   const [name, setName] = useState(user.name || "");
+  const [username, setUsername] = useState(user.username || "");
   const [bio, setBio] = useState(user.bio || "");
   const [githubUrl, setGithubUrl] = useState(user.githubUrl || "");
   const [twitterUrl, setTwitterUrl] = useState(user.twitterUrl || "");
@@ -38,6 +40,7 @@ export function ProfileForm({ user }: { user: User }) {
     setSaving(true);
     const result = await updateProfile({
       name,
+      username,
       bio,
       githubUrl,
       twitterUrl,
@@ -136,6 +139,14 @@ export function ProfileForm({ user }: { user: User }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Your name"
+        />
+
+        <Input
+          label="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ""))}
+          placeholder="your_username"
+          maxLength={30}
         />
 
         <Input

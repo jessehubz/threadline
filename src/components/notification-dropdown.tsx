@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { cn, formatRelativeDate } from "@/lib/utils";
 
 interface Notification {
@@ -20,20 +20,30 @@ export function NotificationDropdown() {
   const [unreadCount, setUnreadCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    async function fetchNotifications() {
-      try {
-        const res = await fetch("/api/notifications");
-        if (res.ok) {
-          const data = await res.json();
-          setNotifications(data.notifications || []);
-          setUnreadCount(data.unreadCount || 0);
-        }
-      } catch {
-        // Silent fail
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications");
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
       }
+    } catch {
+      // Silent fail
     }
+  }, []);
+
+  // Fetch notifications on mount
+  useEffect(() => {
     fetchNotifications();
+  }, [fetchNotifications]);
+
+  // When dropdown opens, mark all as read
+  useEffect(() => {
+    if (open && unreadCount > 0) {
+      markAllRead();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   useEffect(() => {
@@ -52,10 +62,19 @@ export function NotificationDropdown() {
     setUnreadCount(0);
   }
 
+  function handleToggle() {
+    const newOpen = !open;
+    setOpen(newOpen);
+    // Refetch when opening to get latest notifications
+    if (newOpen) {
+      fetchNotifications();
+    }
+  }
+
   return (
     <div className="relative" ref={ref}>
       <button
-        onClick={() => setOpen(!open)}
+        onClick={handleToggle}
         className="relative flex items-center justify-center w-[38px] h-[38px] rounded-full cursor-pointer text-[var(--text-secondary)] transition-all duration-[180ms] ease-in-out hover:bg-[rgba(139,92,246,0.08)] hover:text-[var(--text-primary)] hover:-translate-y-px"
         aria-label="Notifications"
       >

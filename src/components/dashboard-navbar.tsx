@@ -38,18 +38,6 @@ const navItems = [
     ),
   },
   {
-    name: "Tasks",
-    href: "/my-tasks",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <rect x="3" y="3" width="14" height="14" rx="2" />
-        <line x1="3" y1="7" x2="17" y2="7" />
-        <line x1="7" y1="3" x2="7" y2="7" />
-        <polyline points="7,11 9,13 13,9" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
     name: "Messages",
     href: "/messages",
     icon: (
@@ -125,6 +113,23 @@ export function DashboardNavbar() {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const [aiChatOpen, setAiChatOpen] = useState(false);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+
+  // Fetch unread message count
+  useEffect(() => {
+    async function fetchUnreadCount() {
+      try {
+        const res = await fetch("/api/messages/unread-count");
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadMessageCount(data.count ?? 0);
+        }
+      } catch {
+        // silently fail - badge just won't show
+      }
+    }
+    fetchUnreadCount();
+  }, []);
 
   // Listen for custom event from hero banner and scroll launcher
   useEffect(() => {
@@ -155,7 +160,7 @@ export function DashboardNavbar() {
               className="text-[18px] font-bold tracking-tight"
               style={{ color: "var(--text-primary)" }}
             >
-              Thread
+              thread
             </span>
             <span
               className="text-[18px] font-bold tracking-tight"
@@ -173,17 +178,19 @@ export function DashboardNavbar() {
             {/* Message icon button with notification dot */}
             <Link
               href="/messages"
-              className="relative flex items-center justify-center w-[38px] h-[38px] rounded-full text-[var(--text-secondary)] transition-all duration-[180ms] ease-in-out hover:bg-[rgba(139,92,246,0.08)] hover:text-[var(--text-primary)] hover:-translate-y-px"
+              className="relative flex items-center justify-center w-[38px] h-[38px] rounded-full text-[var(--text-secondary)] transition-all duration-[180ms] ease-in-out hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--text-primary)] hover:-translate-y-px"
               aria-label="Messages"
             >
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M4 4h12a2 2 0 012 2v7a2 2 0 01-2 2H7l-4 3V6a2 2 0 012-2z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              {/* Notification dot */}
-              <span
-                className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full"
-                style={{ background: "var(--accent)" }}
-              />
+              {/* Notification dot - only shown when there are unread messages */}
+              {unreadMessageCount > 0 && (
+                <span
+                  className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full"
+                  style={{ background: "var(--accent)" }}
+                />
+              )}
             </Link>
 
             {/* Notification bell */}
@@ -205,7 +212,7 @@ export function DashboardNavbar() {
                   "flex items-center justify-center w-[30px] h-[30px] rounded-full cursor-pointer transition-all duration-[180ms] ease-in-out",
                   resolvedTheme === "light"
                     ? "text-white"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(139,92,246,0.08)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)]"
                 )}
                 style={{
                   background: resolvedTheme === "light" ? "var(--accent)" : "transparent",
@@ -232,7 +239,7 @@ export function DashboardNavbar() {
                   "flex items-center justify-center w-[30px] h-[30px] rounded-full cursor-pointer transition-all duration-[180ms] ease-in-out",
                   resolvedTheme === "dark"
                     ? "text-white"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(139,92,246,0.08)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)]"
                 )}
                 style={{
                   background: resolvedTheme === "dark" ? "var(--accent)" : "transparent",
@@ -256,7 +263,7 @@ export function DashboardNavbar() {
             />
 
             {/* User avatar (Clerk UserButton) with avatar-group hover */}
-            <div className="flex items-center gap-1 cursor-pointer rounded-full px-1.5 py-1 transition-all duration-[180ms] hover:bg-[rgba(139,92,246,0.07)]">
+            <div className="flex items-center gap-1 cursor-pointer rounded-full px-1.5 py-1 transition-all duration-[180ms] hover:bg-[rgba(255,255,255,0.07)]">
               <UserButton
                 appearance={{
                   options: {
@@ -524,7 +531,7 @@ export function DashboardNavbar() {
                   href={item.href}
                   className={cn(
                     "flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 transition-all duration-[180ms] ease-in-out",
-                    !isActive && "hover:text-[var(--text-primary)] hover:bg-[rgba(139,92,246,0.12)] hover:-translate-y-px hover:shadow-[0_2px_8px_rgba(139,92,246,0.15)]"
+                    !isActive && "hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)] hover:-translate-y-px hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)]"
                   )}
                   style={{
                     padding: "8px 15px",

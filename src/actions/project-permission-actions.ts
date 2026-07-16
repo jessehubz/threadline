@@ -64,6 +64,7 @@ export async function updateProjectVisibility(projectId: string, visibility: "PU
   });
 
   revalidatePath(`/graph/${projectId}`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 

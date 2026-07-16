@@ -29,6 +29,7 @@ export function SettingsForm({ user }: { user: User }) {
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
+    if (saving) return;
     setSaving(true);
     const result = await updateSettings({
       theme,
@@ -58,8 +59,8 @@ export function SettingsForm({ user }: { user: User }) {
       {/* Theme - iOS-style grouped section: label above, border-only group below */}
       <div>
         <p className="text-eyebrow mb-2.5 px-1">Appearance</p>
-        <div className="panel-quiet p-5">
-          <div className="flex gap-3">
+        <div className="panel-quiet p-4 sm:p-5">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             {themes.map((t) => (
               <button
                 key={t.value}
@@ -68,14 +69,14 @@ export function SettingsForm({ user }: { user: User }) {
                   applyTheme(t.value as "light" | "dark" | "system");
                 }}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-150 hover:-translate-y-px",
+                  "flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-150 hover:-translate-y-px sm:flex-none sm:justify-start sm:px-4",
                   theme === t.value
                     ? "border-[var(--accent)] accent-bg accent-color shadow-sm"
                     : "border-themed text-body hover:bg-hover"
                 )}
               >
-                <t.icon className="h-4 w-4" />
-                {t.label}
+                <t.icon className="h-4 w-4 shrink-0" />
+                <span className="truncate">{t.label}</span>
               </button>
             ))}
           </div>
@@ -85,7 +86,7 @@ export function SettingsForm({ user }: { user: User }) {
       {/* Notifications */}
       <div>
         <p className="text-eyebrow mb-2.5 px-1">Email Notifications</p>
-        <div className="panel-quiet p-5">
+        <div className="panel-quiet p-4 sm:p-5">
           <div className="space-y-4">
             <Toggle
               label="Enable email notifications"
@@ -93,7 +94,7 @@ export function SettingsForm({ user }: { user: User }) {
               onChange={setEmailNotifications}
             />
             {emailNotifications && (
-              <div className="ml-6 space-y-4 border-l-2 border-themed pl-5">
+              <div className="ml-3 sm:ml-6 space-y-4 border-l-2 border-themed pl-3 sm:pl-5">
                 <Toggle label="Task assigned to me" checked={notifyAssigned} onChange={setNotifyAssigned} />
                 <Toggle label="Approval requests" checked={notifyApproval} onChange={setNotifyApproval} />
                 <Toggle label="Due date reminders" checked={notifyDueSoon} onChange={setNotifyDueSoon} />
@@ -104,7 +105,7 @@ export function SettingsForm({ user }: { user: User }) {
         </div>
       </div>
 
-      <Button onClick={handleSave} loading={saving}>
+      <Button onClick={handleSave} loading={saving} disabled={saving}>
         Save Settings
       </Button>
     </div>
@@ -121,14 +122,14 @@ function Toggle({
   onChange: (val: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between">
-      <span className="text-sm text-body">{label}</span>
+    <label className="flex cursor-pointer items-center justify-between gap-3">
+      <span className="text-sm text-body min-w-0">{label}</span>
       <button
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={cn(
-          "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+          "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors",
           checked ? "bg-[var(--accent)]" : "bg-[var(--border-default)]"
         )}
       >

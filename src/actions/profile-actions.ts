@@ -24,6 +24,12 @@ export async function uploadProfilePicture(imageUrl: string) {
     data: { imageUrl },
   });
 
+  // Revalidate all paths where user avatar is displayed
   revalidatePath("/profile");
+  revalidatePath("/friends");
+  revalidatePath("/dashboard");
+  revalidatePath("/messages");
+  revalidatePath("/team");
+  revalidatePath("/", "layout");
   return { success: true, imageUrl };
 }

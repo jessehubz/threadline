@@ -18,16 +18,20 @@ import {
   UserPlus,
   Trash2,
   Users,
+  Globe,
+  Lock,
 } from "lucide-react";
 import { CreateProjectButton } from "@/components/create-project-button";
 import { TagChip } from "@/components/ui/tag-chip";
 import { TagScrollContainer } from "@/components/ui/tag-scroll-container";
 import { ProjectTagManager } from "@/components/project-tag-manager";
 import { updateProject, deleteProject } from "@/actions/project-actions";
+import { updateProjectVisibility } from "@/actions/project-permission-actions";
 import { getProjectMembers } from "@/actions/assignment-actions";
 import { removeMember } from "@/actions/team-actions";
 import { getFriends, addFriendToProject } from "@/actions/friend-actions";
 import { getTeams } from "@/actions/team-group-actions";
+import { usePresence } from "@/hooks/use-presence";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -42,6 +46,7 @@ interface DashboardContentProps {
   projects: Array<{
     id: string;
     name: string;
+    visibility: "PUBLIC" | "PRIVATE";
     totalTasks: number;
     completedTasks: number;
     memberCount: number;
@@ -192,6 +197,10 @@ export function DashboardContent(props: DashboardContentProps) {
   const { user: clerkUser } = useUser();
   const liveFirstName = clerkUser?.firstName || firstName;
   const router = useRouter();
+
+  // Track which friends are online via Pusher presence channel
+  // This also broadcasts the current user's own presence to friends.
+  const onlineUserIds = usePresence("presence-dashboard", true);
 
   // State
   const [showLauncher, setShowLauncher] = useState(false);
@@ -780,7 +789,7 @@ export function DashboardContent(props: DashboardContentProps) {
         {/* Needs Attention */}
         <NeedsAttentionPanel items={needsAttention} />
         {/* Friends / Team */}
-        <FriendsPanel workload={workload} friendRingOffsets={friendRingOffsets} smallCircumference={smallCircumference} />
+        <FriendsPanel workload={workload} friendRingOffsets={friendRingOffsets} smallCircumference={smallCircumference} onlineUserIds={onlineUserIds} />
       </div>
       </div>
 
@@ -981,49 +990,6 @@ function HeroSection({
     >
       {/* LEFT */}
       <div>
-        {/* Badges */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px", flexWrap: "wrap" }}>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              background: "var(--bg-muted)",
-              borderRadius: "999px",
-              padding: "5px 12px",
-              fontSize: "11px",
-              fontWeight: 500,
-              color: "var(--text-secondary)",
-            }}
-          >
-            <span
-              style={{
-                width: "6px",
-                height: "6px",
-                borderRadius: "50%",
-                background: "var(--accent)",
-                boxShadow: "0 0 0 3px rgba(139,92,246,0.18)",
-                animation: "liveDot 2s infinite ease-in-out",
-              }}
-            />
-            Synced just now
-          </span>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              background: "var(--bg-muted)",
-              borderRadius: "999px",
-              padding: "5px 12px",
-              fontSize: "11px",
-              fontWeight: 500,
-              color: "var(--text-secondary)",
-            }}
-          >
-            {totalProjects} projects · {needsAttentionCount} need attention
-          </span>
-        </div>
-
         {/* H1 */}
         <h1
           style={{
@@ -1565,8 +1531,8 @@ function ProjectCard({ project, index, availableTags, onDeleteProject }: { proje
           />
         </div>
 
-        {/* Top row - status badge */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-start", marginBottom: "14px" }}>
+        {/* Top row - status badge + visibility */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: "6px", marginBottom: "14px" }}>
           <span
             style={{
               fontSize: "10px",
@@ -1581,6 +1547,7 @@ function ProjectCard({ project, index, availableTags, onDeleteProject }: { proje
           >
             {statusLabel}
           </span>
+          <VisibilityToggle projectId={project.id} visibility={project.visibility} />
         </div>
 
         {/* Name */}
@@ -1661,6 +1628,58 @@ function ProjectCard({ project, index, availableTags, onDeleteProject }: { proje
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Visibility Toggle ───────────────────────────────────────────────────────
+
+function VisibilityToggle({ projectId, visibility }: { projectId: string; visibility: "PUBLIC" | "PRIVATE" }) {
+  const [currentVisibility, setCurrentVisibility] = useState(visibility);
+  const [toggling, setToggling] = useState(false);
+
+  async function handleToggle(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (toggling) return;
+    setToggling(true);
+    const newVisibility = currentVisibility === "PUBLIC" ? "PRIVATE" : "PUBLIC";
+    const result = await updateProjectVisibility(projectId, newVisibility);
+    if (!result.error) {
+      setCurrentVisibility(newVisibility);
+    }
+    setToggling(false);
+  }
+
+  const isPublic = currentVisibility === "PUBLIC";
+
+  return (
+    <button
+      type="button"
+      onClick={handleToggle}
+      disabled={toggling}
+      title={isPublic ? "Public — click to make private" : "Private — click to make public"}
+      aria-label={isPublic ? "Public project, click to make private" : "Private project, click to make public"}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "4px",
+        fontSize: "10px",
+        fontWeight: 500,
+        textTransform: "uppercase",
+        letterSpacing: "0.05em",
+        padding: "3px 8px",
+        borderRadius: "999px",
+        background: isPublic ? "rgba(34,197,94,0.1)" : "var(--bg-muted)",
+        color: isPublic ? "rgb(34,197,94)" : "var(--text-muted)",
+        border: "none",
+        cursor: toggling ? "wait" : "pointer",
+        opacity: toggling ? 0.6 : 1,
+        transition: "opacity .15s ease, background .15s ease, color .15s ease",
+      }}
+    >
+      {isPublic ? <Globe style={{ width: "10px", height: "10px" }} /> : <Lock style={{ width: "10px", height: "10px" }} />}
+      {isPublic ? "Public" : "Private"}
+    </button>
   );
 }
 
@@ -2231,10 +2250,12 @@ function FriendsPanel({
   workload,
   friendRingOffsets,
   smallCircumference,
+  onlineUserIds,
 }: {
   workload: DashboardContentProps["workload"];
   friendRingOffsets: number[];
   smallCircumference: number;
+  onlineUserIds: Set<string>;
 }) {
   return (
     <div
@@ -2276,7 +2297,7 @@ function FriendsPanel({
           {workload.slice(0, 6).map((member, idx) => {
             const maxTotal = Math.max(...workload.map((w) => w.total), 1);
             const healthPct = Math.min(Math.round((member.total / maxTotal) * 100), 100);
-            const isOnline = member.inProgress > 0;
+            const isOnline = onlineUserIds.has(member.id);
             const statusText = isOnline ? "Active now" : "Offline";
             const healthLabel = healthPct < 40 ? "Light load" : healthPct <= 75 ? "Busy" : "Stacked";
 

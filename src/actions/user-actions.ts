@@ -8,6 +8,7 @@ import { z } from "zod/v4";
 
 const updateProfileSchema = z.object({
   name: z.string().max(100).optional(),
+  username: z.string().max(30).optional(),
   bio: z.string().max(500).optional(),
   githubUrl: z.string().max(200).optional(),
   twitterUrl: z.string().max(200).optional(),
@@ -24,8 +25,12 @@ const updateSettingsSchema = z.object({
   notifyMentioned: z.boolean(),
 });
 
+// Username validation: alphanumeric, underscores, hyphens, 3-30 chars
+const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+
 export async function updateProfile(data: {
   name?: string;
+  username?: string;
   bio?: string;
   githubUrl?: string;
   twitterUrl?: string;
@@ -36,12 +41,34 @@ export async function updateProfile(data: {
 
   const parsed = updateProfileSchema.parse(data);
 
+  // Validate and check username uniqueness if provided
+  if (parsed.username !== undefined && parsed.username) {
+    const trimmedUsername = parsed.username.trim().toLowerCase();
+    if (!usernameRegex.test(trimmedUsername)) {
+      return { success: false, error: "Username must be 3-30 characters, using only letters, numbers, underscores, or hyphens." };
+    }
+    // Check uniqueness (excluding current user)
+    const existing = await prisma.user.findFirst({
+      where: {
+        username: trimmedUsername,
+        id: { not: user.id },
+      },
+    });
+    if (existing) {
+      return { success: false, error: "Username is already taken." };
+    }
+  }
+
   await prisma.user.update({
     where: { id: user.id },
     data: {
       name:
         parsed.name !== undefined
           ? (parsed.name ? sanitizeTitle(parsed.name) : null)
+          : undefined,
+      username:
+        parsed.username !== undefined
+          ? (parsed.username ? parsed.username.trim().toLowerCase() : null)
           : undefined,
       bio:
         parsed.bio !== undefined
@@ -67,6 +94,9 @@ export async function updateProfile(data: {
   });
 
   revalidatePath("/profile");
+  revalidatePath("/friends");
+  revalidatePath("/team");
+  revalidatePath("/", "layout");
   return { success: true, error: null };
 }
 
@@ -76,6 +106,7 @@ export async function getUserById(userId: string) {
     select: {
       id: true,
       name: true,
+      username: true,
       email: true,
       imageUrl: true,
       bio: true,

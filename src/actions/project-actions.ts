@@ -47,6 +47,8 @@ export async function getProjects() {
     orderBy: [{ lastOpenedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
   });
 
+  // Fetch visibility for each project (included in model)
+
   const now = new Date();
 
   const mapped = projects.map((project) => {
@@ -62,6 +64,7 @@ export async function getProjects() {
       name: project.name,
       description: project.description,
       shareToken: project.shareToken,
+      visibility: project.visibility,
       memberCount: project.members.length,
       totalTasks,
       completedTasks,
@@ -100,6 +103,20 @@ export async function createProject(formData: FormData) {
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message || "Invalid input" };
+  }
+
+  // Idempotency guard: prevent duplicate projects created within 10 seconds
+  const recentDuplicate = await prisma.project.findFirst({
+    where: {
+      name: parsed.data.name,
+      deletedAt: null,
+      members: { some: { userId: user.id, role: "HEAD" } },
+      createdAt: { gte: new Date(Date.now() - 10_000) },
+    },
+  });
+
+  if (recentDuplicate) {
+    return { project: recentDuplicate, projectId: recentDuplicate.id };
   }
 
   const project = await prisma.project.create({

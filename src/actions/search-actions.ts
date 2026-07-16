@@ -7,6 +7,7 @@ import { rateLimiters } from "@/lib/rate-limit";
 export interface SearchPersonResult {
   id: string;
   name: string | null;
+  username: string | null;
   email: string;
   imageUrl: string | null;
 }
@@ -21,7 +22,7 @@ export async function searchAllUsers(query: string): Promise<SearchPersonResult[
   const trimmed = query.trim();
   if (!trimmed || trimmed.length < 2) return [];
 
-  // Search ALL registered users by name or email (case-insensitive), excluding current user
+  // Search ALL registered users by name, username, or email (case-insensitive), excluding current user
   const users = await prisma.user.findMany({
     where: {
       AND: [
@@ -30,6 +31,7 @@ export async function searchAllUsers(query: string): Promise<SearchPersonResult[
           OR: [
             { name: { contains: trimmed, mode: "insensitive" } },
             { email: { contains: trimmed, mode: "insensitive" } },
+            { username: { contains: trimmed, mode: "insensitive" } },
           ],
         },
       ],
@@ -37,6 +39,7 @@ export async function searchAllUsers(query: string): Promise<SearchPersonResult[
     select: {
       id: true,
       name: true,
+      username: true,
       email: true,
       imageUrl: true,
     },
@@ -66,7 +69,7 @@ export async function searchPeople(query: string): Promise<SearchPersonResult[]>
 
   if (projectIds.length === 0) return [];
 
-  // Find users who share a project with the current user, matching name or email
+  // Find users who share a project with the current user, matching name, username, or email
   const people = await prisma.user.findMany({
     where: {
       AND: [
@@ -82,6 +85,7 @@ export async function searchPeople(query: string): Promise<SearchPersonResult[]>
           OR: [
             { name: { contains: trimmed, mode: "insensitive" } },
             { email: { contains: trimmed, mode: "insensitive" } },
+            { username: { contains: trimmed, mode: "insensitive" } },
           ],
         },
       ],
@@ -89,6 +93,7 @@ export async function searchPeople(query: string): Promise<SearchPersonResult[]>
     select: {
       id: true,
       name: true,
+      username: true,
       email: true,
       imageUrl: true,
     },

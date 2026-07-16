@@ -48,10 +48,17 @@ enum ProjectVisibility {
   PRIVATE
 }
 
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
+// NOTE: After adding the `username` field, run `npx prisma db push` or create a migration.
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
   email     String   @unique
+  username  String?  @unique
   name      String?
   imageUrl  String?
   bio       String?
@@ -376,10 +383,11 @@ model ProjectTag {
 }
 
 model Friendship {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   userId    String
   friendId  String
-  createdAt DateTime @default(now())
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime         @default(now())
 
   user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
   friend User @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)

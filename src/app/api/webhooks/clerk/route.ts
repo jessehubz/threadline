@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   const eventType = evt.type;
 
   if (eventType === "user.created" || eventType === "user.updated") {
-    const { id, email_addresses, first_name, last_name, image_url } = evt.data;
+    const { id, email_addresses, first_name, last_name, image_url, username } = evt.data;
     const email = email_addresses[0]?.email_address;
     const name = [first_name, last_name].filter(Boolean).join(" ") || null;
 
@@ -45,18 +45,22 @@ export async function POST(req: Request) {
       return new Response("No email found", { status: 400 });
     }
 
+    // NOTE: For username-based login to work, enable "Username" as an identifier
+    // in the Clerk Dashboard under User & Authentication > Email, Phone, Username.
     await prisma.user.upsert({
       where: { clerkId: id },
       update: {
         email,
         name,
         imageUrl: image_url,
+        username: username || undefined,
       },
       create: {
         clerkId: id,
         email,
         name,
         imageUrl: image_url,
+        username: username || null,
       },
     });
   }

@@ -32,7 +32,7 @@ const GREETING_MESSAGE: ChatMessage = {
   id: "greeting",
   role: "assistant",
   content:
-    "Hi, I'm Loom! 👋 I'm your planning assistant. I can help you figure out what to focus on across all your projects. Try asking me:\n\n• \"What should I prioritize?\"\n• \"Help me plan my schedule\"\n• \"Remind me about [task] tomorrow\"",
+    "Hi, I'm Loom! 👋 I'm your Llama-powered planning assistant. I can help you figure out what to focus on across all your projects. Try asking me:\n\n• \"What should I prioritize?\"\n• \"Help me plan my schedule\"\n• \"Remind me about [task] tomorrow\"",
   type: "text",
 };
 

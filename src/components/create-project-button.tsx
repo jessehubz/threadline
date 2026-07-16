@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, X, Users, UserPlus, Search } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ export function CreateProjectButton() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [activeTab, setActiveTab] = useState<InviteTab>("friends");
   const [friendSearch, setFriendSearch] = useState("");
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (open) {
@@ -52,17 +53,21 @@ export function CreateProjectButton() {
   }
 
   async function handleSubmit(formData: FormData) {
+    // Ref-based guard prevents double-submission even if re-render hasn't happened yet
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setLoading(true);
     const result = await createProject(formData);
-    if (result.error) { toast.error(result.error); setLoading(false); return; }
+    if (result.error) { toast.error(result.error); setLoading(false); submittingRef.current = false; return; }
 
     if (members.length > 0 && result.projectId) {
       for (const m of members) await inviteMember(result.projectId, m.email, m.role);
       toast.success(`Project created with ${members.length} invite(s)`);
     } else {
-      toast.success("Project created");
+      toast.success("Project created successfully!");
     }
     setLoading(false);
+    submittingRef.current = false;
     setMembers([]);
     setOpen(false);
   }

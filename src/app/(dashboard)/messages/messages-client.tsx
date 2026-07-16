@@ -9,8 +9,8 @@ import {
   getOrCreateConversation,
   sendDirectMessage,
   getDirectMessages,
-  getTeamMembers,
 } from "@/actions/dm-actions";
+import { getFriends } from "@/actions/friend-actions";
 import { cn, formatRelativeDate } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -271,7 +271,9 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [showNewDM, setShowNewDM] = useState(false);
-  const [teammates, setTeammates] = useState<MessageUser[]>([]);
+  const [friendsList, setFriendsList] = useState<Array<{ friendId: string; name: string | null; email: string; imageUrl: string | null }>>([]);
+  const [friendSearch, setFriendSearch] = useState("");
+  const [friendsLoading, setFriendsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load conversations
@@ -325,16 +327,31 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
 
   async function handleNewDM() {
     setShowNewDM(true);
+    setFriendsLoading(true);
     try {
-      const members = await getTeamMembers();
-      setTeammates(members);
+      const data = await getFriends();
+      setFriendsList(data.map((f) => ({ friendId: f.friendId, name: f.name, email: f.email, imageUrl: f.imageUrl })));
     } catch {
-      toast.error("Failed to load team members");
+      toast.error("Failed to load friends");
+    } finally {
+      setFriendsLoading(false);
     }
   }
 
+  // Filter friends by name or email
+  const filteredFriends = friendSearch
+    ? friendsList.filter((f) => {
+        const q = friendSearch.toLowerCase();
+        return (
+          (f.name || "").toLowerCase().includes(q) ||
+          f.email.toLowerCase().includes(q)
+        );
+      })
+    : friendsList;
+
   async function handleStartConversation(userId: string) {
     setShowNewDM(false);
+    setFriendSearch("");
     startTransition(async () => {
       try {
         const convo = await getOrCreateConversation(userId);
@@ -393,23 +410,45 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
             </div>
           ) : showNewDM ? (
             <div className="p-2">
-              <p className="mb-2 px-2 text-xs font-medium text-body">Select a team member</p>
-              {teammates.length === 0 ? (
-                <p className="px-2 text-xs text-dim">No team members found</p>
+              <p className="mb-2 px-2 text-xs font-medium text-body">Start a conversation</p>
+              {/* Search input for friends */}
+              <div className="relative mb-2 px-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-dim" />
+                <input
+                  type="text"
+                  value={friendSearch}
+                  onChange={(e) => setFriendSearch(e.target.value)}
+                  placeholder="Search by name or email..."
+                  className="input-field pl-9 py-1.5 text-xs"
+                  autoFocus
+                />
+              </div>
+              {friendsLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-themed border-t-[var(--accent)]" />
+                </div>
+              ) : filteredFriends.length === 0 ? (
+                <p className="px-2 text-xs text-dim">
+                  {friendsList.length === 0 ? "No friends yet. Add friends first!" : "No matching friends"}
+                </p>
               ) : (
-                teammates.map((member) => (
+                filteredFriends.map((friend) => (
                   <button
-                    key={member.id}
-                    onClick={() => handleStartConversation(member.id)}
-                    className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-body hover:bg-hover hover:text-heading"
+                    key={friend.friendId}
+                    onClick={() => handleStartConversation(friend.friendId)}
+                    disabled={isPending}
+                    className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-body hover:bg-hover hover:text-heading disabled:opacity-50"
                   >
-                    <UserAvatar user={member} size="sm" />
-                    <span className="truncate">{member.name || member.email}</span>
+                    <UserAvatar user={{ id: friend.friendId, name: friend.name, email: friend.email, imageUrl: friend.imageUrl }} size="sm" />
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-xs font-medium truncate">{friend.name || friend.email.split("@")[0]}</p>
+                      {friend.name && <p className="text-[10px] text-dim truncate">{friend.email}</p>}
+                    </div>
                   </button>
                 ))
               )}
               <button
-                onClick={() => setShowNewDM(false)}
+                onClick={() => { setShowNewDM(false); setFriendSearch(""); }}
                 className="mt-2 w-full rounded-lg px-2 py-1.5 text-xs text-body hover:bg-hover"
               >
                 Cancel

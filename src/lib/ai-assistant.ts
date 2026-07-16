@@ -215,7 +215,7 @@ function handleGreeting(context: AssistantContext): AssistantResponse {
     (t) => t.status === 'URGENT' || isOverdue(t),
   ).length;
 
-  let greeting = `👋 Hey ${context.userName}! `;
+  let greeting = `👋 Hey ${context.userName}! I'm Loom, your Llama-powered planning assistant. `;
 
   if (urgentCount > 0) {
     greeting += `You have ${urgentCount} urgent/overdue task${urgentCount > 1 ? 's' : ''}. Want me to help you prioritize?`;
