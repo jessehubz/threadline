@@ -97,3 +97,44 @@ export async function triggerDataRefresh(userIds: string | string[], scope: stri
     console.error("Failed to trigger data-refresh event:", error);
   }
 }
+
+/**
+ * Broadcasts a profile change (name/avatar) to every other user who currently
+ * renders this user somewhere in their UI — accepted friends, fellow members of
+ * shared projects, and participants of shared DM conversations — plus the user's
+ * own other tabs. Each recipient's `data-refresh` listener re-renders the
+ * server components that show this user's name/avatar, so identity edits
+ * propagate cross-account without a manual reload.
+ *
+ * This is a fan-out to potentially many channels; it is best-effort and never
+ * throws (triggerDataRefresh swallows its own errors).
+ */
+export async function broadcastProfileUpdate(userId: string) {
+  const [friendships, sharedMemberships, conversations] = await Promise.all([
+    // Accepted friendships in either direction.
+    prisma.friendship.findMany({
+      where: { status: "ACCEPTED", OR: [{ userId }, { friendId: userId }] },
+      select: { userId: true, friendId: true },
+    }),
+    // Other members of every project this user belongs to.
+    prisma.projectMember.findMany({
+      where: { project: { members: { some: { userId } } } },
+      select: { userId: true },
+    }),
+    // Other participants of conversations this user is in.
+    prisma.conversationParticipant.findMany({
+      where: { conversation: { participants: { some: { userId } } } },
+      select: { userId: true },
+    }),
+  ]);
+
+  const recipients = new Set<string>([userId]);
+  for (const f of friendships) {
+    recipients.add(f.userId);
+    recipients.add(f.friendId);
+  }
+  for (const m of sharedMemberships) recipients.add(m.userId);
+  for (const p of conversations) recipients.add(p.userId);
+
+  await triggerDataRefresh(Array.from(recipients), "profile");
+}

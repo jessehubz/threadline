@@ -38,6 +38,13 @@ export async function POST(req: NextRequest) {
             "text/plain",
           ],
           maximumSizeInBytes: 10 * 1024 * 1024, // 10MB
+          // @vercel/blob v2 defaults addRandomSuffix to false. Without this,
+          // the raw filename is the blob pathname, so a second upload of any
+          // common name ("photo.jpg", "avatar.png") collides and the write is
+          // rejected — the upload throws and the DB never records the URL,
+          // which is the root cause of the "avatar shows empty" bug. A random
+          // suffix guarantees a unique, unguessable pathname per upload.
+          addRandomSuffix: true,
         };
       },
       onUploadCompleted: async () => {

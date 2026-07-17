@@ -52,7 +52,10 @@ export async function POST(req: Request) {
       update: {
         email,
         name,
-        imageUrl: image_url,
+        // Never blank out an app-set avatar: only mirror Clerk's image when it
+        // actually has one. App uploads write the DB (and sync to Clerk), so a
+        // later user.updated with an empty image_url must not revert it.
+        imageUrl: image_url || undefined,
         username: username || undefined,
       },
       create: {
