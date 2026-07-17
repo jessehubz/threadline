@@ -1,5 +1,6 @@
 // =============================================================================
 // AI Assistant - Heuristic-based task prioritization & scheduling
+// (User-facing name: "Task Helper")
 // Advisory only: does NOT modify graph data, only suggests actions.
 // =============================================================================
 
@@ -218,7 +219,7 @@ function handleIdentity(): AssistantResponse {
   return {
     type: 'text',
     content:
-      "🤖 I'm **Loom**, your built-in planning assistant. I run entirely on your workspace data - no external AI service - and I help you prioritize tasks, plan your schedule, and set reminders. Ask me to prioritize, schedule, or remind you about something!",
+      "🤖 I'm the **Task Helper**, your built-in planning assistant. I run entirely on your workspace data - no external AI service - and I help you prioritize tasks, plan your schedule, and set reminders. Ask me to prioritize, schedule, or remind you about something!",
   };
 }
 
@@ -227,7 +228,7 @@ function handleGreeting(context: AssistantContext): AssistantResponse {
     (t) => t.status === 'URGENT' || isOverdue(t),
   ).length;
 
-  let greeting = `👋 Hey ${context.userName}! I'm Loom, your built-in planning assistant. `;
+  let greeting = `👋 Hey ${context.userName}! I'm the Task Helper, your built-in planning assistant. `;
 
   if (urgentCount > 0) {
     greeting += `You have ${urgentCount} urgent/overdue task${urgentCount > 1 ? 's' : ''}. Want me to help you prioritize?`;

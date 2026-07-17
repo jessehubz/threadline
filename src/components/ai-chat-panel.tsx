@@ -32,7 +32,7 @@ const GREETING_MESSAGE: ChatMessage = {
   id: "greeting",
   role: "assistant",
   content:
-    "Hi, I'm Loom! 👋 I'm your built-in planning assistant. I can help you figure out what to focus on across all your projects. Try asking me:\n\n• \"What should I prioritize?\"\n• \"Help me plan my schedule\"\n• \"Remind me about [task] tomorrow\"",
+    "Hi! 👋 I'm your Task Helper — a built-in planning assistant. I can help you figure out what to focus on across all your projects. Try asking me:\n\n• \"What should I prioritize?\"\n• \"Help me plan my schedule\"\n• \"Remind me about [task] tomorrow\"",
   type: "text",
 };
 
@@ -169,20 +169,20 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
       )}
       role="dialog"
       aria-modal="false"
-      aria-label="AI Assistant chat"
+      aria-label="Task Helper chat"
     >
       {/* Header */}
       <header className="flex items-center justify-between border-b border-[var(--border-default)] px-4 py-3 shrink-0">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-[var(--accent)]" />
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">
-            AI Assistant
+            Task Helper
           </h2>
         </div>
         <button
           onClick={onClose}
           className="rounded-lg p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)] cursor-pointer"
-          aria-label="Close AI Assistant"
+          aria-label="Close Task Helper"
         >
           <X className="h-4 w-4" />
         </button>

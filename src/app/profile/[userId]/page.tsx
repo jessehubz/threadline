@@ -171,14 +171,6 @@ export default async function PublicProfilePage({
                   >
                     {project.name}
                   </h3>
-                  {project.description && (
-                    <p
-                      className="text-xs mt-1"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      {project.description}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>

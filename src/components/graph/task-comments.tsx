@@ -82,7 +82,7 @@ export function TaskComments({
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const commentsEndRef = useRef<HTMLDivElement>(null);
-  const commentInputRef = useRef<HTMLInputElement>(null);
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   // @mentions: projectId is discovered from the comments fetch (this
   // component only receives nodeId as a prop), then used to lazily load
@@ -163,6 +163,10 @@ export function TaskComments({
     if (!input.trim() && pendingAttachments.length === 0) return;
     const content = input.trim() || "(attachment)";
     setInput("");
+    // Reset textarea height
+    if (commentInputRef.current) {
+      commentInputRef.current.style.height = "auto";
+    }
     const attachments = [...pendingAttachments];
     setPendingAttachments([]);
     const mentionIds = Array.from(mentionedUserIds);
@@ -206,9 +210,15 @@ export function TaskComments({
           .slice(0, 6)
       : [];
 
-  function handleCommentInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleCommentInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const value = e.target.value;
     setInput(value);
+
+    // Auto-resize textarea
+    const el = e.target;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+
     const cursor = e.target.selectionStart ?? value.length;
     const match = value.slice(0, cursor).match(MENTION_TRIGGER_RE);
     if (match) {
@@ -254,7 +264,7 @@ export function TaskComments({
     });
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (mentionQuery !== null && mentionCandidates.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -299,7 +309,7 @@ export function TaskComments({
       </label>
 
       {/* Comments list */}
-      <div className="max-h-64 space-y-3 overflow-y-auto">
+      <div className="max-h-72 space-y-3 overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center py-4">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--border-default)] border-t-[var(--accent)]" />
@@ -313,7 +323,7 @@ export function TaskComments({
             <div
               key={comment.id}
               className={cn(
-                "rounded-lg border px-3 py-2",
+                "rounded-lg border px-3.5 py-2.5",
                 comment.isPrivate
                   ? "border-[var(--violet-300)] bg-[var(--violet-100)]"
                   : "border-themed bg-page"
@@ -350,7 +360,7 @@ export function TaskComments({
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-xs whitespace-pre-wrap break-words text-body">
+              <p className="mt-1.5 text-sm whitespace-pre-wrap break-words text-body leading-relaxed">
                 {formatCommentContent(comment.content)}
               </p>
               {/* Attachments */}
@@ -406,7 +416,7 @@ export function TaskComments({
             </div>
           )}
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-end gap-1.5">
             <button
               onClick={() => setIsPrivate(!isPrivate)}
               className={cn(
@@ -438,15 +448,16 @@ export function TaskComments({
             />
 
             <div className="relative flex-1">
-              <input
+              <textarea
                 ref={commentInputRef}
-                type="text"
                 value={input}
                 onChange={handleCommentInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Add a comment... (@ to mention)"
                 disabled={isPending}
-                className="w-full rounded-md border border-themed px-2.5 py-1.5 text-xs text-heading placeholder-[var(--text-muted)] bg-card focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] disabled:opacity-50"
+                rows={1}
+                className="w-full resize-none rounded-lg border border-themed px-3 py-2 text-sm text-heading placeholder-[var(--text-muted)] bg-card focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] disabled:opacity-50 transition-[border-color,box-shadow] duration-150"
+                style={{ minHeight: "2.75rem", maxHeight: "200px", overflowY: "auto" }}
                 aria-label="Comment input"
               />
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import { Send, MessageSquare, Users, Plus, Search } from "lucide-react";
 import { getPusherClient } from "@/lib/pusher-client";
 import { sendMessage } from "@/actions/message-actions";
@@ -67,6 +68,20 @@ function isConversationUnread(convo: Conversation, currentUserId: string): boole
   return new Date(lastMessage.createdAt) > new Date(ownParticipant.lastReadAt);
 }
 
+// localStorage key for tracking when the user last viewed channels
+const CHANNELS_LAST_SEEN_KEY = "threadline:channels-last-seen";
+
+function getChannelsLastSeen(): Date | null {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(CHANNELS_LAST_SEEN_KEY);
+  return stored ? new Date(stored) : null;
+}
+
+function setChannelsLastSeen() {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(CHANNELS_LAST_SEEN_KEY, new Date().toISOString());
+}
+
 type Tab = "channels" | "dms";
 
 export function MessagesClient({
@@ -76,12 +91,111 @@ export function MessagesClient({
   projects: Project[];
   currentUserId: string;
 }) {
-  const [activeTab, setActiveTab] = useState<Tab>("channels");
+  const searchParams = useSearchParams();
+  const urlTab = searchParams.get("tab");
+  const urlConversationId = searchParams.get("conversation");
+  const urlProjectId = searchParams.get("projectId");
+
+  const [activeTab, setActiveTab] = useState<Tab>(
+    urlTab === "channels" ? "channels" : urlTab === "dms" ? "dms" : "dms"
+  );
   const [searchQuery, setSearchQuery] = useState('');
+
+  // ─── Unread tracking for DMs tab ─────────────────────────────────────────
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversationsLoaded, setConversationsLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const convos = await getConversations();
+        if (!cancelled) {
+          setConversations(convos as unknown as Conversation[]);
+          setConversationsLoaded(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setConversations([]);
+          setConversationsLoaded(true);
+        }
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const unreadDMCount = conversationsLoaded
+    ? conversations.filter((c) => isConversationUnread(c, currentUserId)).length
+    : 0;
+
+  // ─── Unread tracking for Channels tab ────────────────────────────────────
+  const [hasUnreadChannels, setHasUnreadChannels] = useState(false);
+
+  useEffect(() => {
+    if (projects.length === 0) return;
+    let cancelled = false;
+
+    async function checkChannelUnread() {
+      const lastSeen = getChannelsLastSeen();
+      // If user has never opened channels, any message counts as unread
+      if (!lastSeen) {
+        // Check if any project has messages at all
+        try {
+          for (const project of projects) {
+            const res = await fetch(`/api/messages?projectId=${project.id}`);
+            const data = await res.json();
+            if (!cancelled && data.messages && data.messages.length > 0) {
+              setHasUnreadChannels(true);
+              return;
+            }
+          }
+        } catch {
+          // ignore
+        }
+        return;
+      }
+
+      // Check each project for messages newer than lastSeen
+      try {
+        for (const project of projects) {
+          const res = await fetch(`/api/messages?projectId=${project.id}`);
+          const data = await res.json();
+          if (cancelled) return;
+          if (data.messages && data.messages.length > 0) {
+            const latestMsg = data.messages[data.messages.length - 1];
+            if (new Date(latestMsg.createdAt) > lastSeen && latestMsg.user?.id !== currentUserId) {
+              setHasUnreadChannels(true);
+              return;
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    checkChannelUnread();
+    return () => { cancelled = true; };
+  }, [projects, currentUserId]);
+
+  // When user switches to Channels tab, mark as seen
+  function handleTabChange(tab: Tab) {
+    setActiveTab(tab);
+    if (tab === "channels") {
+      setChannelsLastSeen();
+      setHasUnreadChannels(false);
+    }
+  }
 
   const filteredProjects = projects.filter(p =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Callback so DMsPanel can update the shared conversations state
+  const handleConversationsChange = useCallback((convos: Conversation[]) => {
+    setConversations(convos);
+  }, []);
 
   return (
     <div>
@@ -100,9 +214,9 @@ export function MessagesClient({
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-1 rounded-xl border border-themed-subtle bg-page p-1">
+      <div className="mb-6 flex gap-1 rounded-xl border border-themed-subtle bg-page p-1 max-[480px]:flex-col">
         <button
-          onClick={() => setActiveTab("channels")}
+          onClick={() => handleTabChange("channels")}
           className={cn(
             "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-150",
             activeTab === "channels"
@@ -113,9 +227,16 @@ export function MessagesClient({
           <Users className="h-4 w-4" />
           Channels
           <span className="ml-1.5 rounded-full bg-[var(--bg-muted)] px-1.5 py-0.5 text-[10px] font-medium text-dim">{filteredProjects.length}</span>
+          {hasUnreadChannels && (
+            <span
+              className="ml-1 h-2 w-2 flex-shrink-0 rounded-full"
+              style={{ background: "var(--accent)" }}
+              aria-label="Unread channel messages"
+            />
+          )}
         </button>
         <button
-          onClick={() => setActiveTab("dms")}
+          onClick={() => handleTabChange("dms")}
           className={cn(
             "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-150",
             activeTab === "dms"
@@ -125,13 +246,28 @@ export function MessagesClient({
         >
           <MessageSquare className="h-4 w-4" />
           Direct Messages
+          {unreadDMCount > 0 && (
+            <span
+              className="ml-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+              style={{ background: "var(--accent)" }}
+              aria-label={`${unreadDMCount} unread conversation${unreadDMCount > 1 ? "s" : ""}`}
+            >
+              {unreadDMCount > 99 ? "99+" : unreadDMCount}
+            </span>
+          )}
         </button>
       </div>
 
       {activeTab === "channels" ? (
-        <ChannelsPanel projects={filteredProjects} currentUserId={currentUserId} />
+        <ChannelsPanel projects={filteredProjects} currentUserId={currentUserId} initialProjectId={urlProjectId} />
       ) : (
-        <DMsPanel currentUserId={currentUserId} searchQuery={searchQuery} />
+        <DMsPanel
+          currentUserId={currentUserId}
+          searchQuery={searchQuery}
+          initialConversations={conversationsLoaded ? conversations : undefined}
+          onConversationsChange={handleConversationsChange}
+          initialConversationId={urlConversationId}
+        />
       )}
     </div>
   );
@@ -142,11 +278,15 @@ export function MessagesClient({
 function ChannelsPanel({
   projects,
   currentUserId,
+  initialProjectId,
 }: {
   projects: Project[];
   currentUserId: string;
+  initialProjectId?: string | null;
 }) {
-  const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?.id ?? "");
+  const [selectedProjectId, setSelectedProjectId] = useState(
+    (initialProjectId && projects.some((p) => p.id === initialProjectId) ? initialProjectId : projects[0]?.id) ?? ""
+  );
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -222,7 +362,7 @@ function ChannelsPanel({
   }
 
   return (
-    <div className="flex h-[calc(100vh-280px)] flex-col overflow-hidden bg-card" style={{ borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
+    <div className="flex h-[calc(100vh-280px)] min-h-[400px] flex-col overflow-hidden bg-card" style={{ borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
       {/* Project selector */}
       <div className="border-b border-themed px-4 py-3">
         <select
@@ -290,13 +430,25 @@ function ChannelsPanel({
 
 // ─── DMs Panel ──────────────────────────────────────────────────────────────
 
-function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searchQuery: string }) {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+function DMsPanel({
+  currentUserId,
+  searchQuery,
+  initialConversations,
+  onConversationsChange,
+  initialConversationId,
+}: {
+  currentUserId: string;
+  searchQuery: string;
+  initialConversations?: Conversation[];
+  onConversationsChange: (convos: Conversation[]) => void;
+  initialConversationId?: string | null;
+}) {
+  const [conversations, setConversationsLocal] = useState<Conversation[]>(initialConversations ?? []);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isPending, startTransition] = useTransition();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialConversations);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [showNewDM, setShowNewDM] = useState(false);
   const [friendsList, setFriendsList] = useState<Array<{ friendId: string; name: string | null; email: string; imageUrl: string | null }>>([]);
@@ -304,16 +456,41 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
   const [friendsLoading, setFriendsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load conversations
+  // Wrapper that syncs local state with parent
+  const setConversations = useCallback((updater: Conversation[] | ((prev: Conversation[]) => Conversation[])) => {
+    setConversationsLocal((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      onConversationsChange(next);
+      return next;
+    });
+  }, [onConversationsChange]);
+
+  // Sync if parent provides new initial data
   useEffect(() => {
+    if (initialConversations) {
+      setConversationsLocal(initialConversations);
+      setLoading(false);
+    }
+  }, [initialConversations]);
+
+  // Load conversations only if not provided by parent
+  useEffect(() => {
+    if (initialConversations) return;
     let cancelled = false;
     async function load() {
       setLoading(true);
       try {
         const convos = await getConversations();
-        if (!cancelled) setConversations(convos as unknown as Conversation[]);
+        if (!cancelled) {
+          const typed = convos as unknown as Conversation[];
+          setConversationsLocal(typed);
+          onConversationsChange(typed);
+        }
       } catch {
-        if (!cancelled) setConversations([]);
+        if (!cancelled) {
+          setConversationsLocal([]);
+          onConversationsChange([]);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -322,7 +499,18 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialConversations, onConversationsChange]);
+
+  // Auto-select conversation from URL deep-link param
+  const didAutoSelect = useRef(false);
+  useEffect(() => {
+    if (didAutoSelect.current || !initialConversationId || loading) return;
+    const target = conversations.find((c) => c.id === initialConversationId);
+    if (target) {
+      setSelectedConversation(target);
+      didAutoSelect.current = true;
+    }
+  }, [initialConversationId, conversations, loading]);
 
   // Marks a conversation read on the server and clears its unread state
   // locally so the dot disappears immediately.
@@ -467,9 +655,13 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
   }
 
   return (
-    <div className="flex h-[calc(100vh-280px)] overflow-hidden bg-card" style={{ borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
+    <div className="relative flex h-[calc(100vh-280px)] min-h-[400px] overflow-hidden bg-card" style={{ borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
       {/* Conversation list */}
-      <div className="w-64 flex-shrink-0 border-r border-themed">
+      <div className={cn(
+        "w-64 flex-shrink-0 border-r border-themed",
+        "max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:z-10 max-md:w-full max-md:bg-card",
+        selectedConversation && "max-md:hidden"
+      )}>
         <div className="flex items-center justify-between border-b border-themed px-4 py-3">
           <h3 className="text-card-title">Conversations</h3>
           <button
@@ -609,6 +801,13 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
             {/* Header */}
             <div className="border-b border-themed px-4 py-3">
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedConversation(null)}
+                  className="rounded-lg p-1.5 text-dim transition-colors hover:bg-hover md:hidden"
+                  aria-label="Back to conversations"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
                 <UserAvatar
                   user={getOtherParticipant(selectedConversation) || { id: "", name: "?", email: "", imageUrl: null }}
                   size="sm"

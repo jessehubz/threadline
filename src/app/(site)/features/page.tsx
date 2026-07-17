@@ -20,7 +20,7 @@ const features = [
   },
   {
     icon: Brain,
-    title: "AI Assistant",
+    title: "Task Helper",
     description:
       "Describe your project in plain text and generate a full dependency graph. Choose from pre-built templates or let the intelligent parser create task structures for you.",
     color: "var(--violet-400)",

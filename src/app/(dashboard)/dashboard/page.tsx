@@ -230,6 +230,7 @@ export default async function DashboardPage() {
     memberCount: p.memberCount,
     lastOpenedAt: p.lastOpenedAt ? p.lastOpenedAt.toISOString() : null,
     displayOrder: p.displayOrder,
+    role: p.role,
     labels: p.labels.map((l) => ({ id: l.id, name: l.name, color: l.color })),
     tags: p.tags.map((t) => ({ id: t.id, name: t.name, color: t.color, isSystem: t.isSystem })),
   }));

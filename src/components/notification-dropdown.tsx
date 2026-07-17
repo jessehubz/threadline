@@ -108,7 +108,18 @@ export function NotificationDropdown({ userId }: { userId: string }) {
       fetch(`/api/notifications/${notification.id}/read`, { method: "POST" }).catch(() => {});
     }
 
-    if (notification.relatedNodeId && notification.relatedProjectId) {
+    // Deep-link NEW_MESSAGE notifications into the messages page
+    if (notification.type === "NEW_MESSAGE") {
+      if (notification.relatedNodeId) {
+        // DM notification: relatedNodeId stores the conversationId
+        router.push(`/messages?tab=dms&conversation=${notification.relatedNodeId}`);
+      } else if (notification.relatedProjectId) {
+        // Channel message notification: relatedProjectId stores the projectId
+        router.push(`/messages?tab=channels&projectId=${notification.relatedProjectId}`);
+      } else {
+        router.push("/messages");
+      }
+    } else if (notification.relatedNodeId && notification.relatedProjectId) {
       router.push(`/graph/${notification.relatedProjectId}?nodeId=${notification.relatedNodeId}`);
     } else if (notification.relatedProjectId) {
       router.push(`/graph/${notification.relatedProjectId}`);

@@ -8,13 +8,11 @@ import { z } from "zod/v4";
 
 const createProjectSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  description: z.string().max(500).optional(),
 });
 
 const updateProjectSchema = z.object({
   id: z.string(),
   name: z.string().min(1).max(100).optional(),
-  description: z.string().max(500).optional(),
 });
 
 export async function getProjects() {
@@ -62,7 +60,6 @@ export async function getProjects() {
     return {
       id: project.id,
       name: project.name,
-      description: project.description,
       shareToken: project.shareToken,
       visibility: project.visibility,
       memberCount: project.members.length,
@@ -98,7 +95,6 @@ export async function createProject(formData: FormData) {
 
   const parsed = createProjectSchema.safeParse({
     name: formData.get("name"),
-    description: formData.get("description"),
   });
 
   if (!parsed.success) {
@@ -122,7 +118,6 @@ export async function createProject(formData: FormData) {
   const project = await prisma.project.create({
     data: {
       name: parsed.data.name,
-      description: parsed.data.description || null,
       shareToken: generateSecureToken(),
       lastOpenedAt: new Date(),
       members: {
@@ -149,7 +144,6 @@ export async function updateProject(formData: FormData) {
   const parsed = updateProjectSchema.safeParse({
     id: formData.get("id"),
     name: formData.get("name"),
-    description: formData.get("description") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -171,7 +165,6 @@ export async function updateProject(formData: FormData) {
     where: { id: parsed.data.id },
     data: {
       ...(parsed.data.name && { name: parsed.data.name }),
-      ...(parsed.data.description !== undefined && { description: parsed.data.description }),
     },
   });
 
@@ -308,4 +301,51 @@ export async function reorderProjects(projectIds: string[]) {
 
   revalidatePath("/dashboard");
   return { success: true };
+}
+
+const bulkDeleteSchema = z.object({
+  projectIds: z.array(z.string()).min(1, "At least one project must be selected"),
+});
+
+export async function bulkDeleteProjects(projectIds: string[]) {
+  const user = await requireUser();
+
+  const parsed = bulkDeleteSchema.safeParse({ projectIds });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || "Invalid input" };
+  }
+
+  // Verify the current user is HEAD of each project
+  const memberships = await prisma.projectMember.findMany({
+    where: {
+      userId: user.id,
+      projectId: { in: parsed.data.projectIds },
+      role: "HEAD",
+    },
+    select: { projectId: true },
+  });
+
+  const authorizedIds = new Set(memberships.map((m) => m.projectId));
+  const unauthorized = parsed.data.projectIds.filter((id) => !authorizedIds.has(id));
+
+  if (unauthorized.length > 0) {
+    return { error: `You can only delete projects you own. ${unauthorized.length} project(s) were not authorized.` };
+  }
+
+  // Soft-delete all in a transaction
+  const now = new Date();
+  const deleteAfter = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+
+  await prisma.$transaction(
+    parsed.data.projectIds.map((id) =>
+      prisma.project.update({
+        where: { id },
+        data: { deletedAt: now, deleteAfter },
+      })
+    )
+  );
+
+  revalidatePath("/dashboard");
+  revalidatePath("/settings");
+  return { success: true, count: parsed.data.projectIds.length };
 }

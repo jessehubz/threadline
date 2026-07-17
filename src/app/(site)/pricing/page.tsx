@@ -30,7 +30,7 @@ const plans = [
       "Unlimited projects",
       "Unlimited tasks",
       "Up to 20 collaborators",
-      "AI Assistant",
+      "Task Helper",
       "Approval workflows",
       "Real-time collaboration",
       "Analytics dashboard",

@@ -290,6 +290,51 @@ export async function updateNodePosition(
   return node;
 }
 
+export async function batchUpdateNodePositions(
+  projectId: string,
+  graphId: string,
+  positions: Array<{ nodeId: string; positionX: number; positionY: number }>
+) {
+  await requireProjectPermission(projectId, "canEditNodes");
+
+  // Validate all positions are finite numbers
+  for (const pos of positions) {
+    if (!Number.isFinite(pos.positionX) || !Number.isFinite(pos.positionY)) {
+      throw new Error(`Invalid position for node ${pos.nodeId}`);
+    }
+  }
+
+  // Verify graph belongs to this project
+  const graph = await prisma.graph.findUnique({
+    where: { id: graphId, projectId },
+    select: { id: true },
+  });
+  if (!graph) throw new Error("Graph not found");
+
+  // Batch update all positions in a transaction
+  await prisma.$transaction(
+    positions.map((pos) =>
+      prisma.taskNode.update({
+        where: { id: pos.nodeId },
+        data: { positionX: pos.positionX, positionY: pos.positionY },
+      })
+    )
+  );
+
+  // Notify collaborators of each moved node
+  await Promise.all(
+    positions.map((pos) =>
+      pusherServer.trigger(`private-graph-${graphId}`, "node-moved", {
+        id: pos.nodeId,
+        positionX: pos.positionX,
+        positionY: pos.positionY,
+      })
+    )
+  );
+
+  return { success: true };
+}
+
 export async function deleteNode(projectId: string, nodeId: string) {
   await requireProjectPermission(projectId, "canDeleteNodes");
 

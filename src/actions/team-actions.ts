@@ -192,6 +192,79 @@ export async function updateMemberRole(projectId: string, memberId: string, newR
   return { success: true };
 }
 
+const transferHeadSchema = z.object({
+  projectId: z.string().min(1),
+  memberId: z.string().min(1),
+});
+
+/**
+ * Transfer HEAD role to another member. The current HEAD is demoted to CO_HEAD.
+ * Only the current HEAD can perform this action. There must always be exactly
+ * one HEAD per project — this action atomically swaps the roles.
+ */
+export async function transferHeadRole(projectId: string, memberId: string) {
+  const user = await requireUser();
+
+  const parsed = transferHeadSchema.safeParse({ projectId, memberId });
+  if (!parsed.success) {
+    return { error: "Invalid input." };
+  }
+
+  // Rate limiting
+  const { success: rateLimitOk } = await rateLimiters.sensitive.check(user.id);
+  if (!rateLimitOk) return { error: "Too many requests. Please wait." };
+
+  const currentMember = await prisma.projectMember.findUnique({
+    where: { userId_projectId: { userId: user.id, projectId: parsed.data.projectId } },
+  });
+
+  if (!currentMember || currentMember.role !== "HEAD") {
+    return { error: "Only the current Head can transfer ownership" };
+  }
+
+  // Verify target member belongs to this project
+  const targetMember = await prisma.projectMember.findUnique({
+    where: { id: parsed.data.memberId },
+  });
+  if (!targetMember || targetMember.projectId !== parsed.data.projectId) {
+    return { error: "Member not found" };
+  }
+
+  // Cannot transfer to yourself
+  if (targetMember.userId === user.id) {
+    return { error: "You are already the Head" };
+  }
+
+  // Atomically: promote target to HEAD, demote current HEAD to CO_HEAD
+  await prisma.$transaction([
+    prisma.projectMember.update({
+      where: { id: parsed.data.memberId },
+      data: { role: "HEAD" },
+    }),
+    prisma.projectMember.update({
+      where: { id: currentMember.id },
+      data: { role: "CO_HEAD" },
+    }),
+  ]);
+
+  // Notify the new HEAD
+  await createNotification({
+    userId: targetMember.userId,
+    type: "INVITED",
+    title: `You are now the Head of this project`,
+    relatedProjectId: parsed.data.projectId,
+  });
+
+  await triggerDataRefresh(targetMember.userId, "projects");
+  await triggerDataRefresh(user.id, "projects");
+
+  revalidatePath("/team");
+  revalidatePath("/dashboard");
+  revalidatePath("/overview");
+  revalidatePath(`/graph/${parsed.data.projectId}`);
+  return { success: true };
+}
+
 /**
  * Invite by email address. If an account already exists for that email, adds
  * them directly (same as inviteMember). Otherwise creates a 7-day Invite row

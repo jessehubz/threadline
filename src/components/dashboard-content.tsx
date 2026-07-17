@@ -19,13 +19,16 @@ import {
   Users,
   Globe,
   Lock,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { CreateProjectButton } from "@/components/create-project-button";
 import { TagChip } from "@/components/ui/tag-chip";
 import { TagScrollContainer } from "@/components/ui/tag-scroll-container";
 import { ProjectTagManager } from "@/components/project-tag-manager";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { updateProject, deleteProject } from "@/actions/project-actions";
+import { DashboardInsights } from "@/components/dashboard-insights";
+import { updateProject, deleteProject, bulkDeleteProjects } from "@/actions/project-actions";
 import { updateProjectVisibility } from "@/actions/project-permission-actions";
 import { getProjectMembers } from "@/actions/assignment-actions";
 import { removeMember } from "@/actions/team-actions";
@@ -52,6 +55,7 @@ interface DashboardContentProps {
     memberCount: number;
     lastOpenedAt: string | null;
     displayOrder: number;
+    role: "HEAD" | "CO_HEAD" | "MEMBER";
     labels: Array<{ id: string; name: string; color: string }>;
     tags: Array<{ id: string; name: string; color: string; isSystem: boolean }>;
   }>;
@@ -169,6 +173,8 @@ export function DashboardContent(props: DashboardContentProps) {
     availableTags,
   } = props;
 
+  const { inProgressTasks, blockedTasksCount } = props;
+
   const router = useRouter();
 
   // Track which friends are online via Pusher presence channel
@@ -193,6 +199,63 @@ export function DashboardContent(props: DashboardContentProps) {
     variant: "danger" | "default";
     onConfirm: () => void;
   }>({ open: false, title: "", description: "", confirmLabel: "", variant: "default", onConfirm: () => {} });
+
+  // Bulk select mode state
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedProjectIds, setSelectedProjectIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const toggleSelectMode = () => {
+    if (selectMode) {
+      // Exit select mode: clear selection
+      setSelectedProjectIds(new Set());
+    }
+    setSelectMode(!selectMode);
+  };
+
+  const toggleProjectSelection = (projectId: string) => {
+    setSelectedProjectIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(projectId)) {
+        next.delete(projectId);
+      } else {
+        next.add(projectId);
+      }
+      return next;
+    });
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedProjectIds.size === 0) return;
+    setConfirmDialog({
+      open: true,
+      title: `Delete ${selectedProjectIds.size} project${selectedProjectIds.size !== 1 ? "s" : ""}?`,
+      description: `${selectedProjectIds.size} project${selectedProjectIds.size !== 1 ? "s" : ""} will be moved to Recently Deleted. You can restore them from the Trash page within 15 days.`,
+      confirmLabel: `Delete (${selectedProjectIds.size})`,
+      variant: "danger",
+      onConfirm: async () => {
+        setConfirmDialog((prev) => ({ ...prev, open: false }));
+        setBulkDeleting(true);
+        const result = await bulkDeleteProjects(Array.from(selectedProjectIds));
+        setBulkDeleting(false);
+        if (result && "error" in result) {
+          setConfirmDialog({
+            open: true,
+            title: "Error",
+            description: result.error as string,
+            confirmLabel: "OK",
+            variant: "default",
+            onConfirm: () => setConfirmDialog((p) => ({ ...p, open: false })),
+          });
+          return;
+        }
+        // Success: clear selection and exit select mode
+        setSelectedProjectIds(new Set());
+        setSelectMode(false);
+        router.refresh();
+      },
+    });
+  };
 
   const handleDeleteProject = async (projectId: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -725,16 +788,33 @@ export function DashboardContent(props: DashboardContentProps) {
           }}
         >
           <Sparkles style={{ width: "13px", height: "13px" }} />
-          AI ASSISTANT
+          TASK HELPER
         </span>
         <span style={{ fontSize: "14px", color: "var(--text-secondary)", flex: 1 }}>
-          {insights[0]?.text || "Ask AI Assistant anything about your projects..."}
+          {insights[0]?.text || "Ask Task Helper anything about your projects..."}
         </span>
         <ArrowRight style={{ width: "16px", height: "16px", color: "var(--text-muted)", flexShrink: 0 }} />
       </div>
       </div>
 
-      {/* Separator: after AI Banner / before Projects */}
+      {/* Separator: after AI Banner / before Insights */}
+      <div className="dash-separator" />
+
+      {/* ═══ 2.5. INSIGHTS SECTION ═══ */}
+      <div className="dash-reveal">
+        <DashboardInsights
+          activeTasks={activeTasks}
+          inProgressTasks={inProgressTasks}
+          blockedTasksCount={blockedTasksCount}
+          dueToday={dueToday}
+          dueThisWeek={dueThisWeek}
+          overdue={overdue}
+          dueLater={dueLater}
+          projects={projects}
+        />
+      </div>
+
+      {/* Separator: after Insights / before Projects */}
       <div className="dash-separator" />
 
       {/* ═══ 3. PROJECTS SECTION ═══ */}
@@ -750,6 +830,12 @@ export function DashboardContent(props: DashboardContentProps) {
         setShowAllProjects={setShowAllProjects}
         availableTags={availableTags}
         onDeleteProject={handleDeleteProject}
+        selectMode={selectMode}
+        toggleSelectMode={toggleSelectMode}
+        selectedProjectIds={selectedProjectIds}
+        toggleProjectSelection={toggleProjectSelection}
+        handleBulkDelete={handleBulkDelete}
+        bulkDeleting={bulkDeleting}
       />
       </div>
 
@@ -784,13 +870,13 @@ export function DashboardContent(props: DashboardContentProps) {
 
       </div>{/* end revealContainerRef */}
 
-      {/* AI Assistant Launcher - slides in after 200px scroll */}
+      {/* Task Helper Launcher - slides in after 200px scroll */}
       {showLauncher && (
         <button
           onClick={openAiChat}
           className="ai-launcher-visible fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--on-accent)] shadow-[var(--shadow-md)] transition-[transform,box-shadow] duration-150 hover:scale-110 hover:shadow-[var(--elevation-3)] active:scale-95 cursor-pointer"
-          aria-label="Open AI Assistant"
-          title="AI Assistant"
+          aria-label="Open Task Helper"
+          title="Task Helper"
         >
           <Sparkles className="h-5 w-5" />
         </button>
@@ -1057,6 +1143,12 @@ function ProjectsSection({
   setShowAllProjects,
   availableTags,
   onDeleteProject,
+  selectMode,
+  toggleSelectMode,
+  selectedProjectIds,
+  toggleProjectSelection,
+  handleBulkDelete,
+  bulkDeleting,
 }: {
   projects: DashboardContentProps["projects"];
   visibleProjects: DashboardContentProps["projects"];
@@ -1068,6 +1160,12 @@ function ProjectsSection({
   setShowAllProjects: (b: boolean) => void;
   availableTags: DashboardContentProps["availableTags"];
   onDeleteProject: (projectId: string, e: React.MouseEvent) => void;
+  selectMode: boolean;
+  toggleSelectMode: () => void;
+  selectedProjectIds: Set<string>;
+  toggleProjectSelection: (id: string) => void;
+  handleBulkDelete: () => void;
+  bulkDeleting: boolean;
 }) {
   // System view filters + custom user tags as filter tabs
   const systemTabs = [
@@ -1195,6 +1293,30 @@ function ProjectsSection({
           </p>
         </div>
         <div className="my-projects-header__right">
+          <button
+            onClick={toggleSelectMode}
+            title={selectMode ? "Exit select mode" : "Select projects"}
+            aria-label={selectMode ? "Exit select mode" : "Select projects"}
+            aria-pressed={selectMode}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 14px",
+              borderRadius: "var(--radius-sm)",
+              border: selectMode ? "1px solid var(--accent)" : "1px solid var(--border-default)",
+              background: selectMode ? "var(--accent-soft)" : "var(--bg-muted)",
+              color: selectMode ? "var(--accent)" : "var(--text-secondary)",
+              fontSize: "13px",
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "all .15s ease",
+              flexShrink: 0,
+            }}
+          >
+            <CheckSquare style={{ width: "14px", height: "14px" }} />
+            {selectMode ? "Cancel" : "Select"}
+          </button>
           <div className="my-projects-search">
             <Search className="my-projects-search__icon" />
             <input
@@ -1300,6 +1422,8 @@ function ProjectsSection({
       >
         {visibleProjects.map((project, idx) => {
           const isNew = !seenProjectIds.has(project.id);
+          const isSelected = selectedProjectIds.has(project.id);
+          const canDelete = project.role === "HEAD";
           return (
             <div
               key={project.id}
@@ -1309,7 +1433,54 @@ function ProjectsSection({
                 borderRadius: "var(--radius-lg)",
               }}
             >
-              <ProjectCard project={project} index={idx} availableTags={availableTags} onDeleteProject={onDeleteProject} />
+              {selectMode && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (canDelete) toggleProjectSelection(project.id);
+                  }}
+                  disabled={!canDelete}
+                  title={canDelete ? (isSelected ? "Deselect project" : "Select project") : "Only owners can delete projects"}
+                  aria-label={canDelete ? (isSelected ? `Deselect ${project.name}` : `Select ${project.name}`) : `Cannot delete ${project.name} — not owner`}
+                  style={{
+                    position: "absolute",
+                    top: "12px",
+                    left: "12px",
+                    zIndex: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "6px",
+                    border: "none",
+                    background: isSelected ? "var(--accent)" : "var(--bg-elevated)",
+                    color: isSelected ? "#fff" : canDelete ? "var(--text-muted)" : "var(--text-muted)",
+                    cursor: canDelete ? "pointer" : "not-allowed",
+                    opacity: canDelete ? 1 : 0.4,
+                    boxShadow: "var(--shadow-sm)",
+                    transition: "background .15s ease, color .15s ease, transform .15s ease",
+                  }}
+                >
+                  {isSelected ? (
+                    <CheckSquare style={{ width: "16px", height: "16px" }} />
+                  ) : (
+                    <Square style={{ width: "16px", height: "16px" }} />
+                  )}
+                </button>
+              )}
+              <div
+                style={{
+                  outline: selectMode && isSelected ? "2px solid var(--accent)" : "none",
+                  outlineOffset: "-1px",
+                  borderRadius: "var(--radius-lg)",
+                  transition: "outline .15s ease",
+                }}
+              >
+                <ProjectCard project={project} index={idx} availableTags={availableTags} onDeleteProject={onDeleteProject} />
+              </div>
             </div>
           );
         })}
@@ -1336,6 +1507,82 @@ function ProjectsSection({
           </span>
           <ChevronDown className="my-projects-show-all__chevron" />
         </button>
+      )}
+
+      {/* ═══ Floating Bulk Delete Bar ═══ */}
+      {selectMode && selectedProjectIds.size > 0 && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            padding: "12px 20px",
+            borderRadius: "var(--radius-lg)",
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--border-default)",
+            boxShadow: "var(--shadow-lg)",
+            animation: "fadeSlideUp .25s ease",
+          }}
+        >
+          <span style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-primary)" }}>
+            {selectedProjectIds.size} selected
+          </span>
+          <button
+            onClick={handleBulkDelete}
+            disabled={bulkDeleting}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 16px",
+              borderRadius: "var(--radius-sm)",
+              border: "none",
+              background: "var(--error, #ef4444)",
+              color: "#fff",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: bulkDeleting ? "not-allowed" : "pointer",
+              opacity: bulkDeleting ? 0.7 : 1,
+              transition: "opacity .15s ease",
+            }}
+          >
+            <Trash2 style={{ width: "14px", height: "14px" }} />
+            {bulkDeleting ? "Deleting..." : `Delete (${selectedProjectIds.size})`}
+          </button>
+          <button
+            onClick={toggleSelectMode}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "28px",
+              height: "28px",
+              borderRadius: "6px",
+              border: "none",
+              background: "transparent",
+              color: "var(--text-muted)",
+              cursor: "pointer",
+              transition: "background .15s ease, color .15s ease",
+            }}
+            title="Cancel selection"
+            aria-label="Cancel selection"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--bg-muted)";
+              e.currentTarget.style.color = "var(--text-primary)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "var(--text-muted)";
+            }}
+          >
+            <X style={{ width: "14px", height: "14px" }} />
+          </button>
+        </div>
       )}
     </section>
   );
@@ -1427,8 +1674,8 @@ function ProjectCard({ project, availableTags, onDeleteProject }: { project: Das
           />
         </div>
 
-        {/* Top row - status badge + visibility */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: "6px", marginBottom: "14px" }}>
+        {/* Top row - status badge + visibility + role */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: "6px", marginBottom: "14px", flexWrap: "wrap" }}>
           <span
             style={{
               fontSize: "10px",
@@ -1444,6 +1691,20 @@ function ProjectCard({ project, availableTags, onDeleteProject }: { project: Das
             {statusLabel}
           </span>
           <VisibilityToggle projectId={project.id} visibility={project.visibility} />
+          <span
+            style={{
+              fontSize: "10px",
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              padding: "3px 8px",
+              borderRadius: "999px",
+              background: project.role === "HEAD" ? "rgba(139,92,246,0.1)" : project.role === "CO_HEAD" ? "rgba(59,130,246,0.1)" : "var(--bg-muted)",
+              color: project.role === "HEAD" ? "#8b5cf6" : project.role === "CO_HEAD" ? "#3b82f6" : "var(--text-muted)",
+            }}
+          >
+            {project.role === "HEAD" ? "Head" : project.role === "CO_HEAD" ? "Co-Head" : "Member"}
+          </span>
         </div>
 
         {/* Name */}

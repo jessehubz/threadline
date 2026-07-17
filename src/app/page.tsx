@@ -102,7 +102,7 @@ export default async function LandingPage() {
             <div className="social-proof">
               <div className="lbl">Built around a few core ideas</div>
               <div className="logo-row">
-                <span>Dependency Graphs</span><span>Real-Time Sync</span><span>AI Assistant</span><span>Approval Flows</span><span>Workload Analytics</span>
+                <span>Dependency Graphs</span><span>Real-Time Sync</span><span>Task Helper</span><span>Approval Flows</span><span>Workload Analytics</span>
               </div>
             </div>
           </RevealOnScroll>
@@ -194,7 +194,7 @@ export default async function LandingPage() {
               <div className="f-text">
                 <div className="f-eyebrow">AI-powered</div>
                 <h3>Describe it. We&apos;ll build the graph.</h3>
-                <p>Tell the AI assistant what you&apos;re building. It generates a full dependency graph with tasks, connections, and sensible structure that are ready to edit and assign.</p>
+                <p>Tell the Task Helper what you&apos;re building. It generates a full dependency graph with tasks, connections, and sensible structure that are ready to edit and assign.</p>
               </div>
               <div className="f-visual" style={{ flexDirection: "column", alignItems: "stretch", gap: "14px", padding: "28px" }}>
                 <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>

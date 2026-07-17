@@ -102,7 +102,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
         style={{ marginLeft: "50%", transform: "translateX(-50%)" }}
       >
         <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
-        AI Assistant
+        Task Helper
         {open ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
       </button>
 
@@ -114,7 +114,7 @@ export function AIAssistantPanel({ projectId, graphId, open, onToggle }: AIAssis
             visible ? "scale-y-100 opacity-100" : "scale-y-95 opacity-0"
           )}
         >
-          <div className="mx-auto max-w-3xl space-y-4">
+          <div className="mx-auto max-w-3xl space-y-5">
             <div className="flex items-center gap-3">
               <p className="text-card-title">
                 Generate a dependency graph

@@ -220,7 +220,7 @@ export async function getPendingReminders(): Promise<PendingReminder[]> {
 }
 
 // ─── chatWithAssistant (heuristic-powered conversation) ─────────────────────
-// Loom IS the heuristic engine in src/lib/ai-assistant.ts - there is no
+// Task Helper IS the heuristic engine in src/lib/ai-assistant.ts - there is no
 // external LLM call. See parseUserMessage for intent handling.
 
 export async function chatWithAssistant(

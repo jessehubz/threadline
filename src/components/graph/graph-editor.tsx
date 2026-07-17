@@ -27,6 +27,7 @@ import { FolderNodeComponent } from "@/components/graph/folder-node";
 import { GraphToolbar } from "@/components/graph/graph-toolbar";
 import { CustomControls } from "@/components/graph/custom-controls";
 import { TaskDetailPanel } from "@/components/graph/task-detail-panel";
+import { TaskViewPanel } from "@/components/graph/task-view-panel";
 import { GraphBreadcrumbs } from "@/components/graph/graph-breadcrumbs";
 import { CollaboratorPresence } from "@/components/graph/collaborator-presence";
 import { ShareDialog } from "@/components/graph/share-dialog";
@@ -35,7 +36,7 @@ import { AIAssistantPanel } from "@/components/graph/ai-assistant-panel";
 import { ThemedBezierEdge } from "@/components/graph/themed-edge";
 import { MultiSelectPanel } from "@/components/graph/multi-select-panel";
 import { createNode, createEdge, deleteNode, deleteEdge, updateNodePosition, restoreNode, getDeletedNodes } from "@/actions/graph-actions";
-import { wouldCreateCycle } from "@/lib/graph-utils";
+import { wouldCreateCycle, getBlockedNodeIds } from "@/lib/graph-utils";
 import { toast } from "sonner";
 import { usePusher } from "@/hooks/use-pusher";
 import { useUndo } from "@/hooks/use-undo";
@@ -777,8 +778,25 @@ export function GraphEditor({ projectId, graph, projectName, projectVisibility, 
   // Nodes mid-delete get an `isRemoving` flag so task-node/folder-node can
   // play their exit transition before actually being filtered out above.
   const renderNodes = useMemo(
-    () => (removingNodeIds.size === 0 ? nodes : nodes.map((n) => (removingNodeIds.has(n.id) ? { ...n, data: { ...n.data, isRemoving: true } } : n))),
-    [nodes, removingNodeIds]
+    () => {
+      // Compute auto-blocked nodes from the current graph state
+      const blockedIds = getBlockedNodeIds(nodes, edges);
+
+      return nodes.map((n) => {
+        const isRemoving = removingNodeIds.has(n.id);
+        const isAutoBlocked = blockedIds.has(n.id);
+        if (!isRemoving && !isAutoBlocked) return n;
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            ...(isRemoving && { isRemoving: true }),
+            ...(isAutoBlocked && { isAutoBlocked: true }),
+          },
+        };
+      });
+    },
+    [nodes, edges, removingNodeIds]
   );
 
   return (
@@ -847,7 +865,7 @@ export function GraphEditor({ projectId, graph, projectName, projectVisibility, 
           </ReactFlow>
 
           {/* 7.2 - Controls at z-5, below task detail panel */}
-          <CustomControls />
+          <CustomControls projectId={projectId} graphId={graph.id} canEdit={canEditNodes} />
 
           {/* Recently Deleted Panel */}
           {canDeleteNodes && (
@@ -915,24 +933,35 @@ export function GraphEditor({ projectId, graph, projectName, projectVisibility, 
             mounted for NODE_EXIT_MS after closing so it can slide/fade out
             instead of hard-cutting (see detailPanelPersisted below). */}
         {detailPanelPersisted && (
-          <TaskDetailPanel
-            key={detailPanelPersisted.nodeId}
-            isOpen={!!(selectedNodeId && selectedNode)}
-            projectId={projectId}
-            currentUserId={currentUserId}
-            node={selectedNodeId && selectedNode ? selectedNode : detailPanelPersisted.node}
-            graphEdges={edges.map((e) => ({ id: e.id, sourceNodeId: e.source, targetNodeId: e.target }))}
-            graphNodes={graph.nodes.map((gn) => {
-              const liveNode = nodes.find((n) => n.id === gn.id);
-              return { ...gn, status: (liveNode?.data?.status as string) || gn.status };
-            })}
-            members={members}
-            isReadOnly={!canEditNodes}
-            canDelete={canDeleteNodes}
-            hasUnreadComments={unreadCommentNodeIds.includes(detailPanelPersisted.node.id)}
-            onClose={() => setSelectedNodeId(null)}
-            onDelete={() => handleDeleteNode(detailPanelPersisted.nodeId)}
-          />
+          isReadOnly ? (
+            <TaskViewPanel
+              key={detailPanelPersisted.nodeId}
+              isOpen={!!(selectedNodeId && selectedNode)}
+              projectId={projectId}
+              currentUserId={currentUserId}
+              node={selectedNodeId && selectedNode ? selectedNode : detailPanelPersisted.node}
+              onClose={() => setSelectedNodeId(null)}
+            />
+          ) : (
+            <TaskDetailPanel
+              key={detailPanelPersisted.nodeId}
+              isOpen={!!(selectedNodeId && selectedNode)}
+              projectId={projectId}
+              currentUserId={currentUserId}
+              node={selectedNodeId && selectedNode ? selectedNode : detailPanelPersisted.node}
+              graphEdges={edges.map((e) => ({ id: e.id, sourceNodeId: e.source, targetNodeId: e.target }))}
+              graphNodes={graph.nodes.map((gn) => {
+                const liveNode = nodes.find((n) => n.id === gn.id);
+                return { ...gn, status: (liveNode?.data?.status as string) || gn.status };
+              })}
+              members={members}
+              isReadOnly={!canEditNodes}
+              canDelete={canDeleteNodes}
+              hasUnreadComments={unreadCommentNodeIds.includes(detailPanelPersisted.node.id)}
+              onClose={() => setSelectedNodeId(null)}
+              onDelete={() => handleDeleteNode(detailPanelPersisted.nodeId)}
+            />
+          )
         )}
 
         <ShareDialog

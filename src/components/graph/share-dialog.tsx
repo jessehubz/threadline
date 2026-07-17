@@ -16,7 +16,7 @@ import {
   Mail,
   RotateCcw,
 } from "lucide-react";
-import { inviteMember, removeMember, updateMemberRole, inviteByEmail, getPendingInvites, revokeInvite, searchUsersForProject } from "@/actions/team-actions";
+import { inviteMember, removeMember, updateMemberRole, transferHeadRole, inviteByEmail, getPendingInvites, revokeInvite, searchUsersForProject } from "@/actions/team-actions";
 import type { ProjectSearchResult } from "@/actions/team-actions";
 import { regenerateShareToken, disableShareLink } from "@/actions/project-actions";
 import { cn } from "@/lib/utils";
@@ -354,6 +354,32 @@ export function ShareDialog({
   }
 
   async function handleRoleChange(memberId: string, newRole: string) {
+    // HEAD transfer requires confirmation and uses a separate action
+    if (newRole === "HEAD") {
+      const member = members.find((m) => m.id === memberId);
+      const memberName = member?.user.name || member?.user.email || "this member";
+      const confirmed = window.confirm(
+        `Transfer Head role to ${memberName}? You will be demoted to Co-Head. This cannot be undone without the new Head's cooperation.`
+      );
+      if (!confirmed) return;
+
+      setRoleChangeLoading(memberId);
+      try {
+        const result = await transferHeadRole(projectId, memberId);
+        if (result.error) {
+          toast.error(result.error);
+        } else {
+          toast.success("Head role transferred successfully");
+          router.refresh();
+        }
+      } catch {
+        toast.error("Failed to transfer Head role");
+      } finally {
+        setRoleChangeLoading(null);
+      }
+      return;
+    }
+
     setRoleChangeLoading(memberId);
     try {
       const result = await updateMemberRole(projectId, memberId, newRole);
@@ -853,6 +879,9 @@ export function ShareDialog({
                               : "var(--bg-muted, rgba(0,0,0,0.04))",
                         }}
                       >
+                        {currentUserRole === "HEAD" && (
+                          <option value="HEAD">Head</option>
+                        )}
                         <option value="CO_HEAD">Co-Head</option>
                         <option value="MEMBER">Member</option>
                       </select>

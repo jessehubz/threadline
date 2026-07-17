@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { X, Trash2, AlertCircle, Check, ShieldCheck, Shield, XCircle, MessageSquare } from "lucide-react";
+import { X, Trash2, AlertCircle, Check, ShieldCheck, Shield, XCircle, MessageSquare, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -97,6 +97,13 @@ export function TaskDetailPanel({
   const [dueDate, setDueDate] = useState(
     node.dueDate ? new Date(node.dueDate).toISOString().split("T")[0] : ""
   );
+  const [dueTime, setDueTime] = useState(() => {
+    if (!node.dueDate) return "23:59";
+    const d = new Date(node.dueDate);
+    const h = d.getHours().toString().padStart(2, "0");
+    const m = d.getMinutes().toString().padStart(2, "0");
+    return `${h}:${m}`;
+  });
   const [saving, setSaving] = useState(false);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
@@ -104,6 +111,31 @@ export function TaskDetailPanel({
   const [rejectReason, setRejectReason] = useState("");
   const [commentCount, setCommentCount] = useState(node._count?.comments ?? 0);
   const [hasUnread, setHasUnread] = useState(hasUnreadComments);
+
+  // Optimistic state for assignments: tracks user IDs that are optimistically
+  // assigned/unassigned before the server confirms.
+  const [optimisticAssigned, setOptimisticAssigned] = useState<Set<string>>(new Set());
+  const [optimisticUnassigned, setOptimisticUnassigned] = useState<Set<string>>(new Set());
+
+  // Clear optimistic state when props catch up to reality.
+  const serverAssignedIds = node.assignments.map((a) => a.user.id);
+  useEffect(() => {
+    setOptimisticAssigned((prev) => {
+      const next = new Set(prev);
+      for (const id of prev) {
+        if (serverAssignedIds.includes(id)) next.delete(id);
+      }
+      return next.size === prev.size ? prev : next;
+    });
+    setOptimisticUnassigned((prev) => {
+      const next = new Set(prev);
+      for (const id of prev) {
+        if (!serverAssignedIds.includes(id)) next.delete(id);
+      }
+      return next.size === prev.size ? prev : next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverAssignedIds.join(",")]);
 
   function scrollToComments() {
     document.getElementById("comments-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -129,12 +161,18 @@ export function TaskDetailPanel({
 
   async function handleSave() {
     setSaving(true);
-    await updateNode(projectId, node.id, { title, description, color: color || null, dueDate: dueDate || null });
+    const combinedDueDate = dueDate ? `${dueDate}T${dueTime || "23:59"}:00` : null;
+    await updateNode(projectId, node.id, { title, description, color: color || null, dueDate: combinedDueDate });
     toast.success("Saved");
     setSaving(false);
   }
 
   async function handleStatusChange(newStatus: string) {
+    // Prevent completing a task that is auto-blocked by incomplete upstream dependencies
+    if (newStatus === "COMPLETE" && blockedBy.length > 0) {
+      toast.error("Complete parent tasks first");
+      return;
+    }
     setStatus(newStatus);
     try {
       if (newStatus === "COMPLETE" && hasApprover) {
@@ -165,12 +203,23 @@ export function TaskDetailPanel({
   }
 
   async function handleAssign(userId: string) {
+    // Optimistic: show as assigned immediately
+    setOptimisticAssigned((prev) => new Set(prev).add(userId));
+    setOptimisticUnassigned((prev) => { const next = new Set(prev); next.delete(userId); return next; });
     const result = await assignUser(projectId, node.id, userId);
-    if (result.error) toast.error(result.error);
-    else toast.success("Assigned");
+    if (result.error) {
+      // Revert on failure
+      setOptimisticAssigned((prev) => { const next = new Set(prev); next.delete(userId); return next; });
+      toast.error(result.error);
+    } else {
+      toast.success("Assigned");
+    }
   }
 
   async function handleUnassign(userId: string) {
+    // Optimistic: show as unassigned immediately
+    setOptimisticUnassigned((prev) => new Set(prev).add(userId));
+    setOptimisticAssigned((prev) => { const next = new Set(prev); next.delete(userId); return next; });
     await unassignUser(projectId, node.id, userId);
     toast.success("Removed");
   }
@@ -257,7 +306,7 @@ export function TaskDetailPanel({
         </div>
       </div>
 
-      <div className="space-y-6 p-5">
+      <div className="space-y-7 p-5">
         {/* Status */}
         <div>
           <label className="text-eyebrow mb-2 block">Status</label>
@@ -265,22 +314,43 @@ export function TaskDetailPanel({
             <Badge className={getStatusColor(status)}>{getStatusLabel(status)}</Badge>
           ) : (
             <div className="flex flex-wrap gap-1.5">
-              {STATUS_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => handleStatusChange(opt.value)}
-                  className={cn(
-                    "rounded-full px-3 py-1.5 text-xs font-medium transition-[transform,background-color,color] duration-150 hover:scale-105",
-                    status === opt.value ? getStatusColor(opt.value) : "bg-hover text-body"
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
+              {STATUS_OPTIONS.map((opt) => {
+                const isDisabledByDeps = opt.value === "COMPLETE" && blockedBy.length > 0;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleStatusChange(opt.value)}
+                    disabled={isDisabledByDeps}
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-xs font-medium transition-[transform,background-color,color] duration-150 hover:scale-105",
+                      status === opt.value ? getStatusColor(opt.value) : "bg-hover text-body",
+                      isDisabledByDeps && "opacity-40 cursor-not-allowed hover:scale-100"
+                    )}
+                    title={isDisabledByDeps ? "Complete parent tasks first" : undefined}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
             </div>
           )}
           {status === "AWAITING_APPROVAL" && <p className="mt-2 text-xs text-[var(--violet-600)]">Awaiting approval</p>}
           {status === "REJECTED" && <p className="mt-2 flex items-center gap-1 text-xs text-[var(--danger)]"><AlertCircle className="h-3 w-3" /> Rejected</p>}
+
+          {/* Auto-blocked indicator */}
+          {blockedBy.length > 0 && status !== "COMPLETE" && (
+            <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-[var(--danger-soft)] px-3 py-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-[var(--danger)] shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-medium text-[var(--danger)]">
+                  Auto-blocked — complete parent tasks first
+                </p>
+                <p className="text-[11px] text-[var(--danger)] opacity-80 mt-0.5">
+                  Blocked by: {blockedBy.map((n) => n!.title).join(", ")}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Approve/Reject - only the assigned approver sees this while awaiting approval */}
           {isPendingApprover && (
@@ -364,24 +434,54 @@ export function TaskDetailPanel({
         {/* Description */}
         <Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} onBlur={handleSave} disabled={isReadOnly} rows={3} placeholder="Add details..." />
 
-        {/* Due Date */}
-        <DatePicker label="Due Date" value={dueDate} onChange={(val) => { setDueDate(val); updateNode(projectId, node.id, { title, description, color: color || null, dueDate: val || null }).then(() => toast.success("Saved")); }} disabled={isReadOnly} />
+        {/* Due Date & Time */}
+        <div>
+          <DatePicker label="Due Date" value={dueDate} onChange={(val) => { setDueDate(val); const combinedDueDate = val ? `${val}T${dueTime || "23:59"}:00` : null; updateNode(projectId, node.id, { title, description, color: color || null, dueDate: combinedDueDate }).then(() => toast.success("Saved")); }} disabled={isReadOnly} />
+          {dueDate && (
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-heading mb-1.5">Due Time</label>
+              <input
+                type="time"
+                value={dueTime}
+                onChange={(e) => {
+                  const newTime = e.target.value || "23:59";
+                  setDueTime(newTime);
+                  const combinedDueDate = `${dueDate}T${newTime}:00`;
+                  updateNode(projectId, node.id, { title, description, color: color || null, dueDate: combinedDueDate }).then(() => toast.success("Saved"));
+                }}
+                disabled={isReadOnly}
+                className="input-field w-auto text-sm"
+                aria-label="Due time"
+              />
+              <p className="mt-1 text-xs text-dim">
+                Due: {(() => {
+                  const d = new Date(`${dueDate}T${dueTime}:00`);
+                  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + " at " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+                })()}
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Assignees */}
-        <div>
+        <div className="border-t border-themed-subtle pt-5">
           <label className="text-eyebrow mb-2 block">Assigned People</label>
           <div className="space-y-1.5">
             {(() => {
               const assignedIds = new Set(node.assignments.map((a) => a.user.id));
+              // Compute effective assignment state including optimistic updates
+              const effectiveAssignedIds = new Set(assignedIds);
+              for (const id of optimisticAssigned) effectiveAssignedIds.add(id);
+              for (const id of optimisticUnassigned) effectiveAssignedIds.delete(id);
               const sortedMembers = [...members].sort((a, b) => {
-                const aAssigned = assignedIds.has(a.user.id);
-                const bAssigned = assignedIds.has(b.user.id);
+                const aAssigned = effectiveAssignedIds.has(a.user.id);
+                const bAssigned = effectiveAssignedIds.has(b.user.id);
                 if (aAssigned && !bAssigned) return -1;
                 if (!aAssigned && bAssigned) return 1;
                 return 0;
               });
               return sortedMembers.map((m) => {
-                const isAssigned = assignedIds.has(m.user.id);
+                const isAssigned = effectiveAssignedIds.has(m.user.id);
                 const assignment = node.assignments.find((a) => a.user.id === m.user.id);
                 const isApprover = assignment?.isApprover ?? false;
                 return (
@@ -489,13 +589,13 @@ export function TaskDetailPanel({
         )}
 
         {/* Attachments */}
-        <div>
+        <div className="border-t border-themed-subtle pt-5">
           <label className="text-eyebrow mb-2 block">Attachments</label>
           <FileUpload nodeId={node.id} projectId={projectId} attachments={node.attachments} isReadOnly={isReadOnly} />
         </div>
 
         {/* Comments - all project members can comment regardless of graph edit role */}
-        <div>
+        <div className="border-t border-themed-subtle pt-5">
           <TaskComments
             nodeId={node.id}
             currentUserId={currentUserId}

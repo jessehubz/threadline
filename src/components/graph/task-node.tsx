@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useState } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { Calendar, Paperclip, ChevronRight, FileText, MessageCircle, Lock, Trash2 } from "lucide-react";
+import { Calendar, Paperclip, ChevronRight, FileText, MessageCircle, Lock, Trash2, AlertTriangle } from "lucide-react";
 import { cn, getStatusLabel, getStatusDotColor, getPriorityColor, getPriorityLabel, formatDate } from "@/lib/utils";
 
 interface TaskNodeData {
@@ -20,6 +20,7 @@ interface TaskNodeData {
   hasUnreadComments?: boolean;
   isRestricted?: boolean;
   isRemoving?: boolean;
+  isAutoBlocked?: boolean;
   [key: string]: unknown;
 }
 
@@ -67,13 +68,9 @@ function TaskNodeInner({ id, data, selected }: NodeProps & { data: TaskNodeData 
         <Trash2 className="h-3 w-3" />
       </button>
 
-      {/* Connection Handles - all 4 sides */}
-      <Handle
-        type="source"
-        position={Position.Top}
-        id="top-source"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
-      />
+      {/* Connection Handles — target (incoming) on TOP & LEFT, source (outgoing) on BOTTOM & RIGHT.
+          Separating source/target to distinct positions prevents the ambiguity that caused arrows
+          to sometimes point the wrong direction when handles overlapped at the same position. */}
       <Handle
         type="target"
         position={Position.Top}
@@ -81,15 +78,9 @@ function TaskNodeInner({ id, data, selected }: NodeProps & { data: TaskNodeData 
         className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
       />
       <Handle
-        type="source"
-        position={Position.Right}
-        id="right-source"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
-      />
-      <Handle
         type="target"
-        position={Position.Right}
-        id="right-target"
+        position={Position.Left}
+        id="left-target"
         className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
       />
       <Handle
@@ -99,21 +90,9 @@ function TaskNodeInner({ id, data, selected }: NodeProps & { data: TaskNodeData 
         className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
       />
       <Handle
-        type="target"
-        position={Position.Bottom}
-        id="bottom-target"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
-      />
-      <Handle
         type="source"
-        position={Position.Left}
-        id="left-source"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left-target"
+        position={Position.Right}
+        id="right-source"
         className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
       />
 
@@ -164,6 +143,14 @@ function TaskNodeInner({ id, data, selected }: NodeProps & { data: TaskNodeData 
         <h4 className="text-[13px] font-medium leading-tight line-clamp-2 text-[var(--text-primary)] mb-2">
           {nodeData.title}
         </h4>
+
+        {/* Auto-blocked indicator */}
+        {nodeData.isAutoBlocked && nodeData.status !== "COMPLETE" && (
+          <div className="flex items-center gap-1 mb-2 rounded-md bg-[var(--danger-soft)] px-2 py-1">
+            <AlertTriangle className="h-3 w-3 text-[var(--danger)] shrink-0" />
+            <span className="text-[10px] font-medium text-[var(--danger)]">Blocked by dependencies</span>
+          </div>
+        )}
 
         {/* Sub-graph progress */}
         {nodeData.hasSubGraph && nodeData.subGraphProgress && nodeData.subGraphProgress.total > 0 && (

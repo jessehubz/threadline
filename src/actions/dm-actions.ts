@@ -183,6 +183,7 @@ export async function sendDirectMessage(data: { conversationId: string; content:
         type: "NEW_MESSAGE",
         title: `New message from ${senderName}`,
         message: truncatedContent,
+        relatedNodeId: parsed.conversationId,
       })
     )
   );

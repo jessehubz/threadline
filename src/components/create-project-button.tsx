@@ -5,7 +5,6 @@ import { Plus, X, Users, UserPlus, Search } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { createProject } from "@/actions/project-actions";
 import { inviteMember } from "@/actions/team-actions";
 import { getFriends } from "@/actions/friend-actions";
@@ -90,7 +89,6 @@ export function CreateProjectButton() {
       <Dialog open={open} onClose={() => setOpen(false)} title="Create Project">
         <form action={handleSubmit} className="space-y-4">
           <Input name="name" label="Project Name" placeholder="My new project" required />
-          <Textarea name="description" label="Description (optional)" placeholder="What is this project about?" rows={2} />
 
           {/* Invite Members - Tabbed UI */}
           <div>

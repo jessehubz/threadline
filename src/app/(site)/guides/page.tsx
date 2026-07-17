@@ -48,12 +48,12 @@ const guides = [
   },
   {
     icon: Brain,
-    title: "Using the AI Assistant",
-    description: "Describe your project in plain text and let the AI generate a complete dependency graph with tasks and connections.",
+    title: "Using the Task Helper",
+    description: "Describe your project in plain text and let the Task Helper generate a complete dependency graph with tasks and connections.",
     readTime: "4 min read",
     difficulty: "Beginner",
     steps: [
-      "Open the AI assistant from the graph editor.",
+      "Open the Task Helper from the graph editor.",
       "Describe your project in plain text, or start from a pre-built template like Web App or Product Launch.",
       "The assistant splits your description into tasks and adds sensible dependencies between them.",
       "Review the generated graph and adjust titles, statuses, or connections as needed.",
