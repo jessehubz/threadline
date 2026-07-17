@@ -946,7 +946,7 @@ function HeroSection({
         <h1
           style={{
             fontSize: "52px",
-            fontWeight: 200,
+            fontWeight: 350,
             letterSpacing: "-0.02em",
             lineHeight: 1.1,
             color: "var(--text-primary)",
@@ -956,12 +956,9 @@ function HeroSection({
           {greeting},{" "}
           <b
             style={{
-              fontFamily: '"Outfit", "Inter", sans-serif',
-              fontWeight: 700,
-              background: "linear-gradient(135deg, var(--accent-hover), #4c1d95)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              fontFamily: '"Inter", sans-serif',
+              fontWeight: 500,
+              color: "var(--text-primary)",
             }}
           >
             {firstName}.
@@ -1542,7 +1539,7 @@ function ProjectsSection({
               padding: "8px 16px",
               borderRadius: "var(--radius-sm)",
               border: "none",
-              background: "var(--error, #ef4444)",
+              background: "var(--danger)",
               color: "#fff",
               fontSize: "13px",
               fontWeight: 600,
@@ -1657,7 +1654,7 @@ function ProjectCard({ project, availableTags, onDeleteProject }: { project: Das
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = "rgba(239,68,68,0.08)";
-              e.currentTarget.style.color = "var(--error, #ef4444)";
+              e.currentTarget.style.color = "var(--danger)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "transparent";
@@ -1700,7 +1697,7 @@ function ProjectCard({ project, availableTags, onDeleteProject }: { project: Das
               padding: "3px 8px",
               borderRadius: "999px",
               background: project.role === "HEAD" ? "rgba(139,92,246,0.1)" : project.role === "CO_HEAD" ? "rgba(59,130,246,0.1)" : "var(--bg-muted)",
-              color: project.role === "HEAD" ? "#8b5cf6" : project.role === "CO_HEAD" ? "#3b82f6" : "var(--text-muted)",
+              color: project.role === "HEAD" ? "var(--text-primary)" : project.role === "CO_HEAD" ? "var(--text-secondary)" : "var(--text-muted)",
             }}
           >
             {project.role === "HEAD" ? "Head" : project.role === "CO_HEAD" ? "Co-Head" : "Member"}
@@ -2124,7 +2121,7 @@ function EditProjectButton({ projectId, projectName }: { projectId: string; proj
                               transition: "color .15s ease, background .15s ease",
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.color = "var(--error, #ef4444)";
+                              e.currentTarget.style.color = "var(--danger)";
                               e.currentTarget.style.background = "rgba(239,68,68,0.1)";
                             }}
                             onMouseLeave={(e) => {
@@ -2273,7 +2270,7 @@ function EditProjectButton({ projectId, projectName }: { projectId: string; proj
                   </div>
                 )}
               </div>
-              {addError && <p style={{ fontSize: "12px", color: "var(--error, #ef4444)", marginTop: "6px" }}>{addError}</p>}
+              {addError && <p style={{ fontSize: "12px", color: "var(--danger)", marginTop: "6px" }}>{addError}</p>}
             </div>
 
             {/* Save button */}
@@ -2502,7 +2499,7 @@ function FriendsPanel({
                       width: "10px",
                       height: "10px",
                       borderRadius: "50%",
-                      background: isOnline ? "#22c55e" : "#9ca3af",
+                      background: isOnline ? "var(--text-primary)" : "#9ca3af",
                       border: "2px solid var(--bg-elevated)",
                     }}
                   />
@@ -2528,7 +2525,7 @@ function FriendsPanel({
                         cy="16"
                         r="13"
                         fill="none"
-                        stroke={healthPct < 40 ? "#22c55e" : healthPct <= 75 ? "#f59e0b" : "#ef4444"}
+                        stroke={healthPct < 40 ? "var(--text-primary)" : healthPct <= 75 ? "var(--text-secondary)" : "var(--text-muted)"}
                         strokeWidth="3"
                         strokeLinecap="round"
                         strokeDasharray={`${2 * Math.PI * 13}`}
@@ -2555,7 +2552,7 @@ function FriendsPanel({
                     style={{
                       fontSize: "10px",
                       fontWeight: 500,
-                      color: healthPct < 40 ? "#22c55e" : healthPct <= 75 ? "#f59e0b" : "#ef4444",
+                      color: healthPct < 40 ? "var(--text-primary)" : healthPct <= 75 ? "var(--text-secondary)" : "var(--text-muted)",
                       whiteSpace: "nowrap",
                     }}
                   >

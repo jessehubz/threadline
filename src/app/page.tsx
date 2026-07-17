@@ -40,9 +40,9 @@ export default async function LandingPage() {
             <div className="float-card main">
               <div className="mini-tab-bar">
                 <div className="mini-dots">
-                  <span style={{ background: "#FF5F57" }}></span>
-                  <span style={{ background: "#FFBD2E" }}></span>
-                  <span style={{ background: "#28C840" }}></span>
+                  <span style={{ background: "#A3A3A3" }}></span>
+                  <span style={{ background: "#737373" }}></span>
+                  <span style={{ background: "#525252" }}></span>
                 </div>
                 <div className="mini-url">threadline.app</div>
               </div>

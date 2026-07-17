@@ -61,7 +61,7 @@ export function ShareGraphViewer({ graph }: ShareGraphViewerProps) {
     source: edge.sourceNodeId,
     target: edge.targetNodeId,
     animated: true,
-    style: { strokeWidth: 2, stroke: "#6366f1" },
+    style: { strokeWidth: 2, stroke: "var(--accent)" },
   }));
 
   return (

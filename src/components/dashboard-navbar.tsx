@@ -181,11 +181,11 @@ export function DashboardNavbar({ userId }: { userId: string }) {
         }}
       >
         {/* ─── Row 1: Brand + Utilities ─────────────────────────────────── */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 min-w-0">
           {/* Brand - matches the landing page wordmark (see site-footer.tsx / site-page-header.tsx) */}
           <Link
             href="/dashboard"
-            className="logo-word select-none hover:opacity-80 transition-opacity duration-150"
+            className="logo-word select-none hover:opacity-80 transition-opacity duration-150 flex-shrink-0"
             style={{ fontSize: "18px", textDecoration: "none" }}
           >
             <span className="text-heading">thread</span>
@@ -193,23 +193,23 @@ export function DashboardNavbar({ userId }: { userId: string }) {
           </Link>
 
           {/* Utility group */}
-          <div className="flex items-center gap-2">
-            {/* Search - always-visible inline input, fills available space */}
-            <SearchDropdown className="hidden sm:flex min-w-[180px] max-w-[280px]" />
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Search - always-visible inline input */}
+            <SearchDropdown className="hidden md:flex min-w-[160px] max-w-[240px]" />
 
             {/* Message icon button with notification dot */}
             <Link
               href="/messages"
-              className="relative flex items-center justify-center w-[38px] h-[38px] rounded-full text-[var(--text-secondary)] transition-[transform,background-color,color] duration-[180ms] ease-in-out hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--text-primary)] hover:-translate-y-px"
+              className="relative flex items-center justify-center w-[34px] h-[34px] rounded-full text-[var(--text-secondary)] transition-[background-color,color] duration-150 hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)]"
               aria-label="Messages"
             >
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M4 4h12a2 2 0 012 2v7a2 2 0 01-2 2H7l-4 3V6a2 2 0 012-2z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               {/* Notification dot - only shown when there are unread messages */}
               {unreadMessageCount > 0 && (
                 <span
-                  className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full"
+                  className="absolute top-1 right-1 h-2 w-2 rounded-full"
                   style={{ background: "var(--accent)" }}
                 />
               )}
@@ -227,12 +227,11 @@ export function DashboardNavbar({ userId }: { userId: string }) {
                 padding: "3px",
               }}
             >
-              {/* Light mode button */}
               <button
                 onClick={() => setTheme("light")}
                 className={cn(
-                  "flex items-center justify-center w-[30px] h-[30px] rounded-full cursor-pointer transition-[background-color,color] duration-[180ms] ease-in-out",
-                  resolvedTheme !== "light" && "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)]"
+                  "flex items-center justify-center w-[28px] h-[28px] rounded-full cursor-pointer transition-[background-color,color] duration-150",
+                  resolvedTheme !== "light" && "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 )}
                 style={{
                   background: resolvedTheme === "light" ? "var(--accent)" : "transparent",
@@ -240,7 +239,7 @@ export function DashboardNavbar({ userId }: { userId: string }) {
                 }}
                 aria-label="Light mode"
               >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <circle cx="10" cy="10" r="4" />
                   <line x1="10" y1="1" x2="10" y2="3" strokeLinecap="round" />
                   <line x1="10" y1="17" x2="10" y2="19" strokeLinecap="round" />
@@ -252,13 +251,11 @@ export function DashboardNavbar({ userId }: { userId: string }) {
                   <line x1="14.7" y1="5.3" x2="16.1" y2="3.9" strokeLinecap="round" />
                 </svg>
               </button>
-
-              {/* Dark mode button */}
               <button
                 onClick={() => setTheme("dark")}
                 className={cn(
-                  "flex items-center justify-center w-[30px] h-[30px] rounded-full cursor-pointer transition-[background-color,color] duration-[180ms] ease-in-out",
-                  resolvedTheme !== "dark" && "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)]"
+                  "flex items-center justify-center w-[28px] h-[28px] rounded-full cursor-pointer transition-[background-color,color] duration-150",
+                  resolvedTheme !== "dark" && "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 )}
                 style={{
                   background: resolvedTheme === "dark" ? "var(--accent)" : "transparent",
@@ -266,7 +263,7 @@ export function DashboardNavbar({ userId }: { userId: string }) {
                 }}
                 aria-label="Dark mode"
               >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M17 12.5A7.5 7.5 0 017.5 3 7.5 7.5 0 1017 12.5z" />
                 </svg>
               </button>
@@ -274,16 +271,16 @@ export function DashboardNavbar({ userId }: { userId: string }) {
 
             {/* Divider */}
             <div
-              className="mx-1"
+              className="hidden sm:block mx-1"
               style={{
                 width: "1px",
-                height: "22px",
+                height: "20px",
                 background: "var(--border-default)",
               }}
             />
 
-            {/* User avatar (Clerk UserButton) with avatar-group hover */}
-            <div className="flex items-center gap-1 cursor-pointer rounded-full px-1.5 py-1 transition-colors duration-[180ms] hover:bg-[rgba(255,255,255,0.07)]">
+            {/* User avatar (Clerk UserButton) */}
+            <div className="flex items-center">
               <UserButton
                 appearance={{
                   options: {
@@ -514,14 +511,13 @@ export function DashboardNavbar({ userId }: { userId: string }) {
 
         {/* ─── Row 2: Navigation Pills ──────────────────────────────────── */}
         <div
-          className="hidden sm:block"
           style={{
             borderTop: "1px solid var(--border-default)",
             paddingTop: "14px",
           }}
         >
           <div
-            className="flex overflow-x-auto"
+            className="flex overflow-x-auto scrollbar-hide"
             style={{
               background: "var(--bg-base)",
               borderRadius: "999px",
@@ -550,15 +546,15 @@ export function DashboardNavbar({ userId }: { userId: string }) {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 transition-[transform,background-color,color,box-shadow] duration-[180ms] ease-in-out",
-                    !isActive && "hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)] hover:-translate-y-px hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)]"
+                    "flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 transition-[background-color,color] duration-150",
+                    !isActive && "hover:text-[var(--text-primary)] hover:bg-[var(--accent-soft)]"
                   )}
                   style={{
-                    padding: "8px 15px",
+                    padding: "8px 14px",
                     borderRadius: "999px",
-                    fontSize: "13.5px",
+                    fontSize: "13px",
                     fontWeight: 500,
-                    color: isActive ? "#fff" : "var(--text-secondary)",
+                    color: isActive ? "var(--on-accent)" : "var(--text-secondary)",
                     background: isActive ? "var(--accent)" : "transparent",
                   }}
                 >

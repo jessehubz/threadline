@@ -313,8 +313,8 @@ export default function ContactPage() {
               <p
                 style={{
                   fontSize: "13.5px",
-                  color: "#ef4444",
-                  background: "rgba(239, 68, 68, 0.08)",
+                  color: "var(--danger)",
+                  background: "rgba(0, 0, 0, 0.05)",
                   borderRadius: "var(--radius-sm)",
                   padding: "10px 14px",
                   margin: 0,

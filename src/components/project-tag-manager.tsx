@@ -16,14 +16,14 @@ interface ProjectTagManagerProps {
 }
 
 const TAG_COLORS = [
-  "#8B5CF6", // Violet
-  "#6366F1", // Indigo
-  "#3B82F6", // Blue
-  "#06B6D4", // Cyan
-  "#10B981", // Emerald
-  "#F59E0B", // Amber
-  "#EF4444", // Red
-  "#EC4899", // Pink
+  "#171717", // Near black
+  "#262626", // Dark gray
+  "#404040", // Charcoal
+  "#525252", // Medium dark
+  "#737373", // Medium gray
+  "#A3A3A3", // Light gray
+  "#D4D4D4", // Lighter gray
+  "#3F3F46", // Zinc dark
   "#6B7280", // Gray
 ];
 

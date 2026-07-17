@@ -92,7 +92,7 @@ export function TrashPageClient({ initialProjects }: { initialProjects: DeletedP
               background: "rgba(239,68,68,0.08)",
             }}
           >
-            <Trash2 style={{ width: "20px", height: "20px", color: "var(--error, #ef4444)" }} />
+            <Trash2 style={{ width: "20px", height: "20px", color: "var(--danger)" }} />
           </div>
           <div>
             <h1 style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
@@ -183,7 +183,7 @@ export function TrashPageClient({ initialProjects }: { initialProjects: DeletedP
                     {project.name}
                   </div>
                   {days !== null && (
-                    <div style={{ fontSize: "11px", color: days <= 3 ? "var(--error, #ef4444)" : "var(--text-muted)", marginTop: "3px", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <div style={{ fontSize: "11px", color: days <= 3 ? "var(--danger)" : "var(--text-muted)", marginTop: "3px", display: "flex", alignItems: "center", gap: "4px" }}>
                       <Clock style={{ width: "10px", height: "10px" }} />
                       {days === 0 ? "Purging today" : `Auto-deletes in ${days} day${days !== 1 ? "s" : ""}`}
                     </div>
@@ -247,8 +247,8 @@ export function TrashPageClient({ initialProjects }: { initialProjects: DeletedP
                       transition: "all .15s ease",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "var(--error, #ef4444)";
-                      e.currentTarget.style.color = "var(--error, #ef4444)";
+                      e.currentTarget.style.borderColor = "var(--danger)";
+                      e.currentTarget.style.color = "var(--danger)";
                       e.currentTarget.style.background = "rgba(239,68,68,0.06)";
                     }}
                     onMouseLeave={(e) => {

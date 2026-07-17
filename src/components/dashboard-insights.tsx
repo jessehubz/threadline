@@ -48,11 +48,11 @@ function formatDate(dateStr: string | null) {
 function getStatusColor(status: string): string {
   switch (status) {
     case "NOT_STARTED": return "var(--text-muted)";
-    case "IN_PROGRESS": return "#3b82f6";
-    case "BLOCKED": return "#ef4444";
-    case "AWAITING_APPROVAL": return "#f59e0b";
-    case "REJECTED": return "#ef4444";
-    case "COMPLETE": return "#22c55e";
+    case "IN_PROGRESS": return "var(--text-primary)";
+    case "BLOCKED": return "var(--text-muted)";
+    case "AWAITING_APPROVAL": return "var(--text-secondary)";
+    case "REJECTED": return "var(--text-muted)";
+    case "COMPLETE": return "var(--text-primary)";
     default: return "var(--text-muted)";
   }
 }
@@ -198,11 +198,11 @@ function FinishTodaySection({ dueToday }: { dueToday: TaskItem[] }) {
           gap: "12px",
           padding: "14px 20px",
           borderRadius: "var(--radius-lg)",
-          background: "rgba(34,197,94,0.05)",
-          border: "1px solid rgba(34,197,94,0.15)",
+          background: "rgba(0,0,0,0.03)",
+          border: "1px solid var(--border)",
         }}
       >
-        <CheckCircle2 style={{ width: "16px", height: "16px", color: "#22c55e", flexShrink: 0 }} />
+        <CheckCircle2 style={{ width: "16px", height: "16px", color: "var(--text-primary)", flexShrink: 0 }} />
         <span style={{ fontSize: "13.5px", color: "var(--text-secondary)", fontWeight: 500 }}>
           Nothing due today — you&apos;re ahead!
         </span>
@@ -215,13 +215,13 @@ function FinishTodaySection({ dueToday }: { dueToday: TaskItem[] }) {
       style={{
         padding: "16px 20px",
         borderRadius: "var(--radius-lg)",
-        background: "rgba(245,158,11,0.04)",
-        border: "1px solid rgba(245,158,11,0.15)",
+        background: "rgba(0,0,0,0.03)",
+        border: "1px solid var(--border)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-        <Clock style={{ width: "14px", height: "14px", color: "#f59e0b" }} />
-        <span style={{ fontSize: "12px", fontWeight: 600, color: "#f59e0b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        <Clock style={{ width: "14px", height: "14px", color: "var(--text-secondary)" }} />
+        <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
           Finish Today ({dueToday.length})
         </span>
       </div>
@@ -314,8 +314,8 @@ function OverviewPanel({
         className="grid grid-cols-3 gap-3 mb-4 max-[480px]:grid-cols-1 max-[480px]:gap-2"
       >
         <StatCard label="Active" value={activeTasks} color="var(--accent)" />
-        <StatCard label="Overdue" value={overdueCount} color={overdueCount > 0 ? "#ef4444" : "var(--text-muted)"} />
-        <StatCard label="Due This Week" value={dueThisWeekCount} color={dueThisWeekCount > 0 ? "#f59e0b" : "var(--text-muted)"} />
+        <StatCard label="Overdue" value={overdueCount} color={overdueCount > 0 ? "var(--text-primary)" : "var(--text-muted)"} />
+        <StatCard label="Due This Week" value={dueThisWeekCount} color={dueThisWeekCount > 0 ? "var(--text-secondary)" : "var(--text-muted)"} />
       </div>
 
       {/* Status breakdown */}
@@ -558,7 +558,7 @@ function PlanningModal({
                             {/* Date + overdue badge */}
                             <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                               {task.daysOverdue && task.daysOverdue > 0 ? (
-                                <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "10px", fontWeight: 600, color: "#ef4444", background: "rgba(239,68,68,0.08)", padding: "2px 7px", borderRadius: "999px" }}>
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "10px", fontWeight: 600, color: "var(--text-primary)", background: "rgba(0,0,0,0.06)", padding: "2px 7px", borderRadius: "999px" }}>
                                   <AlertTriangle style={{ width: "10px", height: "10px" }} />
                                   {task.daysOverdue}d late
                                 </span>

@@ -17,8 +17,8 @@ import { cn, getStatusColor, getStatusLabel, getPriorityColor, getPriorityLabel 
 import { toast } from "sonner";
 
 const PRESET_COLORS = [
-  "#ef4444", "#f97316", "#f59e0b", "#22c55e", "#3b82f6",
-  "#6366f1", "#8b5cf6", "#ec4899", "#14b8a6", "#64748b",
+  "#171717", "#262626", "#404040", "#525252", "#737373",
+  "#A3A3A3", "#D4D4D4", "#E5E5E5", "#F5F5F5", "#64748b",
 ];
 
 interface TaskDetailPanelProps {

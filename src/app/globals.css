@@ -38,7 +38,7 @@
   --accent-soft: rgba(20, 20, 25, 0.06);
   --accent-soft-hover: rgba(20, 20, 25, 0.10);
   --on-accent: #FFFFFF;
-  --logo-accent: #7C3AED;
+  --logo-accent: var(--text-primary);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05), 0 6px 14px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 18px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --ring-color: rgba(20, 20, 25, 0.20);
@@ -69,10 +69,10 @@
   --violet-600: #52525B;
   --violet-700: #3F3F46;
 
-  /* Single negative/warning color - muted coral. The only non-violet hue in the app. */
-  --danger: #DC4C4C;
-  --danger-hover: #C93D3D;
-  --danger-soft: rgba(220, 76, 76, 0.08);
+  /* Single negative/warning color - monochrome dark. */
+  --danger: #2E2E33;
+  --danger-hover: #17171A;
+  --danger-soft: rgba(20, 20, 25, 0.08);
 }
 
 .dark {
@@ -91,7 +91,7 @@
   --accent-soft: rgba(255, 255, 255, 0.08);
   --accent-soft-hover: rgba(255, 255, 255, 0.14);
   --on-accent: #0A0A0B;
-  --logo-accent: #A78BFA;
+  --logo-accent: var(--text-primary);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 14px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4), 0 8px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --ring-color: rgba(255, 255, 255, 0.28);
@@ -108,10 +108,10 @@
   --radius-md: 16px;
   --radius-sm: 10px;
 
-  /* Single negative/warning color - muted coral. The only non-violet hue in the app. */
-  --danger: #E5484D;
-  --danger-hover: #EC6A6E;
-  --danger-soft: rgba(229, 72, 77, 0.14);
+  /* Single negative/warning color - monochrome light. */
+  --danger: #E4E4E7;
+  --danger-hover: #F4F4F5;
+  --danger-soft: rgba(255, 255, 255, 0.14);
 
   /* Neutral hierarchy (formerly violet) - use these for UI chrome, borders, hover states.
      Inverted relative to light mode: emphasis lightens toward white to hold contrast on a dark canvas. */
@@ -760,13 +760,13 @@ main > * {
 
 /* Password field visual feedback in Clerk UserProfile */
 .cl-formFieldInput[type="password"]:focus:valid {
-  border-color: #22c55e !important;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
+  border-color: var(--text-primary) !important;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 .cl-formFieldInput[type="password"]:focus:invalid {
-  border-color: #ef4444 !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 .cl-modalContent {

@@ -361,7 +361,7 @@ function ReminderCard({
       </div>
 
       {confirmed ? (
-        <div className="mt-2.5 flex items-center gap-2 text-[13px] font-medium text-green-600 dark:text-green-400">
+        <div className="mt-2.5 flex items-center gap-2 text-[13px] font-medium text-[var(--text-secondary)]">
           <CheckCircle2 className="h-3.5 w-3.5" />
           Reminder set
         </div>

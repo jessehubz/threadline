@@ -358,7 +358,7 @@ export async function inviteByEmail(projectId: string, email: string) {
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <p>${inviterName} invited you to join <strong>${project.name}</strong> on Threadline.</p>
           <p style="margin: 24px 0;">
-            <a href="${inviteUrl}" style="display: inline-block; padding: 10px 20px; background: #7c3aed; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">
+            <a href="${inviteUrl}" style="display: inline-block; padding: 10px 20px; background: #17171A; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">
               Accept invite
             </a>
           </p>

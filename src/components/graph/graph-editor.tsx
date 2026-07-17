@@ -97,11 +97,13 @@ interface GraphEditorProps {
   unreadCommentNodeIds?: string[];
 }
 
-function makeEdge(id: string, source: string, target: string): Edge {
+function makeEdge(id: string, source: string, target: string, sourceHandle?: string | null, targetHandle?: string | null): Edge {
   return {
     id,
     source,
     target,
+    sourceHandle: sourceHandle ?? undefined,
+    targetHandle: targetHandle ?? undefined,
     type: "themed",
     style: { strokeWidth: 2, stroke: "var(--accent)" },
     markerEnd: {
@@ -353,8 +355,8 @@ export function GraphEditor({ projectId, graph, projectName, projectVisibility, 
 
       // Optimistic: add edge immediately with temp ID
       const tempId = `temp-edge-${Date.now()}`;
-      const tempEdge = makeEdge(tempId, connection.source, connection.target);
-      setEdges((eds) => addEdge({ ...connection, ...tempEdge }, eds));
+      const tempEdge = makeEdge(tempId, connection.source, connection.target, connection.sourceHandle, connection.targetHandle);
+      setEdges((eds) => addEdge(tempEdge, eds));
 
       // Persist to server
       const result = await createEdge(projectId, graph.id, connection.source, connection.target);
@@ -366,7 +368,7 @@ export function GraphEditor({ projectId, graph, projectName, projectVisibility, 
       }
       if (result.edge) {
         // Replace temp edge with real one
-        setEdges((eds) => eds.map((e) => e.id === tempId ? makeEdge(result.edge.id, connection.source!, connection.target!) : e));
+        setEdges((eds) => eds.map((e) => e.id === tempId ? makeEdge(result.edge.id, connection.source!, connection.target!, connection.sourceHandle, connection.targetHandle) : e));
         // Push undo action for edge creation
         const edgeId = result.edge.id;
         pushUndo({

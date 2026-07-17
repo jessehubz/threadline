@@ -579,7 +579,7 @@ export function FriendsClient({
                             width: "10px",
                             height: "10px",
                             borderRadius: "50%",
-                            background: "#22c55e",
+                            background: "var(--text-primary)",
                             border: "2px solid var(--bg-elevated)",
                           }}
                           aria-label="Online"
