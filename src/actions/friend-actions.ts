@@ -357,17 +357,18 @@ export async function addFriendToProject(friendId: string, projectId: string) {
     data: { userId: friendId, projectId, role: "MEMBER" },
   });
 
-  // Create notification for the friend being added
+  // Route through the shared helper so this add behaves like every other add:
+  // preference-gated notification + a realtime data-refresh so the added
+  // friend's dashboard shows the project without a manual reload (T04).
   const adderName = user.name || user.email.split("@")[0];
   const projectName = project?.name || "a project";
-  await prisma.notification.create({
-    data: {
-      userId: friendId,
-      type: "INVITED",
-      message: `${adderName} added you to ${projectName}`,
-      relatedProjectId: projectId,
-    },
+  await createNotification({
+    userId: friendId,
+    type: "INVITED",
+    title: `${adderName} added you to ${projectName}`,
+    relatedProjectId: projectId,
   });
+  await triggerDataRefresh(friendId, "projects");
 
   revalidatePath("/friends");
   revalidatePath(`/graph/${projectId}`);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -101,6 +102,7 @@ export function ShareDialog({
   currentUserRole,
   canInviteMembers,
 }: ShareDialogProps) {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
 
   // Add-people tab
@@ -226,6 +228,8 @@ export function ShareDialog({
         setSelectedUser(null);
         setSearchQuery("");
         setSearchResults([]);
+        router.refresh(); // re-fetch the members list so it reflects the add
+
       }
     } catch {
       toast.error("Failed to add member");
@@ -246,6 +250,7 @@ export function ShareDialog({
       } else if (result.addedDirectly) {
         toast.success(`${trimmed} has been added!`);
         setEmailInput("");
+        router.refresh(); // existing-account add → reflect in the members list
       } else if (result.inviteUrl) {
         setEmailInviteResult({ email: trimmed, url: result.inviteUrl });
         setEmailInput("");
@@ -356,6 +361,7 @@ export function ShareDialog({
         toast.error(result.error);
       } else {
         toast.success("Role updated");
+        router.refresh(); // reflect the new role in the members list
       }
     } catch {
       toast.error("Failed to update role");
@@ -372,6 +378,7 @@ export function ShareDialog({
         toast.error(result.error);
       } else {
         toast.success(`${userName} has been removed`);
+        router.refresh(); // drop the removed member from the list immediately
       }
     } catch {
       toast.error("Failed to remove member");

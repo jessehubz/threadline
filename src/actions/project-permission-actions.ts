@@ -147,7 +147,14 @@ export async function kickMember(projectId: string, memberId: string) {
     return { error: "Cannot kick another CO_HEAD" };
   }
 
-  await prisma.projectMember.delete({ where: { id: memberId } });
+  // Remove membership + this user's task assignments in this project atomically
+  // (TaskAssignment doesn't cascade from ProjectMember — see removeMember).
+  await prisma.$transaction([
+    prisma.taskAssignment.deleteMany({
+      where: { userId: target.userId, node: { graph: { projectId } } },
+    }),
+    prisma.projectMember.delete({ where: { id: memberId } }),
+  ]);
   await triggerDataRefresh(target.userId, "projects");
   revalidatePath(`/graph/${projectId}`);
   revalidatePath("/team");

@@ -77,4 +77,25 @@ a renamed participant until reload — pre-existing, documented; DB-backed surfa
 greeting/member lists/public profile) do update on the broadcast's router.refresh.
 
 ## T02 — done — 2026-07-17
-Commit: round2: T02 display name propagation (Clerk sync + cross-account broadcast)
+Commit: round2: T02 display name propagation (Clerk sync + cross-account broadcast) (commit 65e16b8)
+
+## T03+T04 — in_progress — 2026-07-17
+Bundled (same member-management flow, inseparable into two commits — documented deviation from one-commit-
+per-task). First attempt delegated to a Sonnet subagent which died on a transient 529 (server overload) with
+ZERO edits landed (clean tree confirmed) — redone inline.
+Root causes (from audit, verified): T03 "already a member" is client/RSC staleness, NOT a DB stale record
+(removeMember/kickMember hard-delete cleanly; re-add already succeeds server-side) — plus a genuine residue:
+orphaned TaskAssignment rows survive removal. T04: addFriendToProject bypassed the realtime helper.
+Implemented (edits complete, on disk):
+- team-actions.ts removeMember + project-permission-actions.ts kickMember: wrapped member delete +
+  `taskAssignment.deleteMany({ where: { userId, node: { graph: { projectId } } } })` in a prisma.$transaction
+  (verified relation path TaskAssignment.node -> TaskNode.graph -> Graph.projectId against schema).
+- share-dialog.tsx: added useRouter + router.refresh() after successful add / email-add / role-change /
+  remove. Verified members flows straight through as a prop (GraphEditor -> ShareDialog, no local useState
+  copy), so router.refresh re-runs the graph server component and updates the list — no state re-sync needed.
+- friend-actions.ts addFriendToProject: replaced raw prisma.notification.create with createNotification
+  (pref-gated) + added triggerDataRefresh(friendId, "projects") so the re-added user's dashboard updates live,
+  matching removal's existing live behavior (the T04 acceptance criterion).
+VERIFICATION PENDING: Bash classifier temporarily unavailable, so `npx tsc --noEmit` hasn't run yet. NOT
+marking done and NOT committing until typecheck passes. Status stays in_progress. Next step on resume:
+run tsc, then commit "round2: T03+T04 ...".

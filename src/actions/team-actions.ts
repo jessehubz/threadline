@@ -136,7 +136,17 @@ export async function removeMember(projectId: string, memberId: string) {
     return { error: "Only the HEAD can remove a Co-Head" };
   }
 
-  await prisma.projectMember.delete({ where: { id: memberId } });
+  // Remove the membership AND the user's task assignments in this project in
+  // one transaction. TaskAssignment references User+TaskNode (not ProjectMember),
+  // so nothing cascades on member removal — without this, a removed member
+  // stays a ghost assignee on nodes and can remain a task's sole approver,
+  // silently deadlocking its approval flow.
+  await prisma.$transaction([
+    prisma.taskAssignment.deleteMany({
+      where: { userId: targetMember.userId, node: { graph: { projectId } } },
+    }),
+    prisma.projectMember.delete({ where: { id: memberId } }),
+  ]);
   await triggerDataRefresh(targetMember.userId, "projects");
   revalidatePath("/team");
   revalidatePath("/dashboard");
