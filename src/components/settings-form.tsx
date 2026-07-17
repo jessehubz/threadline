@@ -69,7 +69,7 @@ export function SettingsForm({ user }: { user: User }) {
                   applyTheme(t.value as "light" | "dark" | "system");
                 }}
                 className={cn(
-                  "flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-150 hover:-translate-y-px sm:flex-none sm:justify-start sm:px-4",
+                  "flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-[transform,border-color,background-color,color] duration-150 hover:-translate-y-px sm:flex-none sm:justify-start sm:px-4",
                   theme === t.value
                     ? "border-[var(--accent)] accent-bg accent-color shadow-sm"
                     : "border-themed text-body hover:bg-hover"
@@ -135,8 +135,8 @@ function Toggle({
       >
         <span
           className={cn(
-            "inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm",
-            checked ? "translate-x-4.5" : "translate-x-0.5"
+            "inline-block h-3.5 w-3.5 transform rounded-full transition-transform shadow-sm",
+            checked ? "translate-x-4.5 bg-[var(--on-accent)]" : "translate-x-0.5 bg-white"
           )}
         />
       </button>

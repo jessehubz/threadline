@@ -7,18 +7,6 @@
   --font-display: "General Sans", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-logo: "Outfit", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
 
-  --color-brand-50: #f5f3ff;
-  --color-brand-100: #ede9fe;
-  --color-brand-200: #ddd6fe;
-  --color-brand-300: #c4b5fd;
-  --color-brand-400: #a78bfa;
-  --color-brand-500: #8b5cf6;
-  --color-brand-600: #7C5CFF;
-  --color-brand-700: #6d28d9;
-  --color-brand-800: #5b21b6;
-  --color-brand-900: #4c1d95;
-  --color-brand-950: #2e1065;
-
   --color-surface-50: #fafafa;
   --color-surface-100: #f5f5f5;
   --color-surface-200: #e5e5e5;
@@ -45,13 +33,19 @@
   --text-primary: #17171A;
   --text-secondary: #75757C;
   --text-muted: #A6A6AD;
-  --accent: #8B5CF6;
-  --accent-hover: #7C5CFF;
-  --accent-soft: #F5F3FF;
-  --accent-soft-hover: #EDE9FE;
+  --accent: #17171A;
+  --accent-hover: #2E2E33;
+  --accent-soft: rgba(20, 20, 25, 0.06);
+  --accent-soft-hover: rgba(20, 20, 25, 0.10);
+  --on-accent: #FFFFFF;
+  --logo-accent: #7C3AED;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05), 0 6px 14px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 18px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  --ring-color: rgba(139, 92, 246, 0.15);
+  --ring-color: rgba(20, 20, 25, 0.20);
+
+  /* Motion foundations */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
 
   /* Elevation scale */
   --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.12);
@@ -65,15 +59,15 @@
   --radius-md: 16px;
   --radius-sm: 10px;
 
-  /* Violet hierarchy - light mode. Emphasis darkens (inverse of dark mode) to hold contrast on white. */
-  --violet-50: rgba(139, 92, 246, 0.06);
-  --violet-100: rgba(139, 92, 246, 0.10);
-  --violet-200: rgba(139, 92, 246, 0.16);
-  --violet-300: rgba(139, 92, 246, 0.26);
-  --violet-400: rgba(139, 92, 246, 0.42);
-  --violet-500: #8B5CF6;
-  --violet-600: #7C3AED;
-  --violet-700: #6D28D9;
+  /* Neutral hierarchy (formerly violet) - light mode. Emphasis darkens (inverse of dark mode) to hold contrast on white. */
+  --violet-50: #FAFAFA;
+  --violet-100: #F4F4F5;
+  --violet-200: #E4E4E7;
+  --violet-300: #D4D4D8;
+  --violet-400: #A1A1AA;
+  --violet-500: #71717A;
+  --violet-600: #52525B;
+  --violet-700: #3F3F46;
 
   /* Single negative/warning color - muted coral. The only non-violet hue in the app. */
   --danger: #DC4C4C;
@@ -92,13 +86,15 @@
   --text-primary: #F2F2F4;
   --text-secondary: #98989F;
   --text-muted: #626268;
-  --accent: #8B5CF6;
-  --accent-hover: #A78BFA;
-  --accent-soft: rgba(139, 92, 246, 0.12);
-  --accent-soft-hover: rgba(139, 92, 246, 0.2);
+  --accent: #F2F2F4;
+  --accent-hover: #FFFFFF;
+  --accent-soft: rgba(255, 255, 255, 0.08);
+  --accent-soft-hover: rgba(255, 255, 255, 0.14);
+  --on-accent: #0A0A0B;
+  --logo-accent: #A78BFA;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 14px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4), 0 8px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --ring-color: rgba(139, 92, 246, 0.25);
+  --ring-color: rgba(255, 255, 255, 0.28);
 
   /* Elevation scale */
   --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.20), 0 1px 4px rgba(0, 0, 0, 0.28);
@@ -117,15 +113,16 @@
   --danger-hover: #EC6A6E;
   --danger-soft: rgba(229, 72, 77, 0.14);
 
-  /* Violet hierarchy - use these for UI chrome, borders, hover states */
-  --violet-50: rgba(139, 92, 246, 0.04);
-  --violet-100: rgba(139, 92, 246, 0.08);
-  --violet-200: rgba(139, 92, 246, 0.12);
-  --violet-300: rgba(139, 92, 246, 0.20);
-  --violet-400: rgba(139, 92, 246, 0.30);
-  --violet-500: #8B5CF6;
-  --violet-600: #A78BFA;
-  --violet-700: #C4B5FD;
+  /* Neutral hierarchy (formerly violet) - use these for UI chrome, borders, hover states.
+     Inverted relative to light mode: emphasis lightens toward white to hold contrast on a dark canvas. */
+  --violet-50: #3F3F46;
+  --violet-100: #52525B;
+  --violet-200: #71717A;
+  --violet-300: #A1A1AA;
+  --violet-400: #D4D4D8;
+  --violet-500: #E4E4E7;
+  --violet-600: #F4F4F5;
+  --violet-700: #FAFAFA;
 }
 
 /* ─── Base Styles ─────────────────────────────────────────────────────────── */
@@ -174,17 +171,24 @@ html.theme-transition *::after {
      not elevation. */
 
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:-translate-y-px active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 ease-out hover:-translate-y-px active:translate-y-0 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
     background-color: var(--accent);
+    color: var(--on-accent);
+    transition-property: background-color, transform, box-shadow;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ease-out-strong);
     &:hover { background-color: var(--accent-hover); }
     &:focus { --tw-ring-color: var(--ring-color); }
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 ease-out hover:-translate-y-px active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold hover:-translate-y-px active:translate-y-0 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
     background-color: var(--bg-elevated);
     color: var(--text-primary);
     border: 1px solid var(--border-default);
+    transition-property: background-color, border-color, transform, box-shadow;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ease-out-strong);
     &:hover {
       background-color: var(--bg-muted);
       border-color: var(--border-default);
@@ -193,8 +197,11 @@ html.theme-transition *::after {
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150 ease-out focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium active:scale-[0.97] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
     color: var(--text-secondary);
+    transition-property: background-color, color, transform;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out-strong);
     &:hover {
       background-color: var(--bg-muted);
       color: var(--text-primary);
@@ -202,17 +209,23 @@ html.theme-transition *::after {
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:-translate-y-px active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white hover:-translate-y-px active:translate-y-0 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
     background-color: var(--danger);
+    transition-property: background-color, transform, box-shadow;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ease-out-strong);
     &:hover { background-color: var(--danger-hover); }
     &:focus { --tw-ring-color: var(--danger-soft); }
   }
 
   .input-field {
-    @apply block w-full rounded-lg px-4 py-2.5 text-sm transition-all duration-150 ease-out focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply block w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50;
     background-color: var(--bg-elevated);
     color: var(--text-primary);
     border: 1px solid var(--border-default);
+    transition-property: border-color, box-shadow;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out-strong);
     &::placeholder { color: var(--text-muted); }
     &:focus {
       border-color: var(--accent);
@@ -223,11 +236,14 @@ html.theme-transition *::after {
   /* Cards carry depth via a background step + hairline border + inset shadow -
      surface-ladder logic from sample3. */
   .card {
-    @apply p-6 transition-all duration-200 ease-out;
+    @apply p-6;
     border-radius: var(--radius-xl);
     background-color: var(--bg-elevated);
     border: 1px solid var(--border-default);
     box-shadow: var(--shadow-sm);
+    transition-property: border-color, box-shadow;
+    transition-duration: 200ms;
+    transition-timing-function: var(--ease-out-strong);
   }
 
   /* Custom select styling */
@@ -235,7 +251,7 @@ html.theme-transition *::after {
   select {
     appearance: none;
     -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238B5CF6' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23888890' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     background-position: right 0.5rem center;
     background-repeat: no-repeat;
     background-size: 1.2em 1.2em;
@@ -459,7 +475,7 @@ main > * {
 
 /* Threadline wordmark - shared everywhere the logo appears (matches landing-nav.tsx .word) */
 .logo-word { font-family: 'Inter', sans-serif; font-weight: 450; letter-spacing: 0.05em; }
-.logo-word-accent { color: #7C3AED; }
+.logo-word-accent { color: var(--logo-accent); }
 .shadow-themed { box-shadow: var(--shadow-sm); }
 .shadow-themed-md { box-shadow: var(--shadow-md); }
 
@@ -720,7 +736,7 @@ main > * {
 }
 
 .cl-userButtonPopoverActionButton:hover {
-  background-color: rgba(139, 92, 246, 0.08) !important;
+  background-color: var(--accent-soft) !important;
 }
 
 .cl-userButtonPopoverActionButton:hover .cl-userButtonPopoverActionButtonText,
@@ -822,7 +838,7 @@ main > * {
 }
 
 .cl-navbarButton:hover {
-  background-color: rgba(139, 92, 246, 0.06) !important;
+  background-color: var(--accent-soft) !important;
   color: var(--text-primary) !important;
 }
 
@@ -918,7 +934,7 @@ button.cl-profileSectionPrimaryButton,
 a.cl-profileSectionPrimaryButton {
   background-color: var(--accent) !important;
   background: var(--accent) !important;
-  color: #FFFFFF !important;
+  color: var(--on-accent) !important;
   font-size: 13px !important;
   font-weight: 600 !important;
   border-radius: 8px !important;
@@ -940,7 +956,7 @@ button.cl-profileSectionPrimaryButton:hover,
 a.cl-profileSectionPrimaryButton:hover {
   background-color: var(--accent-hover) !important;
   background: var(--accent-hover) !important;
-  color: #FFFFFF !important;
+  color: var(--on-accent) !important;
   transform: translateY(-1px) !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
   text-decoration: none !important;
@@ -949,7 +965,7 @@ a.cl-profileSectionPrimaryButton:hover {
 .cl-profileSectionPrimaryButton:active,
 .cl-profileSectionPrimaryButton.cl-profileSectionPrimaryButton:active {
   transform: translateY(0) scale(0.97) !important;
-  box-shadow: 0 1px 2px rgba(139, 92, 246, 0.15) !important;
+  box-shadow: 0 1px 2px var(--ring-color) !important;
 }
 
 /* ── 8. Form elements - inputs refined, BUTTONS look like buttons ───────────── */
@@ -987,7 +1003,7 @@ a.cl-profileSectionPrimaryButton:hover {
 .cl-formButtonPrimary.cl-formButtonPrimary {
   background: var(--accent) !important;
   background-color: var(--accent) !important;
-  color: #fff !important;
+  color: var(--on-accent) !important;
   font-weight: 600 !important;
   padding: 10px 20px !important;
   border-radius: var(--radius-sm, 8px) !important;
@@ -1037,20 +1053,20 @@ a.cl-profileSectionPrimaryButton:hover {
 /* ── 9. Badges - subtle, pill-shaped ───────────────────────────────────────── */
 
 .cl-badge {
-  background-color: rgba(139, 92, 246, 0.15) !important;
+  background-color: var(--accent-soft) !important;
   color: var(--accent) !important;
   border-radius: 999px !important;
   font-size: 10.5px !important;
   font-weight: 600 !important;
   padding: 3px 9px !important;
-  border: 1px solid rgba(139, 92, 246, 0.2) !important;
+  border: 1px solid var(--accent-soft-hover) !important;
   letter-spacing: 0.02em !important;
 }
 
 .dark .cl-badge {
-  background-color: rgba(139, 92, 246, 0.2) !important;
-  color: #A78BFA !important;
-  border-color: rgba(139, 92, 246, 0.3) !important;
+  background-color: var(--accent-soft-hover) !important;
+  color: var(--accent) !important;
+  border-color: var(--accent-soft-hover) !important;
 }
 
 /* ── 10. Avatar ────────────────────────────────────────────────────────────── */
@@ -1102,7 +1118,7 @@ a.cl-profileSectionPrimaryButton:hover {
 }
 
 .cl-menuButton:hover {
-  background-color: rgba(139, 92, 246, 0.06) !important;
+  background-color: var(--accent-soft) !important;
 }
 
 .cl-menuList {
@@ -1122,7 +1138,7 @@ a.cl-profileSectionPrimaryButton:hover {
 }
 
 .cl-menuItem:hover {
-  background-color: rgba(139, 92, 246, 0.06) !important;
+  background-color: var(--accent-soft) !important;
 }
 
 /* ── 14. Modal entrance animation ──────────────────────────────────────────── */
@@ -1266,7 +1282,7 @@ a.cl-profileSectionPrimaryButton:hover {
 
 .cl-formFieldInput.cl-formFieldInput:focus {
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px var(--ring-color, rgba(139, 92, 246, 0.15)) !important;
+  box-shadow: 0 0 0 3px var(--ring-color) !important;
 }
 
 .cl-headerTitle.cl-headerTitle {
@@ -1286,15 +1302,15 @@ a.cl-profileSectionPrimaryButton:hover {
 }
 
 .cl-badge.cl-badge {
-  background: rgba(139, 92, 246, 0.15) !important;
+  background: var(--accent-soft) !important;
   color: var(--accent) !important;
-  border: 1px solid rgba(139, 92, 246, 0.2) !important;
+  border: 1px solid var(--accent-soft-hover) !important;
 }
 
 .dark .cl-badge.cl-badge {
-  background: rgba(139, 92, 246, 0.2) !important;
-  color: #A78BFA !important;
-  border-color: rgba(139, 92, 246, 0.3) !important;
+  background: var(--accent-soft-hover) !important;
+  color: var(--accent) !important;
+  border-color: var(--accent-soft-hover) !important;
 }
 
 .cl-accordionTriggerButton.cl-accordionTriggerButton {
@@ -1310,7 +1326,7 @@ a.cl-profileSectionPrimaryButton:hover {
 [data-clerk-component] button.cl-formButtonPrimary {
   background: var(--accent) !important;
   background-color: var(--accent) !important;
-  color: #fff !important;
+  color: var(--on-accent) !important;
   font-weight: 600 !important;
   border: none !important;
   border-radius: var(--radius-sm, 8px) !important;

@@ -85,11 +85,14 @@ export function DatePicker({
 
   // Reset view month when opening
   useEffect(() => {
-    if (isOpen) {
-      const base = selectedDate || new Date();
-      setViewMonth(startOfMonth(base));
-      setFocusedDate(selectedDate || new Date());
+    function run() {
+      if (isOpen) {
+        const base = selectedDate || new Date();
+        setViewMonth(startOfMonth(base));
+        setFocusedDate(selectedDate || new Date());
+      }
     }
+    run();
   }, [isOpen, selectedDate]);
 
   const handleSelect = useCallback(
@@ -238,7 +241,7 @@ export function DatePicker({
         {/* Dropdown */}
         <div
           className={cn(
-            "absolute left-0 top-full z-50 mt-1.5 w-[300px] origin-top-left rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-elevated)] p-3 shadow-[var(--shadow-md)] transition-all duration-200 ease-out",
+            "absolute left-0 top-full z-50 mt-1.5 w-[300px] origin-top-left rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-elevated)] p-3 shadow-[var(--shadow-md)] transition-[transform,opacity] duration-200 ease-(--ease-out-strong)",
             isOpen
               ? "pointer-events-auto scale-100 opacity-100"
               : "pointer-events-none scale-95 opacity-0"
@@ -254,7 +257,7 @@ export function DatePicker({
                 key={shortcut.label}
                 type="button"
                 onClick={() => handleSelect(shortcut.date)}
-                className="rounded-md bg-[var(--bg-muted)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition-all duration-150 hover:-translate-y-px hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] hover:shadow-sm"
+                className="rounded-md bg-[var(--bg-muted)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition-[transform,background-color,color,box-shadow] duration-150 hover:-translate-y-px hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] hover:shadow-sm"
               >
                 {shortcut.label}
               </button>
@@ -317,7 +320,7 @@ export function DatePicker({
                   tabIndex={isFocused ? 0 : -1}
                   onClick={() => handleSelect(day)}
                   className={cn(
-                    "relative mx-auto flex h-8 w-8 items-center justify-center rounded-md text-xs font-medium transition-all duration-150",
+                    "relative mx-auto flex h-8 w-8 items-center justify-center rounded-md text-xs font-medium transition-[transform,background-color,box-shadow] duration-150",
                     // Base state
                     isCurrentMonth
                       ? "text-[var(--text-primary)]"
@@ -330,7 +333,7 @@ export function DatePicker({
                       "hover:-translate-y-px hover:bg-[var(--bg-muted)] hover:shadow-sm",
                     // Selected
                     isSelected &&
-                      "bg-[var(--accent)] text-white shadow-sm",
+                      "bg-[var(--accent)] text-[var(--on-accent)] shadow-sm",
                     // Today ring
                     isDayToday &&
                       !isSelected &&

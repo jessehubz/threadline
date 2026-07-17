@@ -48,6 +48,14 @@ export default async function PublicProfilePage({
             >
               {user.name || "Anonymous"}
             </h1>
+            {user.username && (
+              <p
+                className="text-sm"
+                style={{ color: "var(--accent)" }}
+              >
+                @{user.username}
+              </p>
+            )}
             {user.bio && (
               <p
                 className="mt-1 text-sm"

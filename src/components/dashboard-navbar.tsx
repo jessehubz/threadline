@@ -8,6 +8,7 @@ import { NotificationDropdown } from "@/components/notification-dropdown";
 import { SearchDropdown } from "@/components/search-dropdown";
 import { UserButton } from "@clerk/nextjs";
 import { AIChatPanel } from "@/components/ai-chat-panel";
+import { useUserChannel } from "@/hooks/use-user-channel";
 import { cn } from "@/lib/utils";
 
 // ─── Navigation Items ────────────────────────────────────────────────────────
@@ -109,26 +110,53 @@ const navItems = [
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function DashboardNavbar() {
+export function DashboardNavbar({ userId }: { userId: string }) {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
-  // Fetch unread message count
-  useEffect(() => {
-    async function fetchUnreadCount() {
-      try {
-        const res = await fetch("/api/messages/unread-count");
-        if (res.ok) {
-          const data = await res.json();
-          setUnreadMessageCount(data.count ?? 0);
-        }
-      } catch {
-        // silently fail - badge just won't show
+  // Fetch unread message count. Closes over nothing but the stable
+  // setUnreadMessageCount setter, so a fresh function identity each render
+  // (it's a plain function, not useCallback) is harmless - it's reused
+  // below by the realtime refetch triggers and the focus listener.
+  async function fetchUnreadCount() {
+    try {
+      const res = await fetch("/api/messages/unread-count");
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadMessageCount(data.count ?? 0);
       }
+    } catch {
+      // silently fail - badge just won't show
     }
-    fetchUnreadCount();
+  }
+
+  useEffect(() => {
+    void (async () => {
+      await fetchUnreadCount();
+    })();
+  }, []);
+
+  // Keep the badge live: refetch on new-message notifications, on cross-tab
+  // read receipts, and when the tab regains focus. Shares the underlying
+  // private-user channel subscription with NotificationDropdown via
+  // useUserChannel (reference-counted, see that hook for why).
+  useUserChannel(userId, {
+    "notification-new": (data) => {
+      const notification = data as { type?: string };
+      if (notification?.type === "NEW_MESSAGE") {
+        fetchUnreadCount();
+      }
+    },
+    "dm-read": () => {
+      fetchUnreadCount();
+    },
+  });
+
+  useEffect(() => {
+    window.addEventListener("focus", fetchUnreadCount);
+    return () => window.removeEventListener("focus", fetchUnreadCount);
   }, []);
 
   // Listen for custom event from hero banner and scroll launcher
@@ -154,20 +182,14 @@ export function DashboardNavbar() {
       >
         {/* ─── Row 1: Brand + Utilities ─────────────────────────────────── */}
         <div className="flex items-center justify-between">
-          {/* Brand */}
-          <Link href="/dashboard" className="flex items-center gap-0 select-none hover:opacity-80 transition-opacity duration-150">
-            <span
-              className="text-[18px] font-bold tracking-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
-              thread
-            </span>
-            <span
-              className="text-[18px] font-bold tracking-tight"
-              style={{ color: "var(--accent)" }}
-            >
-              line
-            </span>
+          {/* Brand - matches the landing page wordmark (see site-footer.tsx / site-page-header.tsx) */}
+          <Link
+            href="/dashboard"
+            className="logo-word select-none hover:opacity-80 transition-opacity duration-150"
+            style={{ fontSize: "18px", textDecoration: "none" }}
+          >
+            <span className="text-heading">thread</span>
+            <span className="logo-word-accent">line</span>
           </Link>
 
           {/* Utility group */}
@@ -178,7 +200,7 @@ export function DashboardNavbar() {
             {/* Message icon button with notification dot */}
             <Link
               href="/messages"
-              className="relative flex items-center justify-center w-[38px] h-[38px] rounded-full text-[var(--text-secondary)] transition-all duration-[180ms] ease-in-out hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--text-primary)] hover:-translate-y-px"
+              className="relative flex items-center justify-center w-[38px] h-[38px] rounded-full text-[var(--text-secondary)] transition-[transform,background-color,color] duration-[180ms] ease-in-out hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--text-primary)] hover:-translate-y-px"
               aria-label="Messages"
             >
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -194,7 +216,7 @@ export function DashboardNavbar() {
             </Link>
 
             {/* Notification bell */}
-            <NotificationDropdown />
+            <NotificationDropdown userId={userId} />
 
             {/* Theme switch */}
             <div
@@ -209,13 +231,12 @@ export function DashboardNavbar() {
               <button
                 onClick={() => setTheme("light")}
                 className={cn(
-                  "flex items-center justify-center w-[30px] h-[30px] rounded-full cursor-pointer transition-all duration-[180ms] ease-in-out",
-                  resolvedTheme === "light"
-                    ? "text-white"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)]"
+                  "flex items-center justify-center w-[30px] h-[30px] rounded-full cursor-pointer transition-[background-color,color] duration-[180ms] ease-in-out",
+                  resolvedTheme !== "light" && "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)]"
                 )}
                 style={{
                   background: resolvedTheme === "light" ? "var(--accent)" : "transparent",
+                  color: resolvedTheme === "light" ? "var(--on-accent)" : undefined,
                 }}
                 aria-label="Light mode"
               >
@@ -236,13 +257,12 @@ export function DashboardNavbar() {
               <button
                 onClick={() => setTheme("dark")}
                 className={cn(
-                  "flex items-center justify-center w-[30px] h-[30px] rounded-full cursor-pointer transition-all duration-[180ms] ease-in-out",
-                  resolvedTheme === "dark"
-                    ? "text-white"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)]"
+                  "flex items-center justify-center w-[30px] h-[30px] rounded-full cursor-pointer transition-[background-color,color] duration-[180ms] ease-in-out",
+                  resolvedTheme !== "dark" && "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)]"
                 )}
                 style={{
                   background: resolvedTheme === "dark" ? "var(--accent)" : "transparent",
+                  color: resolvedTheme === "dark" ? "var(--on-accent)" : undefined,
                 }}
                 aria-label="Dark mode"
               >
@@ -263,7 +283,7 @@ export function DashboardNavbar() {
             />
 
             {/* User avatar (Clerk UserButton) with avatar-group hover */}
-            <div className="flex items-center gap-1 cursor-pointer rounded-full px-1.5 py-1 transition-all duration-[180ms] hover:bg-[rgba(255,255,255,0.07)]">
+            <div className="flex items-center gap-1 cursor-pointer rounded-full px-1.5 py-1 transition-colors duration-[180ms] hover:bg-[rgba(255,255,255,0.07)]">
               <UserButton
                 appearance={{
                   options: {
@@ -313,7 +333,7 @@ export function DashboardNavbar() {
                     colorForeground: resolvedTheme === "dark" ? "#F2F2F4" : "#17171A",
                     colorMutedForeground: resolvedTheme === "dark" ? "#98989F" : "#75757C",
                     colorNeutral: resolvedTheme === "dark" ? "white" : "black",
-                    colorPrimary: "#8B5CF6",
+                    colorPrimary: "var(--accent)",
                     colorDanger: resolvedTheme === "dark" ? "#E5484D" : "#DC4C4C",
                     colorBorder: resolvedTheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(20, 20, 25, 0.08)",
                     borderRadius: "16px",
@@ -418,8 +438,8 @@ export function DashboardNavbar() {
                       },
                       // Primary action button (Update Profile)
                       formButtonPrimary: {
-                        background: "#8B5CF6",
-                        color: "#FFFFFF",
+                        background: "var(--accent)",
+                        color: "var(--on-accent)",
                         padding: "10px 20px",
                         borderRadius: "10px",
                         fontWeight: 600,
@@ -429,9 +449,9 @@ export function DashboardNavbar() {
                       },
                       // "Update profile" link button - must always look like a button
                       profileSectionPrimaryButton: {
-                        background: "#8B5CF6",
-                        backgroundColor: "#8B5CF6",
-                        color: "#FFFFFF",
+                        background: "var(--accent)",
+                        backgroundColor: "var(--accent)",
+                        color: "var(--on-accent)",
                         padding: "8px 16px",
                         borderRadius: "8px",
                         fontWeight: 600,
@@ -455,9 +475,9 @@ export function DashboardNavbar() {
                       },
                       // Badges
                       badge: {
-                        background: resolvedTheme === "dark" ? "rgba(139, 92, 246, 0.2)" : "rgba(139, 92, 246, 0.15)",
-                        color: resolvedTheme === "dark" ? "#A78BFA" : "#8B5CF6",
-                        border: `1px solid ${resolvedTheme === "dark" ? "rgba(139, 92, 246, 0.3)" : "rgba(139, 92, 246, 0.2)"}`,
+                        background: "var(--accent-soft)",
+                        color: "var(--accent)",
+                        border: "1px solid var(--accent-soft-hover)",
                         borderRadius: "999px",
                       },
                       // Accordion items
@@ -477,7 +497,7 @@ export function DashboardNavbar() {
                       colorMutedForeground: resolvedTheme === "dark" ? "#98989F" : "#75757C",
                       colorMuted: resolvedTheme === "dark" ? "#1C1C1F" : "#F7F7F8",
                       colorNeutral: resolvedTheme === "dark" ? "white" : "black",
-                      colorPrimary: "#8B5CF6",
+                      colorPrimary: "var(--accent)",
                       colorDanger: resolvedTheme === "dark" ? "#E5484D" : "#DC4C4C",
                       colorBorder: resolvedTheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(20, 20, 25, 0.08)",
                       colorInput: resolvedTheme === "dark" ? "#1C1C1F" : "#F7F7F8",
@@ -530,7 +550,7 @@ export function DashboardNavbar() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 transition-all duration-[180ms] ease-in-out",
+                    "flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 transition-[transform,background-color,color,box-shadow] duration-[180ms] ease-in-out",
                     !isActive && "hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)] hover:-translate-y-px hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)]"
                   )}
                   style={{

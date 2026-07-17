@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Trash2, RotateCcw, GripVertical, ChevronDown, ChevronUp, Folder } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DeletedNode {
   id: string;
@@ -30,7 +31,7 @@ export function RecentlyDeletedPanel({ deletedNodes, onRestore, onDragStart }: R
       {/* Toggle button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center gap-2 rounded-xl border border-themed-subtle bg-card/95 px-3 py-2 text-xs font-medium text-body shadow-sm backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+        className="flex w-full items-center gap-2 rounded-xl border border-themed-subtle bg-card/95 px-3 py-2 text-xs font-medium text-body shadow-sm backdrop-blur-md transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md"
       >
         <Trash2 className="h-3.5 w-3.5 text-[var(--danger)]" />
         <span>Recently Deleted</span>
@@ -43,15 +44,20 @@ export function RecentlyDeletedPanel({ deletedNodes, onRestore, onDragStart }: R
       </button>
 
       {/* Panel content */}
-      {isOpen && (
-        <div className="mt-1 max-h-72 overflow-y-auto rounded-xl border border-themed-subtle bg-card/95 shadow-themed-md backdrop-blur-md">
+      <div
+        className={cn(
+          "absolute left-0 top-full mt-1 max-h-72 w-full origin-top overflow-y-auto rounded-xl border border-themed-subtle bg-card/95 shadow-themed-md backdrop-blur-md",
+          "transition-[transform,opacity] duration-[170ms] ease-(--ease-out-strong)",
+          isOpen ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
+        )}
+      >
           <div className="p-2 space-y-1">
             {deletedNodes.map((node) => (
               <div
                 key={node.id}
                 draggable
                 onDragStart={(e) => onDragStart(e, node)}
-                className="group flex items-center gap-2 rounded-lg px-2.5 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-hover hover:shadow-sm cursor-grab active:cursor-grabbing"
+                className="group flex items-center gap-2 rounded-lg px-2.5 py-2 transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-hover hover:shadow-sm cursor-grab active:cursor-grabbing"
               >
                 <GripVertical className="h-3 w-3 text-dim opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 {node.nodeType === "FOLDER" ? (
@@ -68,7 +74,7 @@ export function RecentlyDeletedPanel({ deletedNodes, onRestore, onDragStart }: R
                     e.stopPropagation();
                     onRestore(node.id);
                   }}
-                  className="shrink-0 rounded p-1 text-dim opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+                  className="shrink-0 rounded p-1 text-dim opacity-0 group-hover:opacity-100 transition-[opacity,background-color,color] duration-200 hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
                   aria-label={`Restore ${node.title}`}
                   title="Restore"
                 >
@@ -80,8 +86,7 @@ export function RecentlyDeletedPanel({ deletedNodes, onRestore, onDragStart }: R
           <div className="border-t border-themed-subtle px-3 py-2">
             <p className="text-[10px] text-dim">Drag onto graph to restore, or click the restore icon</p>
           </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { createNotification, triggerDataRefresh } from "@/lib/notifications";
 
 export async function searchUsers(query: string) {
   const user = await requireUser();
@@ -71,6 +72,7 @@ async function createConnectionConversation(userId: string, friendId: string) {
       conversationId: conversation.id,
       userId,
       content: `You and ${friendDisplayName} are now connected! 🎉`,
+      isSystem: true,
     },
   });
 }
@@ -104,6 +106,15 @@ export async function addFriend(friendId: string) {
     // Create a DM conversation with 'now connected' first message
     await createConnectionConversation(user.id, friendId);
 
+    // Notify the original requester that their request was accepted
+    const accepterName = user.name || user.email.split("@")[0];
+    await createNotification({
+      userId: friendId,
+      type: "FRIEND_ACCEPTED",
+      title: `${accepterName} accepted your friend request`,
+    });
+    await triggerDataRefresh([user.id, friendId], "friends");
+
     revalidatePath("/friends");
     revalidatePath("/messages");
     return { success: true };
@@ -116,6 +127,15 @@ export async function addFriend(friendId: string) {
   await prisma.friendship.create({
     data: { userId: user.id, friendId, status: "PENDING" },
   });
+
+  // Notify the recipient of the new friend request
+  const requesterName = user.name || user.email.split("@")[0];
+  await createNotification({
+    userId: friendId,
+    type: "FRIEND_REQUEST",
+    title: `${requesterName} sent you a friend request`,
+  });
+  await triggerDataRefresh([user.id, friendId], "friends");
 
   revalidatePath("/friends");
   return { success: true };
@@ -147,6 +167,15 @@ export async function acceptFriendRequest(requesterId: string) {
 
   // Create a DM conversation with 'now connected' first message
   await createConnectionConversation(user.id, requesterId);
+
+  // Notify the original requester that their request was accepted
+  const accepterName = user.name || user.email.split("@")[0];
+  await createNotification({
+    userId: requesterId,
+    type: "FRIEND_ACCEPTED",
+    title: `${accepterName} accepted your friend request`,
+  });
+  await triggerDataRefresh([user.id, requesterId], "friends");
 
   revalidatePath("/friends");
   revalidatePath("/messages");
@@ -245,6 +274,52 @@ export async function getPendingFriendRequests() {
     imageUrl: r.user.imageUrl,
     createdAt: r.createdAt.toISOString(),
   }));
+}
+
+export async function getSentFriendRequests() {
+  const user = await requireUser();
+
+  // Requests the current user sent that are still awaiting a response
+  const requests = await prisma.friendship.findMany({
+    where: { userId: user.id, status: "PENDING" },
+    include: {
+      friend: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          email: true,
+          imageUrl: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return requests.map((r) => ({
+    id: r.id,
+    recipientId: r.friend.id,
+    name: r.friend.name,
+    username: r.friend.username,
+    email: r.friend.email,
+    imageUrl: r.friend.imageUrl,
+    createdAt: r.createdAt.toISOString(),
+  }));
+}
+
+export async function cancelFriendRequest(friendshipId: string) {
+  const user = await requireUser();
+
+  const request = await prisma.friendship.findUnique({ where: { id: friendshipId } });
+  if (!request || request.userId !== user.id || request.status !== "PENDING") {
+    return { error: "Friend request not found" };
+  }
+
+  await prisma.friendship.delete({ where: { id: friendshipId } });
+  await triggerDataRefresh([request.userId, request.friendId], "friends");
+
+  revalidatePath("/friends");
+  return { success: true };
 }
 
 export async function addFriendToProject(friendId: string, projectId: string) {

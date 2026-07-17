@@ -82,7 +82,7 @@ const entries = [
 function TypeBadge({ type }: { type: string }) {
   const styles: Record<string, { bg: string; color: string }> = {
     feature: { bg: "var(--accent-soft)", color: "var(--accent)" },
-    improvement: { bg: "rgba(139, 92, 246, 0.08)", color: "var(--text-secondary)" },
+    improvement: { bg: "color-mix(in srgb, var(--text-secondary) 10%, transparent)", color: "var(--text-secondary)" },
     fix: { bg: "var(--bg-muted)", color: "var(--text-muted)" },
   };
   const s = styles[type] || styles.fix;

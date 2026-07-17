@@ -20,6 +20,8 @@ interface MultiSelectPanelProps {
   selectedNodeIds: string[];
   projectId: string;
   members: Array<{ id: string; role: string; user: { id: string; name: string | null; email: string } }>;
+  canEditNodes: boolean;
+  canDeleteNodes: boolean;
   onDelete: (nodeIds: string[]) => void;
   onClearSelection: () => void;
 }
@@ -28,6 +30,8 @@ export function MultiSelectPanel({
   selectedNodeIds,
   projectId,
   members,
+  canEditNodes,
+  canDeleteNodes,
   onDelete,
   onClearSelection,
 }: MultiSelectPanelProps) {
@@ -98,6 +102,7 @@ export function MultiSelectPanel({
         <div className="hidden sm:block h-5 w-px bg-hover" />
 
         {/* Change Status */}
+        {canEditNodes && (
         <div className="relative">
           <Button
             size="sm"
@@ -123,8 +128,10 @@ export function MultiSelectPanel({
             </div>
           )}
         </div>
+        )}
 
         {/* Assign */}
+        {canEditNodes && (
         <div className="relative">
           <Button
             size="sm"
@@ -150,8 +157,10 @@ export function MultiSelectPanel({
             </div>
           )}
         </div>
+        )}
 
         {/* Delete */}
+        {canDeleteNodes && (
         <Button
           size="sm"
           variant="danger"
@@ -162,6 +171,7 @@ export function MultiSelectPanel({
           <Trash2 className="h-3.5 w-3.5" />
           Delete
         </Button>
+        )}
 
         <div className="hidden sm:block h-5 w-px bg-hover" />
 

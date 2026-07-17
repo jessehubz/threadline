@@ -10,8 +10,9 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Count conversations where the most recent message is from someone else
-  // (a simple heuristic for "unread" without dedicated read-tracking)
+  // Unread = conversations where a message exists that is (a) newer than the
+  // caller's lastReadAt (or any message if lastReadAt is null), (b) authored
+  // by someone else, (c) not a system message.
   const conversations = await prisma.conversation.findMany({
     where: {
       participants: {
@@ -19,17 +20,25 @@ export async function GET() {
       },
     },
     include: {
+      participants: {
+        where: { userId: user.id },
+        select: { lastReadAt: true },
+      },
       messages: {
+        where: { userId: { not: user.id }, isSystem: false },
         orderBy: { createdAt: "desc" },
         take: 1,
-        select: { userId: true },
+        select: { createdAt: true },
       },
     },
   });
 
-  const unreadCount = conversations.filter(
-    (c) => c.messages.length > 0 && c.messages[0].userId !== user.id
-  ).length;
+  const unreadCount = conversations.filter((c) => {
+    const lastMessage = c.messages[0];
+    if (!lastMessage) return false;
+    const lastReadAt = c.participants[0]?.lastReadAt;
+    return !lastReadAt || lastMessage.createdAt > lastReadAt;
+  }).length;
 
   return NextResponse.json({ count: unreadCount });
 }

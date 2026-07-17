@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Tag, Plus, X } from "lucide-react";
+import { Tag, Plus } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { TagChip } from "@/components/ui/tag-chip";
 import { TagScrollContainer } from "@/components/ui/tag-scroll-container";
@@ -103,7 +103,7 @@ export function ProjectTagManager({ projectId, projectName, currentTags, availab
           background: "transparent",
           color: "var(--text-muted)",
           cursor: "pointer",
-          transition: "all .18s ease",
+          transition: "border-color .18s ease, color .18s ease, background-color .18s ease",
           flexShrink: 0,
         }}
         onMouseEnter={(e) => {
@@ -219,7 +219,7 @@ export function ProjectTagManager({ projectId, projectName, currentTags, availab
                   color: newTagName.trim() ? "#fff" : "var(--text-muted)",
                   border: "none",
                   cursor: newTagName.trim() ? "pointer" : "not-allowed",
-                  transition: "all .18s ease",
+                  transition: "background-color .18s ease, opacity .18s ease",
                   flexShrink: 0,
                   opacity: isPending ? 0.6 : 1,
                 }}

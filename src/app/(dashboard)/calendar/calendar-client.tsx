@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn, getStatusDotColor } from "@/lib/utils";
 
@@ -9,6 +10,7 @@ interface Task {
   title: string;
   status: string;
   dueDate: string;
+  projectId: string;
   projectName: string;
 }
 
@@ -158,7 +160,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
                 key={dateKey}
                 onClick={() => setSelectedDate(dateKey === selectedDate ? null : dateKey)}
                 className={cn(
-                  "min-h-[80px] border-b border-r border-themed-subtle p-1.5 text-left transition-all duration-150",
+                  "min-h-[80px] border-b border-r border-themed-subtle p-1.5 text-left transition-colors duration-150",
                   isSelected
                     ? "accent-bg"
                     : "hover:bg-hover",
@@ -169,7 +171,7 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
                   className={cn(
                     "inline-flex h-6 w-6 items-center justify-center rounded-lg text-xs font-semibold",
                     isToday
-                      ? "bg-[var(--accent)] text-white"
+                      ? "bg-[var(--accent)] text-[var(--on-accent)]"
                       : "text-body"
                   )}
                 >
@@ -216,22 +218,24 @@ export function CalendarGrid({ tasks }: { tasks: Task[] }) {
           ) : (
             <ul className="mt-3 divide-y divide-[var(--border-subtle)]">
               {selectedTasks.map((task) => (
-                <li
-                  key={task.id}
-                  className="flex items-center gap-3 px-1 py-2.5"
-                >
-                  <span
-                    className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
-                    style={{ backgroundColor: getStatusDotColor(task.status) }}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-item-title">
-                      {task.title}
-                    </p>
-                    <p className="text-meta">
-                      {task.projectName} · {STATUS_LABELS[task.status] || task.status}
-                    </p>
-                  </div>
+                <li key={task.id}>
+                  <Link
+                    href={`/graph/${task.projectId}?nodeId=${task.id}`}
+                    className="group flex items-center gap-3 rounded-lg px-1 py-2.5 transition-[transform,background-color] duration-150 hover:translate-x-0.5 hover:bg-hover"
+                  >
+                    <span
+                      className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                      style={{ backgroundColor: getStatusDotColor(task.status) }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-item-title transition-colors group-hover:accent-color">
+                        {task.title}
+                      </p>
+                      <p className="text-meta">
+                        {task.projectName} · {STATUS_LABELS[task.status] || task.status}
+                      </p>
+                    </div>
+                  </Link>
                 </li>
               ))}
             </ul>

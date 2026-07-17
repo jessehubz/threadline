@@ -18,6 +18,18 @@ export async function logNodeChange(
 export async function getNodeHistory(nodeId: string) {
   const user = await requireUser();
 
+  // Verify caller is a member of the project that owns this node
+  const node = await prisma.taskNode.findUnique({
+    where: { id: nodeId },
+    select: { graph: { select: { projectId: true } } },
+  });
+  if (!node) throw new Error("Node not found");
+
+  const membership = await prisma.projectMember.findUnique({
+    where: { userId_projectId: { userId: user.id, projectId: node.graph.projectId } },
+  });
+  if (!membership) throw new Error("Not a member of this project");
+
   // Prune entries older than 10 days
   const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
   await prisma.nodeAuditLog.deleteMany({

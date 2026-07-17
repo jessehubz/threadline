@@ -3,6 +3,14 @@
     {
       "path": "/api/cron/cleanup-projects",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/prune-audit",
+      "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/due-soon",
+      "schedule": "0 1 * * *"
     }
   ]
 }

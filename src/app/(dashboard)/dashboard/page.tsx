@@ -17,7 +17,8 @@ export default async function DashboardPage() {
 
   const allTasks = await prisma.taskNode.findMany({
     where: {
-      graph: { project: { members: { some: { userId: user.id } } } },
+      deletedAt: null,
+      graph: { project: { deletedAt: null, members: { some: { userId: user.id } } } },
     },
     include: {
       assignments: { include: { user: { select: { id: true, name: true, email: true, imageUrl: true } } } },

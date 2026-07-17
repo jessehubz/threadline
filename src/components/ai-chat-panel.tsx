@@ -32,7 +32,7 @@ const GREETING_MESSAGE: ChatMessage = {
   id: "greeting",
   role: "assistant",
   content:
-    "Hi, I'm Loom! 👋 I'm your Llama-powered planning assistant. I can help you figure out what to focus on across all your projects. Try asking me:\n\n• \"What should I prioritize?\"\n• \"Help me plan my schedule\"\n• \"Remind me about [task] tomorrow\"",
+    "Hi, I'm Loom! 👋 I'm your built-in planning assistant. I can help you figure out what to focus on across all your projects. Try asking me:\n\n• \"What should I prioritize?\"\n• \"Help me plan my schedule\"\n• \"Remind me about [task] tomorrow\"",
   type: "text",
 };
 
@@ -98,7 +98,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
+    } catch {
       const errorMessage: ChatMessage = {
         id: generateId(),
         role: "assistant",
@@ -138,7 +138,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
         setMessages((prev) => [...prev, successMessage]);
 
         toast.success("Reminder created successfully");
-      } catch (error) {
+      } catch {
         toast.error("Failed to create reminder");
       }
     },
@@ -235,7 +235,7 @@ export function AIChatPanel({ open, onClose }: AIChatPanelProps) {
           <button
             onClick={handleSend}
             disabled={!input.trim() || isProcessing}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)] text-white transition-all duration-150 hover:-translate-y-px hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)] text-[var(--on-accent)] transition-[transform,box-shadow] duration-150 hover:-translate-y-px hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer"
             aria-label="Send message"
           >
             <Send className="h-4 w-4" />
@@ -265,7 +265,7 @@ function MessageBubble({
   if (isUser) {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-xl rounded-br-sm bg-[var(--accent)] px-3 py-2 text-white shadow-sm">
+        <div className="max-w-[80%] rounded-xl rounded-br-sm bg-[var(--accent)] px-3 py-2 text-[var(--on-accent)] shadow-sm">
           <p className="whitespace-pre-wrap text-[13px] leading-relaxed">
             {message.content}
           </p>
@@ -369,7 +369,7 @@ function ReminderCard({
         <button
           onClick={handleClick}
           disabled={isConfirming}
-          className="mt-2.5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[13px] font-semibold text-white transition-all duration-150 hover:-translate-y-px hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer"
+          className="mt-2.5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[13px] font-semibold text-[var(--on-accent)] transition-[transform,box-shadow] duration-150 hover:-translate-y-px hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer"
         >
           {isConfirming ? (
             <>

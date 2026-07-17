@@ -66,10 +66,12 @@ export function CreateProjectButton() {
     } else {
       toast.success("Project created successfully!");
     }
-    setLoading(false);
-    submittingRef.current = false;
+    // Don't reset loading/submitting here - the dialog is closing, and leaving
+    // the button disabled until then avoids a flash of re-enabled state.
     setMembers([]);
     setOpen(false);
+    setLoading(false);
+    submittingRef.current = false;
   }
 
   const filteredFriends = friendSearch
@@ -104,7 +106,7 @@ export function CreateProjectButton() {
                   type="button"
                   onClick={() => setActiveTab(tab.key)}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
+                    "flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150",
                     activeTab === tab.key
                       ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm"
                       : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
@@ -145,7 +147,7 @@ export function CreateProjectButton() {
                             disabled={isAdded}
                             onClick={() => handleAddFriend(friend)}
                             className={cn(
-                              "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-all duration-150",
+                              "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors duration-150",
                               isAdded ? "opacity-50 cursor-not-allowed" : "hover:bg-[var(--bg-muted)] hover:scale-[1.01]"
                             )}
                           >
@@ -180,7 +182,7 @@ export function CreateProjectButton() {
                           key={t.id}
                           type="button"
                           onClick={() => handleAddTeam(t.id)}
-                          className="flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-all duration-150 hover:border-[var(--accent)] hover:bg-[var(--bg-muted)] hover:scale-[1.01]"
+                          className="flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-[border-color,background-color,transform] duration-150 hover:border-[var(--accent)] hover:bg-[var(--bg-muted)] hover:scale-[1.01]"
                           style={{ borderColor: 'var(--border-default)' }}
                         >
                           <Users className="h-4 w-4 text-[var(--accent)]" />
@@ -212,7 +214,7 @@ export function CreateProjectButton() {
 
           <div className="flex justify-end gap-3 pt-1">
             <Button variant="secondary" type="button" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" loading={loading}>Create Project</Button>
+            <Button type="submit" loading={loading}>{loading ? "Creating…" : "Create Project"}</Button>
           </div>
         </form>
       </Dialog>

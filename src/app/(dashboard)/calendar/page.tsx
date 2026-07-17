@@ -9,8 +9,10 @@ export default async function CalendarPage() {
   const tasks = await prisma.taskNode.findMany({
     where: {
       dueDate: { not: null },
+      deletedAt: null,
       graph: {
         project: {
+          deletedAt: null,
           members: { some: { userId: user.id } },
         },
       },
@@ -34,6 +36,7 @@ export default async function CalendarPage() {
     title: t.title,
     status: t.status,
     dueDate: t.dueDate!.toISOString(),
+    projectId: t.graph.project.id,
     projectName: t.graph.project.name,
   }));
 

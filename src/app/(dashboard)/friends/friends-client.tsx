@@ -11,10 +11,13 @@ import {
   getPendingFriendRequests,
   acceptFriendRequest,
   declineFriendRequest,
+  getSentFriendRequests,
+  cancelFriendRequest,
 } from "@/actions/friend-actions";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { usePresence } from "@/hooks/use-presence";
 
 interface Project {
   id: string;
@@ -34,6 +37,16 @@ interface FriendData {
 interface PendingRequest {
   id: string;
   requesterId: string;
+  name: string | null;
+  username: string | null;
+  email: string;
+  imageUrl: string | null;
+  createdAt: string;
+}
+
+interface SentRequest {
+  id: string;
+  recipientId: string;
   name: string | null;
   username: string | null;
   email: string;
@@ -130,57 +143,114 @@ function FriendProfilePopup({
 
 // ─── Main Friends Client ────────────────────────────────────────────────────
 
-export function FriendsClient({ projects, currentUserId }: { projects: Project[]; currentUserId: string }) {
+export function FriendsClient({
+  projects,
+  initialFriends,
+  initialPendingRequests,
+  initialSentRequests,
+}: {
+  projects: Project[];
+  currentUserId: string;
+  initialFriends: FriendData[];
+  initialPendingRequests: PendingRequest[];
+  initialSentRequests: SentRequest[];
+}) {
   const router = useRouter();
-  const [friends, setFriends] = useState<FriendData[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [friends, setFriends] = useState<FriendData[]>(initialFriends);
+  const [prevInitialFriends, setPrevInitialFriends] = useState(initialFriends);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>(initialPendingRequests);
+  const [prevInitialPendingRequests, setPrevInitialPendingRequests] = useState(initialPendingRequests);
+  const [sentRequests, setSentRequests] = useState<SentRequest[]>(initialSentRequests);
+  const [prevInitialSentRequests, setPrevInitialSentRequests] = useState(initialSentRequests);
+  const [cancelingId, setCancelingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [addToProjectFriend, setAddToProjectFriend] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [loading, setLoading] = useState(true);
   const [profilePopup, setProfilePopup] = useState<{ friend: FriendData; rect: DOMRect } | null>(null);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [decliningId, setDecliningId] = useState<string | null>(null);
   const [addingToProjectId, setAddingToProjectId] = useState<string | null>(null);
 
-  // Load friends and pending requests
+  // Presence dots: which friends are currently online (shared dashboard
+  // presence channel, same source dashboard-content.tsx uses).
+  const onlineUserIds = usePresence("presence-dashboard", true);
+
+  // The server component (friends/page.tsx) refetches friends + pending
+  // requests on every render, so router.refresh() (triggered by the
+  // "data-refresh" Pusher event when e.g. a friend request comes in) needs
+  // to flow back into this local state, which was only seeded from props
+  // once. Adjust state during render (React's documented pattern for this)
+  // rather than in an effect, so there's no extra render pass.
+  if (initialFriends !== prevInitialFriends) {
+    setPrevInitialFriends(initialFriends);
+    setFriends(initialFriends);
+  }
+  if (initialPendingRequests !== prevInitialPendingRequests) {
+    setPrevInitialPendingRequests(initialPendingRequests);
+    setPendingRequests(initialPendingRequests);
+  }
+  if (initialSentRequests !== prevInitialSentRequests) {
+    setPrevInitialSentRequests(initialSentRequests);
+    setSentRequests(initialSentRequests);
+  }
+
+  // ─── Entrance-animation tracking (by identity, not array position) ─────
+  // Accepting/declining a request reorders `friends`, so deriving the
+  // stagger class from index would replay entrance motion on rows that
+  // never actually mounted. Kept in state (a ref can't be read during
+  // render) and marked "seen" a frame after paint (same rAF-deferred-
+  // setState pattern as the mount flags in task-node.tsx/tag-chip.tsx) so
+  // the entrance class is still present for the first paint instead of
+  // being replaced pre-commit.
+  const [seenFriendIds, setSeenFriendIds] = useState<Set<string>>(() => new Set());
   useEffect(() => {
-    setLoading(true);
-    Promise.all([getFriends(), getPendingFriendRequests()])
-      .then(([friendsData, requestsData]) => {
-        setFriends(friendsData as FriendData[]);
-        setPendingRequests(requestsData as PendingRequest[]);
-      })
-      .catch(() => {
-        setFriends([]);
-        setPendingRequests([]);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    const raf = requestAnimationFrame(() => {
+      setSeenFriendIds((prev) => {
+        let changed = false;
+        const next = new Set(prev);
+        for (const friend of friends) {
+          if (!next.has(friend.id)) {
+            next.add(friend.id);
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [friends]);
 
   // Search users
   useEffect(() => {
-    if (!showAddFriend || searchQuery.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      setIsSearching(true);
-      try {
-        const results = await searchUsers(searchQuery);
-        // Filter out existing friends
-        const friendIds = new Set(friends.map((f) => f.friendId));
-        setSearchResults(results.filter((r) => !friendIds.has(r.id)));
-      } catch {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    function run() {
+      if (!showAddFriend || searchQuery.length < 2) {
         setSearchResults([]);
-      } finally {
-        setIsSearching(false);
+        return;
       }
-    }, 300);
-    return () => clearTimeout(timer);
+      timer = setTimeout(async () => {
+        setIsSearching(true);
+        try {
+          const results = await searchUsers(searchQuery);
+          // Filter out existing friends
+          const friendIds = new Set(friends.map((f) => f.friendId));
+          setSearchResults(results.filter((r) => !friendIds.has(r.id)));
+        } catch {
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 300);
+    }
+
+    run();
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [searchQuery, showAddFriend, friends]);
 
   function handleAddFriend(userId: string) {
@@ -191,11 +261,35 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
         setSearchQuery("");
         setShowAddFriend(false);
         // Reload
-        const [friendsData, requestsData] = await Promise.all([getFriends(), getPendingFriendRequests()]);
+        const [friendsData, requestsData, sentData] = await Promise.all([
+          getFriends(),
+          getPendingFriendRequests(),
+          getSentFriendRequests(),
+        ]);
         setFriends(friendsData as FriendData[]);
         setPendingRequests(requestsData as PendingRequest[]);
+        setSentRequests(sentData as SentRequest[]);
       } catch (error) {
         toast.error((error as Error).message || "Failed to send friend request");
+      }
+    });
+  }
+
+  function handleCancelRequest(friendshipId: string) {
+    setCancelingId(friendshipId);
+    startTransition(async () => {
+      try {
+        const result = await cancelFriendRequest(friendshipId);
+        if (result.error) {
+          toast.error(result.error);
+        } else {
+          toast.success("Friend request canceled");
+          setSentRequests((prev) => prev.filter((r) => r.id !== friendshipId));
+        }
+      } catch (error) {
+        toast.error((error as Error).message || "Failed to cancel friend request");
+      } finally {
+        setCancelingId(null);
       }
     });
   }
@@ -375,7 +469,7 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                   <button
                     onClick={() => handleAcceptRequest(request.requesterId)}
                     disabled={isPending || acceptingId === request.requesterId}
-                    className="flex items-center gap-1 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[11px] font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
+                    className="flex items-center gap-1 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[11px] font-medium text-[var(--on-accent)] transition-colors hover:opacity-90 disabled:opacity-50"
                   >
                     <UserCheck className="h-3.5 w-3.5" />
                     {acceptingId === request.requesterId ? "Accepting..." : "Accept"}
@@ -395,6 +489,50 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
         </div>
       )}
 
+      {/* Sent friend requests */}
+      {sentRequests.length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <Clock className="h-4 w-4 text-dim" />
+            <h2 className="text-[13px] font-medium uppercase tracking-wide text-dim">Sent Requests</h2>
+            <span className="rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-[10px] font-medium text-dim">
+              {sentRequests.length}
+            </span>
+          </div>
+
+          <div className="divide-y divide-[var(--border-subtle)] rounded-2xl border border-themed-subtle">
+            {sentRequests.map((request) => (
+              <div key={request.id} className="p-3.5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full accent-bg text-sm font-medium accent-color overflow-hidden">
+                    {request.imageUrl ? (
+                      <img src={request.imageUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                    ) : (
+                      (request.name || request.email).charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-medium text-heading">{request.name || request.email.split("@")[0]}</p>
+                    {request.username && (
+                      <p className="text-[11px] accent-color">@{request.username}</p>
+                    )}
+                    <p className="text-[11px] text-dim">{request.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleCancelRequest(request.id)}
+                  disabled={isPending || cancelingId === request.id}
+                  className="flex items-center gap-1 rounded-lg border border-themed px-3 py-1.5 text-[11px] font-medium text-dim transition-colors hover:bg-hover hover:text-body disabled:opacity-50"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  {cancelingId === request.id ? "Canceling..." : "Cancel"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Friends list */}
       <div>
         <div className="mb-3 flex items-center gap-2">
@@ -404,11 +542,7 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
           </span>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-themed border-t-[var(--accent)]" />
-          </div>
-        ) : friends.length === 0 ? (
+        {friends.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-themed py-10 text-center">
             <Users className="mx-auto h-8 w-8 text-dim mb-2" />
             <p className="text-[13px] text-body">No friends yet</p>
@@ -416,8 +550,10 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
           </div>
         ) : (
           <div className="divide-y divide-[var(--border-subtle)] rounded-2xl border border-themed-subtle">
-            {friends.map((friend, i) => (
-              <div key={friend.id} className={cn("p-3.5 transition-colors hover:bg-hover", `animate-entrance-${Math.min(i + 1, 6)}`)}>
+            {friends.map((friend, i) => {
+              const isNew = !seenFriendIds.has(friend.id);
+              return (
+              <div key={friend.id} className={cn("p-3.5 transition-colors hover:bg-hover", isNew && `animate-entrance-${Math.min(i + 1, 6)}`)}>
                 <div className="flex items-center justify-between">
                   <div
                     className="flex items-center gap-3 cursor-pointer"
@@ -426,11 +562,28 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                     tabIndex={0}
                     aria-label={`View profile of ${friend.name || friend.email}`}
                   >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full accent-bg text-sm font-medium accent-color overflow-hidden">
-                      {friend.imageUrl ? (
-                        <img src={friend.imageUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
-                      ) : (
-                        (friend.name || friend.email).charAt(0).toUpperCase()
+                    <div className="relative flex-shrink-0">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full accent-bg text-sm font-medium accent-color overflow-hidden">
+                        {friend.imageUrl ? (
+                          <img src={friend.imageUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                        ) : (
+                          (friend.name || friend.email).charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      {onlineUserIds.has(friend.friendId) && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            bottom: "0px",
+                            right: "0px",
+                            width: "10px",
+                            height: "10px",
+                            borderRadius: "50%",
+                            background: "#22c55e",
+                            border: "2px solid var(--bg-elevated)",
+                          }}
+                          aria-label="Online"
+                        />
                       )}
                     </div>
                     <div>
@@ -444,14 +597,14 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleDM(friend.friendId)}
-                      className="rounded-lg p-1.5 text-dim transition-all duration-150 hover:scale-105 hover:bg-[var(--bg-muted)] hover:text-body"
+                      className="rounded-lg p-1.5 text-dim transition-[transform,background-color,color] duration-150 hover:scale-105 hover:bg-[var(--bg-muted)] hover:text-body"
                       title="Send message"
                     >
                       <MessageCircle className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => setAddToProjectFriend(addToProjectFriend === friend.friendId ? null : friend.friendId)}
-                      className="rounded-lg p-1.5 text-dim transition-all duration-150 hover:scale-105 hover:bg-[var(--bg-muted)] hover:text-body"
+                      className="rounded-lg p-1.5 text-dim transition-[transform,background-color,color] duration-150 hover:scale-105 hover:bg-[var(--bg-muted)] hover:text-body"
                       title="Add to project"
                     >
                       <FolderPlus className="h-4 w-4" />
@@ -459,7 +612,7 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                     <button
                       onClick={() => handleRemoveFriend(friend.friendId)}
                       disabled={isPending}
-                      className="rounded-lg p-1.5 text-dim transition-all duration-150 hover:scale-105 hover:bg-[var(--danger-soft)] hover:text-[var(--danger)] disabled:opacity-50"
+                      className="rounded-lg p-1.5 text-dim transition-[transform,background-color,color] duration-150 hover:scale-105 hover:bg-[var(--danger-soft)] hover:text-[var(--danger)] disabled:opacity-50"
                       title="Remove friend"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -500,7 +653,8 @@ export function FriendsClient({ projects, currentUserId }: { projects: Project[]
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

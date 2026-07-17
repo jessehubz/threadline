@@ -97,6 +97,17 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // User channel authorization: only the owning user may subscribe to their own channel
+  const userChannelMatch = channel.match(/^private-user-(.+)$/);
+  if (userChannelMatch) {
+    if (userChannelMatch[1] !== user.id) {
+      return NextResponse.json(
+        { error: "Not authorized for this channel" },
+        { status: 403 }
+      );
+    }
+  }
+
   // For presence channels, include user info
   if (channel.startsWith("presence-")) {
     const authResponse = pusherServer.authorizeChannel(socketId, channel, {

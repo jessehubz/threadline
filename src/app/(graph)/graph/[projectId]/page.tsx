@@ -3,6 +3,7 @@ import { getUnreadCommentNodes } from "@/actions/comment-read-actions";
 import { GraphEditor } from "@/components/graph/graph-editor";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
+import { getEffectivePermissions } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 
 interface GraphPageProps {
@@ -26,11 +27,14 @@ export default async function GraphPage({ params, searchParams }: GraphPageProps
   const pathArray = path ? path.split(",") : [];
   const breadcrumbs = await getBreadcrumbs(projectId, pathArray);
 
-  // Get project details for share
+  // Get project details for share + settings
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { shareToken: true },
+    select: { shareToken: true, visibility: true },
   });
+
+  // Effective permission matrix for the current user (HEAD/CO_HEAD/MEMBER + overrides)
+  const { perms } = await getEffectivePermissions(user.id, projectId);
 
   // Record that this project was opened (for chronological ordering on dashboard)
   await prisma.project.update({
@@ -53,9 +57,11 @@ export default async function GraphPage({ params, searchParams }: GraphPageProps
         projectId={projectId}
         graph={data.graph}
         projectName={data.project.name}
+        projectVisibility={project?.visibility || "PRIVATE"}
         shareToken={project?.shareToken || null}
         members={members.map((m) => ({ id: m.id, role: m.role, user: m.user }))}
         role={data.role}
+        perms={perms}
         breadcrumbs={breadcrumbs}
         currentPath={pathArray}
         currentUserId={user.id}

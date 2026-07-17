@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import {
   Sparkles,
   Search,
@@ -25,6 +24,7 @@ import { CreateProjectButton } from "@/components/create-project-button";
 import { TagChip } from "@/components/ui/tag-chip";
 import { TagScrollContainer } from "@/components/ui/tag-scroll-container";
 import { ProjectTagManager } from "@/components/project-tag-manager";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { updateProject, deleteProject } from "@/actions/project-actions";
 import { updateProjectVisibility } from "@/actions/project-permission-actions";
 import { getProjectMembers } from "@/actions/assignment-actions";
@@ -128,23 +128,6 @@ interface DashboardContentProps {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const PROJECT_ICONS = ["📋", "🚀", "💡", "🎯", "📦", "🔧", "🌐", "📊"];
-const PROJECT_COLORS = [
-  "rgba(139,92,246,0.12)",
-  "rgba(99,102,241,0.12)",
-  "rgba(168,85,247,0.12)",
-  "rgba(124,58,237,0.12)",
-  "rgba(109,40,217,0.12)",
-  "rgba(139,92,246,0.08)",
-];
-
-function getProjectIcon(index: number) {
-  return PROJECT_ICONS[index % PROJECT_ICONS.length];
-}
-function getProjectColor(index: number) {
-  return PROJECT_COLORS[index % PROJECT_COLORS.length];
-}
-
 function formatDate(dateStr: string | null) {
   if (!dateStr) return "No date";
   const d = new Date(dateStr);
@@ -169,12 +152,10 @@ function formatRelativeTime(dateStr: string) {
 
 export function DashboardContent(props: DashboardContentProps) {
   const {
-    user,
     greeting,
     firstName,
     healthScore,
     activeTasks,
-    completionRate,
     insights,
     projects,
     needsAttention,
@@ -183,19 +164,11 @@ export function DashboardContent(props: DashboardContentProps) {
     dueLater,
     overdue,
     workload,
-    workloadByProject,
-    pendingReminderCount,
     totalProjects,
     needsAttentionCount,
-    inProgressTasks,
-    blockedTasksCount,
     availableTags,
   } = props;
 
-  // Use Clerk's live user data so display name updates reactively
-  // without needing a page reload after the user edits their profile.
-  const { user: clerkUser } = useUser();
-  const liveFirstName = clerkUser?.firstName || firstName;
   const router = useRouter();
 
   // Track which friends are online via Pusher presence channel
@@ -256,7 +229,7 @@ export function DashboardContent(props: DashboardContentProps) {
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     // Check initial scroll position (e.g. page restored with scroll)
-    if (window.scrollY > 200) setShowLauncher(true);
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -590,7 +563,7 @@ export function DashboardContent(props: DashboardContentProps) {
           font-size: 13px;
           font-weight: 600;
           cursor: pointer;
-          transition: all .18s ease;
+          transition: border-color .18s ease, color .18s ease, background-color .18s ease;
           outline: none;
         }
         .my-projects-show-all:hover {
@@ -691,7 +664,7 @@ export function DashboardContent(props: DashboardContentProps) {
       <div className="dash-reveal">
       <HeroSection
         greeting={greeting}
-        firstName={liveFirstName}
+        firstName={firstName}
         healthScore={healthScore}
         activeTasks={activeTasks}
         totalProjects={totalProjects}
@@ -726,7 +699,7 @@ export function DashboardContent(props: DashboardContentProps) {
           const el = e.currentTarget;
           el.style.transform = "translateY(-2px)";
           el.style.boxShadow = "var(--shadow-md)";
-          el.style.borderColor = "rgba(139,92,246,0.28)";
+          el.style.borderColor = "var(--ring-color)";
         }}
         onMouseLeave={(e) => {
           const el = e.currentTarget;
@@ -740,12 +713,12 @@ export function DashboardContent(props: DashboardContentProps) {
             display: "inline-flex",
             alignItems: "center",
             gap: "6px",
-            background: "rgba(139,92,246,0.1)",
+            background: "var(--accent-soft)",
             borderRadius: "999px",
             padding: "5px 12px",
             fontSize: "11px",
             fontWeight: 600,
-            color: "#8B5CF6",
+            color: "var(--accent)",
             letterSpacing: "0.04em",
             textTransform: "uppercase",
             flexShrink: 0,
@@ -815,7 +788,7 @@ export function DashboardContent(props: DashboardContentProps) {
       {showLauncher && (
         <button
           onClick={openAiChat}
-          className="ai-launcher-visible fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-[var(--shadow-md)] transition-all duration-150 hover:scale-110 hover:shadow-[var(--elevation-3)] active:scale-95 cursor-pointer"
+          className="ai-launcher-visible fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--on-accent)] shadow-[var(--shadow-md)] transition-[transform,box-shadow] duration-150 hover:scale-110 hover:shadow-[var(--elevation-3)] active:scale-95 cursor-pointer"
           aria-label="Open AI Assistant"
           title="AI Assistant"
         >
@@ -824,119 +797,15 @@ export function DashboardContent(props: DashboardContentProps) {
       )}
 
       {/* ═══ CONFIRM DIALOG ═══ */}
-      {confirmDialog.open && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 10001,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(4px)",
-            animation: "fadeIn .15s ease",
-          }}
-          onClick={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
-        >
-          <div
-            style={{
-              background: "var(--bg-elevated)",
-              border: "1px solid var(--border-default)",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "var(--shadow-lg, 0 25px 50px rgba(0,0,0,0.25))",
-              padding: "28px",
-              width: "100%",
-              maxWidth: "380px",
-              margin: "0 16px",
-              animation: "fadeSlideUp .2s ease",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Icon */}
-            <div
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: confirmDialog.variant === "danger" ? "rgba(239,68,68,0.08)" : "var(--accent-soft)",
-                marginBottom: "16px",
-              }}
-            >
-              {confirmDialog.variant === "danger" ? (
-                <Trash2 style={{ width: "20px", height: "20px", color: "var(--error, #ef4444)" }} />
-              ) : (
-                <CheckCircle2 style={{ width: "20px", height: "20px", color: "var(--accent)" }} />
-              )}
-            </div>
-
-            {/* Title */}
-            <h3 style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.01em" }}>
-              {confirmDialog.title}
-            </h3>
-
-            {/* Description */}
-            <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "24px" }}>
-              {confirmDialog.description}
-            </p>
-
-            {/* Actions */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "flex-end" }}>
-              <button
-                onClick={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
-                style={{
-                  padding: "9px 18px",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid var(--border-default)",
-                  background: "var(--bg-elevated)",
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  transition: "all .15s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "var(--text-muted)";
-                  e.currentTarget.style.color = "var(--text-primary)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "var(--border-default)";
-                  e.currentTarget.style.color = "var(--text-secondary)";
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDialog.onConfirm}
-                style={{
-                  padding: "9px 18px",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  borderRadius: "var(--radius-sm)",
-                  border: "none",
-                  background: confirmDialog.variant === "danger" ? "var(--error, #ef4444)" : "var(--accent)",
-                  color: "#fff",
-                  cursor: "pointer",
-                  transition: "all .15s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "0.85";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "1";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-              >
-                {confirmDialog.confirmLabel}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={confirmDialog.open}
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        confirmLabel={confirmDialog.confirmLabel}
+        destructive={confirmDialog.variant === "danger"}
+        onConfirm={confirmDialog.onConfirm}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+      />
     </>
   );
 }
@@ -950,13 +819,10 @@ function HeroSection({
   healthScore,
   activeTasks,
   totalProjects,
-  needsAttentionCount,
   dueToday,
   dueThisWeek,
   dueLater,
   overdue,
-  healthRingOffset,
-  circumference,
 }: {
   greeting: string;
   firstName: string;
@@ -1040,7 +906,7 @@ function HeroSection({
           const el = e.currentTarget;
           el.style.transform = "translateY(-4px)";
           el.style.boxShadow = "var(--elevation-3)";
-          el.style.borderColor = "rgba(139,92,246,0.28)";
+          el.style.borderColor = "var(--ring-color)";
         }}
         onMouseLeave={(e) => {
           const el = e.currentTarget;
@@ -1106,7 +972,7 @@ function HeroSection({
               const el = e.currentTarget;
               el.style.transform = "translateY(-4px)";
               el.style.boxShadow = "var(--elevation-2)";
-              el.style.borderColor = "rgba(139,92,246,0.28)";
+              el.style.borderColor = "var(--ring-color)";
             }}
             onMouseLeave={(e) => {
               const el = e.currentTarget;
@@ -1124,7 +990,7 @@ function HeroSection({
               const el = e.currentTarget;
               el.style.transform = "translateY(-4px)";
               el.style.boxShadow = "var(--elevation-2)";
-              el.style.borderColor = "rgba(139,92,246,0.28)";
+              el.style.borderColor = "var(--ring-color)";
             }}
             onMouseLeave={(e) => {
               const el = e.currentTarget;
@@ -1142,7 +1008,7 @@ function HeroSection({
               const el = e.currentTarget;
               el.style.transform = "translateY(-4px)";
               el.style.boxShadow = "var(--elevation-2)";
-              el.style.borderColor = "rgba(139,92,246,0.28)";
+              el.style.borderColor = "var(--ring-color)";
             }}
             onMouseLeave={(e) => {
               const el = e.currentTarget;
@@ -1160,7 +1026,7 @@ function HeroSection({
               const el = e.currentTarget;
               el.style.transform = "translateY(-4px)";
               el.style.boxShadow = "var(--elevation-2)";
-              el.style.borderColor = "rgba(139,92,246,0.28)";
+              el.style.borderColor = "var(--ring-color)";
             }}
             onMouseLeave={(e) => {
               const el = e.currentTarget;
@@ -1286,6 +1152,32 @@ function ProjectsSection({
     return () => obs.disconnect();
   }, [allTabs.length]);
 
+  // ─── Entrance-animation tracking (by identity, not array position) ─────
+  // Only cards that have never been rendered before should play the
+  // fade-in-up entrance. Deriving the animation from array index would
+  // replay it on unrelated rows whenever the list is re-filtered/searched.
+  // Kept in state (a ref can't be read during render) and marked "seen"
+  // a frame after paint (same rAF-deferred-setState pattern as the mount
+  // flags in task-node.tsx/tag-chip.tsx) so the entrance class is still
+  // present for the first paint instead of being replaced pre-commit.
+  const [seenProjectIds, setSeenProjectIds] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      setSeenProjectIds((prev) => {
+        let changed = false;
+        const next = new Set(prev);
+        for (const project of visibleProjects) {
+          if (!next.has(project.id)) {
+            next.add(project.id);
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [visibleProjects]);
+
   // Count projects needing attention
   const needsAttentionCount = projects.filter(
     (p) => p.totalTasks === 0 || (p.completedTasks === 0 && p.totalTasks > 0)
@@ -1406,18 +1298,21 @@ function ProjectsSection({
         className="my-projects-grid"
         id="projects-grid"
       >
-        {visibleProjects.map((project, idx) => (
-          <div
-            key={project.id}
-            className={`my-projects-card-entrance my-projects-card-entrance--${Math.min(idx, 7)}`}
-            style={{
-              position: "relative",
-              borderRadius: "var(--radius-lg)",
-            }}
-          >
-            <ProjectCard project={project} index={idx} availableTags={availableTags} onDeleteProject={onDeleteProject} />
-          </div>
-        ))}
+        {visibleProjects.map((project, idx) => {
+          const isNew = !seenProjectIds.has(project.id);
+          return (
+            <div
+              key={project.id}
+              className={isNew ? `my-projects-card-entrance my-projects-card-entrance--${Math.min(idx, 7)}` : ""}
+              style={{
+                position: "relative",
+                borderRadius: "var(--radius-lg)",
+              }}
+            >
+              <ProjectCard project={project} index={idx} availableTags={availableTags} onDeleteProject={onDeleteProject} />
+            </div>
+          );
+        })}
       </div>
 
       {/* Empty state */}
@@ -1450,7 +1345,7 @@ function ProjectsSection({
 
 // ─── Project Card ────────────────────────────────────────────────────────────
 
-function ProjectCard({ project, index, availableTags, onDeleteProject }: { project: DashboardContentProps["projects"][number]; index: number; availableTags: DashboardContentProps["availableTags"]; onDeleteProject: (projectId: string, e: React.MouseEvent) => void }) {
+function ProjectCard({ project, availableTags, onDeleteProject }: { project: DashboardContentProps["projects"][number]; index: number; availableTags: DashboardContentProps["availableTags"]; onDeleteProject: (projectId: string, e: React.MouseEvent) => void }) {
   const progress = project.totalTasks > 0 ? Math.round((project.completedTasks / project.totalTasks) * 100) : 0;
   const statusLabel = project.totalTasks === 0 ? "Draft" : project.completedTasks === project.totalTasks ? "Complete" : progress > 0 ? "Ongoing" : "Not Started";
 
@@ -1460,6 +1355,7 @@ function ProjectCard({ project, index, availableTags, onDeleteProject }: { proje
       tabIndex={0}
       onClick={() => { window.location.href = `/graph/${project.id}`; }}
       onKeyDown={(e) => { if (e.key === "Enter") window.location.href = `/graph/${project.id}`; }}
+      className="transition-transform duration-150 active:scale-[0.98]"
       style={{ textDecoration: "none", cursor: "pointer" }}
     >
       <div
@@ -1478,7 +1374,7 @@ function ProjectCard({ project, index, availableTags, onDeleteProject }: { proje
           const el = e.currentTarget;
           el.style.transform = "translateY(-4px)";
           el.style.boxShadow = "var(--shadow-md)";
-          el.style.borderColor = "rgba(139,92,246,0.28)";
+          el.style.borderColor = "var(--ring-color)";
         }}
         onMouseLeave={(e) => {
           const el = e.currentTarget;
@@ -1947,7 +1843,7 @@ function EditProjectButton({ projectId, projectName }: { projectId: string; proj
                           background: member.role === "HEAD" ? "var(--accent-soft)" : "transparent",
                           color: member.role === "HEAD" ? "var(--accent)" : "var(--text-muted)",
                         }}>
-                          {member.role === "HEAD" ? "Owner" : member.role === "ADMIN" ? "Admin" : "Member"}
+                          {member.role === "HEAD" ? "Owner" : member.role === "CO_HEAD" ? "Admin" : "Member"}
                         </span>
                         {member.role !== "HEAD" && (
                           <button
@@ -2057,7 +1953,7 @@ function EditProjectButton({ projectId, projectName }: { projectId: string; proj
                               borderRadius: "4px",
                               border: "none",
                               background: "var(--accent)",
-                              color: "#fff",
+                              color: "var(--on-accent)",
                               cursor: "pointer",
                               flexShrink: 0,
                             }}
@@ -2103,7 +1999,7 @@ function EditProjectButton({ projectId, projectName }: { projectId: string; proj
                               borderRadius: "4px",
                               border: "none",
                               background: "var(--accent)",
-                              color: "#fff",
+                              color: "var(--on-accent)",
                               cursor: "pointer",
                               flexShrink: 0,
                             }}
@@ -2131,7 +2027,7 @@ function EditProjectButton({ projectId, projectName }: { projectId: string; proj
                 borderRadius: "8px",
                 border: "none",
                 background: "var(--accent)",
-                color: "#fff",
+                color: "var(--on-accent)",
                 cursor: saving ? "not-allowed" : "pointer",
                 opacity: saving ? 0.7 : 1,
                 transition: "opacity .15s ease",
@@ -2196,7 +2092,7 @@ function NeedsAttentionPanel({ items }: { items: DashboardContentProps["needsAtt
             >
               <div
                 style={{
-                  borderLeft: `3px solid ${item.daysOverdue && item.daysOverdue > 3 ? "#6d28d9" : "#8B5CF6"}`,
+                  borderLeft: `3px solid ${item.daysOverdue && item.daysOverdue > 3 ? "var(--accent)" : "var(--violet-400)"}`,
                   paddingLeft: "16px",
                   padding: "10px 12px 10px 16px",
                   borderRadius: "0 var(--radius-sm) var(--radius-sm) 0",
@@ -2227,7 +2123,7 @@ function NeedsAttentionPanel({ items }: { items: DashboardContentProps["needsAtt
                       fontWeight: 500,
                       padding: "2px 7px",
                       borderRadius: "999px",
-                      background: item.status === "BLOCKED" ? "var(--danger-soft)" : "rgba(139,92,246,0.08)",
+                      background: item.status === "BLOCKED" ? "var(--danger-soft)" : "var(--accent-soft)",
                       color: item.status === "BLOCKED" ? "var(--danger)" : "var(--accent)",
                       flexShrink: 0,
                     }}
@@ -2248,8 +2144,6 @@ function NeedsAttentionPanel({ items }: { items: DashboardContentProps["needsAtt
 
 function FriendsPanel({
   workload,
-  friendRingOffsets,
-  smallCircumference,
   onlineUserIds,
 }: {
   workload: DashboardContentProps["workload"];
@@ -2294,7 +2188,7 @@ function FriendsPanel({
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {workload.slice(0, 6).map((member, idx) => {
+          {workload.slice(0, 6).map((member) => {
             const maxTotal = Math.max(...workload.map((w) => w.total), 1);
             const healthPct = Math.min(Math.round((member.total / maxTotal) * 100), 100);
             const isOnline = onlineUserIds.has(member.id);
@@ -2458,7 +2352,7 @@ function DeadlinesPanel({
         const el = e.currentTarget;
         el.style.transform = "translateY(-4px)";
         el.style.boxShadow = "var(--elevation-3)";
-        el.style.borderColor = "rgba(139,92,246,0.28)";
+        el.style.borderColor = "var(--ring-color)";
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget;
@@ -2467,11 +2361,32 @@ function DeadlinesPanel({
         el.style.borderColor = "var(--border-default)";
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-        <Calendar style={{ width: "16px", height: "16px", color: "var(--accent)" }} />
-        <h3 style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-          Deadlines
-        </h3>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "4px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Calendar style={{ width: "16px", height: "16px", color: "var(--accent)" }} />
+          <h3 style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+            Deadlines
+          </h3>
+        </div>
+        <Link
+          href="/my-tasks"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+            fontSize: "12.5px",
+            fontWeight: 500,
+            color: "var(--text-muted)",
+            textDecoration: "none",
+            transition: "color .15s ease",
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
+        >
+          View all
+          <ArrowRight style={{ width: "12px", height: "12px" }} />
+        </Link>
       </div>
       <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px", marginBottom: "20px" }}>
         What&apos;s due, sorted by urgency

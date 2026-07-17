@@ -109,7 +109,7 @@ export function ProfileForm({ user }: { user: User }) {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-card bg-[var(--accent)] text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-50"
+              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-card bg-[var(--accent)] text-[var(--on-accent)] transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-50"
               aria-label="Upload profile picture"
             >
               <Camera className="h-4 w-4" />

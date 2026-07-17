@@ -20,7 +20,7 @@ interface FileUploadProps {
   isReadOnly: boolean;
 }
 
-export function FileUpload({ nodeId, projectId, attachments, isReadOnly }: FileUploadProps) {
+export function FileUpload({ nodeId, attachments, isReadOnly }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [files, setFiles] = useState<Attachment[]>(attachments);
   const inputRef = useRef<HTMLInputElement>(null);

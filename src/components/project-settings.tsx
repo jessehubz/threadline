@@ -13,6 +13,10 @@ interface ProjectSettingsProps {
   currentVisibility: string;
   members: Array<{ id: string; role: string; user: { id: string; name: string | null; email: string } }>;
   currentUserRole: string;
+  // Non-HEAD members with this permission can still open the dialog to
+  // manage members (kick, subject to canKickMembers); visibility & the
+  // permission matrix itself remain HEAD-only regardless.
+  canChangeSettings?: boolean;
   open: boolean;
   onClose: () => void;
 }
@@ -42,12 +46,13 @@ const permissionLabels: Record<keyof PermissionSet, string> = {
   canKickMembers: "Kick members",
 };
 
-export function ProjectSettings({ projectId, currentVisibility, members, currentUserRole, open, onClose }: ProjectSettingsProps) {
+export function ProjectSettings({ projectId, currentVisibility, members, currentUserRole, canChangeSettings = false, open, onClose }: ProjectSettingsProps) {
+  const isHead = currentUserRole === "HEAD";
   const [visibility, setVisibility] = useState(currentVisibility);
   const [coHeadPerms, setCoHeadPerms] = useState<PermissionSet>(defaultCoHead);
   const [memberPerms, setMemberPerms] = useState<PermissionSet>(defaultMember);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"general" | "permissions" | "members">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "permissions" | "members">(isHead ? "general" : "members");
 
   useEffect(() => {
     if (open) {
@@ -85,29 +90,33 @@ export function ProjectSettings({ projectId, currentVisibility, members, current
     else toast.success("Member removed");
   }
 
-  if (currentUserRole !== "HEAD") return null;
+  if (!isHead && !canChangeSettings) return null;
+
+  const visibleTabs = (["general", "permissions", "members"] as const).filter(
+    (tab) => tab === "members" || isHead
+  );
 
   return (
     <Dialog open={open} onClose={onClose} title="Project Settings">
       {/* Tabs */}
       <div className="flex rounded-lg p-0.5 mb-4" style={{ backgroundColor: "var(--bg-muted)", border: "1px solid var(--border-default)" }}>
-        {(["general", "permissions", "members"] as const).map((tab) => (
-          <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={cn("flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-all duration-150", activeTab === tab ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]")}>
+        {visibleTabs.map((tab) => (
+          <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={cn("flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors duration-150", activeTab === tab ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]")}>
             {tab}
           </button>
         ))}
       </div>
 
-      {activeTab === "general" && (
+      {activeTab === "general" && isHead && (
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Visibility</label>
             <div className="mt-2 space-y-2">
-              <button type="button" onClick={() => setVisibility("PUBLIC")} className={cn("flex w-full items-center gap-3 rounded-xl p-3 border transition-all duration-150", visibility === "PUBLIC" ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--border-default)] hover:border-[var(--accent)]/50")}>
+              <button type="button" onClick={() => setVisibility("PUBLIC")} className={cn("flex w-full items-center gap-3 rounded-xl p-3 border transition-colors duration-150", visibility === "PUBLIC" ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--border-default)] hover:border-[var(--accent)]/50")}>
                 <Eye className="h-4 w-4" style={{ color: visibility === "PUBLIC" ? "var(--accent)" : "var(--text-muted)" }} />
                 <div className="text-left"><p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>Public</p><p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Visible on your profile, viewable by anyone</p></div>
               </button>
-              <button type="button" onClick={() => setVisibility("PRIVATE")} className={cn("flex w-full items-center gap-3 rounded-xl p-3 border transition-all duration-150", visibility === "PRIVATE" ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--border-default)] hover:border-[var(--accent)]/50")}>
+              <button type="button" onClick={() => setVisibility("PRIVATE")} className={cn("flex w-full items-center gap-3 rounded-xl p-3 border transition-colors duration-150", visibility === "PRIVATE" ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--border-default)] hover:border-[var(--accent)]/50")}>
                 <EyeOff className="h-4 w-4" style={{ color: visibility === "PRIVATE" ? "var(--accent)" : "var(--text-muted)" }} />
                 <div className="text-left"><p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>Private</p><p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Only members can view this project</p></div>
               </button>
@@ -117,7 +126,7 @@ export function ProjectSettings({ projectId, currentVisibility, members, current
         </div>
       )}
 
-      {activeTab === "permissions" && (
+      {activeTab === "permissions" && isHead && (
         <div className="space-y-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -157,7 +166,7 @@ export function ProjectSettings({ projectId, currentVisibility, members, current
                 <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{m.role}</p>
               </div>
               {m.role !== "HEAD" && (
-                <button onClick={() => handleKick(m.id)} className="rounded-lg p-1.5 text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger-soft)] transition-all duration-150" title="Remove member">
+                <button onClick={() => handleKick(m.id)} className="rounded-lg p-1.5 text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger-soft)] transition-colors duration-150" title="Remove member">
                   <UserMinus className="h-3.5 w-3.5" />
                 </button>
               )}

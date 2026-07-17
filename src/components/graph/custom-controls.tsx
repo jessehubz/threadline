@@ -1,12 +1,14 @@
 "use client";
 
 import { useReactFlow } from "@xyflow/react";
-import { Maximize2, ZoomIn, ZoomOut, LocateFixed } from "lucide-react";
+import { ZoomIn, ZoomOut, LocateFixed, Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTheme } from "@/components/theme-provider";
 
 export function CustomControls() {
   const { fitView, zoomIn, zoomOut, getZoom } = useReactFlow();
   const [zoom, setZoom] = useState(100);
+  const { resolvedTheme, setTheme } = useTheme();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -42,6 +44,15 @@ export function CustomControls() {
       >
         <LocateFixed className="h-4 w-4" />
         <span className="text-xs font-medium">Recenter</span>
+      </button>
+      <div className="mx-1 h-4 w-px bg-hover" />
+      <button
+        onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+        className="rounded-lg p-1.5 text-dim transition-colors hover:bg-hover hover:text-body"
+        aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        title={resolvedTheme === "dark" ? "Light mode" : "Dark mode"}
+      >
+        {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </button>
     </div>
   );

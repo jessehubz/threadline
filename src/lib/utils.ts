@@ -65,6 +65,49 @@ export function getStatusDotColor(status: string): string {
   }
 }
 
+// Priority chip styling follows the same restrained, single-accent idiom as
+// getStatusColor: violet for "needs a bit more attention" (HIGH), the app's
+// one negative/warning hue for the top of the scale (URGENT). NONE/LOW/MEDIUM
+// intentionally render nothing in the UI (see task-node.tsx / my-tasks-list.tsx).
+export function getPriorityColor(priority: string): string {
+  switch (priority) {
+    case "URGENT":
+      return "bg-[var(--danger-soft)] text-[var(--danger)]";
+    case "HIGH":
+      return "bg-[var(--violet-100)] text-[var(--violet-600)]";
+    default:
+      return "bg-[var(--bg-muted)] text-[var(--text-muted)]";
+  }
+}
+
+export function getPriorityLabel(priority: string): string {
+  switch (priority) {
+    case "LOW":
+      return "Low";
+    case "MEDIUM":
+      return "Medium";
+    case "HIGH":
+      return "High";
+    case "URGENT":
+      return "Urgent";
+    default:
+      return "None";
+  }
+}
+
+// URGENT -> HIGH -> MEDIUM -> LOW -> NONE, for sorting task lists.
+const PRIORITY_RANK: Record<string, number> = {
+  URGENT: 0,
+  HIGH: 1,
+  MEDIUM: 2,
+  LOW: 3,
+  NONE: 4,
+};
+
+export function getPriorityRank(priority: string): number {
+  return PRIORITY_RANK[priority] ?? PRIORITY_RANK.NONE;
+}
+
 export function getStatusLabel(status: string): string {
   switch (status) {
     case "NOT_STARTED":

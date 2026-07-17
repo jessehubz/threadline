@@ -5,15 +5,11 @@ import { AnalyticsCharts } from "@/components/analytics-charts";
 export default async function AnalyticsPage() {
   const user = await requireUser();
 
-  const projects = await prisma.project.findMany({
-    where: { members: { some: { userId: user.id } } },
-    select: { id: true, name: true },
-  });
-
   // Get all tasks for user's projects
   const tasks = await prisma.taskNode.findMany({
     where: {
-      graph: { project: { members: { some: { userId: user.id } } } },
+      deletedAt: null,
+      graph: { project: { deletedAt: null, members: { some: { userId: user.id } } } },
     },
     include: {
       assignments: { include: { user: true } },

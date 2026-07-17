@@ -1,5 +1,6 @@
 import { SiteFooter } from "@/components/site-footer";
 import { SitePageHeader } from "@/components/site-page-header";
+import { FloatingThemeToggle } from "@/components/floating-theme-toggle";
 
 export default function SitePagesLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function SitePagesLayout({ children }: { children: React.ReactNod
         background: "var(--bg-base)",
       }}
     >
+      <FloatingThemeToggle />
       <SitePageHeader />
       <main
         style={{

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { ShareGraphViewer } from "@/components/share-graph-viewer";
 
 interface SharePageProps {
@@ -18,7 +19,7 @@ export default async function SharePage({ params }: SharePageProps) {
         include: {
           nodes: {
             include: {
-              assignments: { include: { user: true } },
+              assignments: { include: { user: { select: { id: true, name: true, imageUrl: true } } } },
               attachments: true,
               subGraph: { include: { nodes: { select: { id: true, status: true } } } },
               incomingEdges: true,
@@ -44,9 +45,9 @@ export default async function SharePage({ params }: SharePageProps) {
           {project.name}
           <span className="ml-2 text-sm font-normal text-dim">(View Only)</span>
         </h1>
-        <a href="/sign-up" className="btn-primary text-sm">
+        <Link href="/sign-up" className="btn-primary text-sm">
           Sign up to edit
-        </a>
+        </Link>
       </header>
       <div className="flex-1">
         <ShareGraphViewer graph={graph} />

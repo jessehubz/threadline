@@ -13,36 +13,49 @@ interface DialogProps {
   className?: string;
 }
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Dialog({ open, onClose, title, children, className }: DialogProps) {
   const [mounted, setMounted] = useState(false);
   const [show, setShow] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   // Ensure we only portal on the client
   useEffect(() => {
-    setPortalContainer(document.body);
+    function run() {
+      setPortalContainer(document.body);
+    }
+    run();
   }, []);
 
   useEffect(() => {
-    if (open) {
-      setMounted(true);
-      if (closeTimerRef.current) {
-        clearTimeout(closeTimerRef.current);
-        closeTimerRef.current = null;
-      }
-      requestAnimationFrame(() => {
+    function run() {
+      if (open) {
+        setMounted(true);
+        if (closeTimerRef.current) {
+          clearTimeout(closeTimerRef.current);
+          closeTimerRef.current = null;
+        }
+        // EXIT is faster than enter; enter waits a frame so the panel mounts
+        // at its initial (closed) state before transitioning to open.
         requestAnimationFrame(() => {
-          setShow(true);
+          requestAnimationFrame(() => {
+            setShow(true);
+          });
         });
-      });
-    } else if (mounted) {
-      setShow(false);
-      closeTimerRef.current = setTimeout(() => {
-        setMounted(false);
-      }, 220);
+      } else if (mounted) {
+        setShow(false);
+        closeTimerRef.current = setTimeout(() => {
+          setMounted(false);
+        }, 140);
+      }
     }
-  }, [open]);
+    run();
+  }, [open, mounted]);
 
   // Lock body scroll
   useEffect(() => {
@@ -63,6 +76,60 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
     return () => document.removeEventListener("keydown", handleEscape);
   }, [mounted, onClose]);
 
+  // Focus trap: focus the first focusable element (or the panel itself) on
+  // open, cycle Tab/Shift+Tab within the panel, and restore focus to the
+  // previously-focused element on close.
+  useEffect(() => {
+    if (!mounted) return;
+
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+
+    const panel = panelRef.current;
+    const focusFirst = () => {
+      if (!panel) return;
+      const focusable = panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      if (focusable.length > 0) {
+        focusable[0].focus();
+      } else {
+        panel.focus();
+      }
+    };
+    // Wait a tick so the panel is in the DOM (and any autofocus targets exist).
+    const raf = requestAnimationFrame(focusFirst);
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Tab" || !panel) return;
+      const focusable = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      if (focusable.length === 0) {
+        e.preventDefault();
+        panel.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (e.shiftKey) {
+        if (active === first || !panel.contains(active)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (active === last || !panel.contains(active)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocusedRef.current?.focus?.();
+    };
+  }, [mounted]);
+
   if (!mounted || !portalContainer) return null;
 
   const dialogContent = (
@@ -73,8 +140,8 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
       {/* Overlay - solid dark scrim, NO blur */}
       <div
         className={cn(
-          "fixed inset-0 transition-opacity duration-[220ms] ease-out",
-          show ? "opacity-100" : "opacity-0"
+          "fixed inset-0 transition-opacity ease-(--ease-out-strong)",
+          show ? "opacity-100 duration-[180ms]" : "opacity-0 duration-[140ms]"
         )}
         style={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }}
         onClick={onClose}
@@ -82,11 +149,13 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
       />
       {/* Dialog panel */}
       <div
+        ref={panelRef}
+        tabIndex={-1}
         className={cn(
-          "relative z-10 w-full max-w-lg p-6 transition-all duration-[220ms] ease-out",
+          "relative z-10 w-full max-w-lg p-6 origin-center transition-[opacity,transform] ease-(--ease-out-strong) focus:outline-none",
           show
-            ? "opacity-100 scale-100 translate-y-0"
-            : "opacity-0 scale-[0.96] translate-y-1",
+            ? "opacity-100 scale-100 duration-[190ms]"
+            : "opacity-0 scale-[0.98] duration-[140ms]",
           className
         )}
         style={{
@@ -102,7 +171,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
           <h2 className="text-[16px] font-semibold" style={{ color: "var(--text-primary)" }}>{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 transition-all duration-150 hover:bg-[var(--bg-muted)] hover:scale-105"
+            className="rounded-lg p-1.5 transition-[background-color,transform] duration-150 hover:bg-[var(--bg-muted)] hover:scale-105"
             style={{ color: "var(--text-muted)" }}
             aria-label="Close"
           >

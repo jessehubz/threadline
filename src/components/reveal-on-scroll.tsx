@@ -21,46 +21,56 @@ export function RevealOnScroll({
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Check for reduced motion preference
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let observer: IntersectionObserver | undefined;
 
-    if (prefersReducedMotion) {
-      setIsVisible(true);
-      return;
-    }
+    function run() {
+      // Check for reduced motion preference
+      const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
 
-    const element = ref.current;
-    if (!element) return;
-
-    // Check if element is already in viewport on mount
-    const rect = element.getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-      setIsVisible(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          if (delay > 0) {
-            setTimeout(() => setIsVisible(true), delay);
-          } else {
-            setIsVisible(true);
-          }
-          // Only trigger once - disconnect after revealing
-          observer.unobserve(entry.target);
-        }
-      },
-      {
-        threshold: 0.08,
-        rootMargin: "0px 0px -60px 0px",
+      if (prefersReducedMotion) {
+        setIsVisible(true);
+        return;
       }
-    );
 
-    observer.observe(element);
-    return () => observer.disconnect();
+      const element = ref.current;
+      if (!element) return;
+
+      // Check if element is already in viewport on mount
+      const rect = element.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        setIsVisible(true);
+        return;
+      }
+
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            if (delay > 0) {
+              timeoutId = setTimeout(() => setIsVisible(true), delay);
+            } else {
+              setIsVisible(true);
+            }
+            // Only trigger once - disconnect after revealing
+            observer?.unobserve(entry.target);
+          }
+        },
+        {
+          threshold: 0.08,
+          rootMargin: "0px 0px -60px 0px",
+        }
+      );
+
+      observer.observe(element);
+    }
+
+    run();
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      observer?.disconnect();
+    };
   }, [delay]);
 
   return (

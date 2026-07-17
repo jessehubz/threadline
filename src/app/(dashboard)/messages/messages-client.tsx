@@ -9,6 +9,7 @@ import {
   getOrCreateConversation,
   sendDirectMessage,
   getDirectMessages,
+  markConversationRead,
 } from "@/actions/dm-actions";
 import { getFriends } from "@/actions/friend-actions";
 import { cn, formatRelativeDate } from "@/lib/utils";
@@ -29,6 +30,7 @@ interface MessageUser {
 interface Message {
   id: string;
   content: string;
+  isSystem: boolean;
   createdAt: string;
   user: MessageUser;
 }
@@ -39,14 +41,30 @@ interface Conversation {
   name: string | null;
   participants: Array<{
     id: string;
+    userId: string;
+    lastReadAt: string | null;
     user: MessageUser;
   }>;
   messages: Array<{
     id: string;
     content: string;
+    isSystem: boolean;
     createdAt: string;
     user: { id: string; name: string | null; email: string };
   }>;
+}
+
+// A conversation has unread messages if the most recent message is from
+// someone else, isn't a system message, and postdates the caller's own
+// lastReadAt on that conversation (or they've never read it at all).
+function isConversationUnread(convo: Conversation, currentUserId: string): boolean {
+  const lastMessage = convo.messages[0];
+  if (!lastMessage || lastMessage.isSystem || lastMessage.user.id === currentUserId) {
+    return false;
+  }
+  const ownParticipant = convo.participants.find((p) => p.userId === currentUserId);
+  if (!ownParticipant?.lastReadAt) return true;
+  return new Date(lastMessage.createdAt) > new Date(ownParticipant.lastReadAt);
 }
 
 type Tab = "channels" | "dms";
@@ -86,7 +104,7 @@ export function MessagesClient({
         <button
           onClick={() => setActiveTab("channels")}
           className={cn(
-            "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150",
+            "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-150",
             activeTab === "channels"
               ? "bg-card text-heading shadow-sm"
               : "text-body hover:text-heading"
@@ -99,7 +117,7 @@ export function MessagesClient({
         <button
           onClick={() => setActiveTab("dms")}
           className={cn(
-            "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150",
+            "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-150",
             activeTab === "dms"
               ? "bg-card text-heading shadow-sm"
               : "text-body hover:text-heading"
@@ -111,7 +129,7 @@ export function MessagesClient({
       </div>
 
       {activeTab === "channels" ? (
-        <ChannelsPanel projects={filteredProjects} currentUserId={currentUserId} searchQuery={searchQuery} />
+        <ChannelsPanel projects={filteredProjects} currentUserId={currentUserId} />
       ) : (
         <DMsPanel currentUserId={currentUserId} searchQuery={searchQuery} />
       )}
@@ -124,11 +142,9 @@ export function MessagesClient({
 function ChannelsPanel({
   projects,
   currentUserId,
-  searchQuery,
 }: {
   projects: Project[];
   currentUserId: string;
-  searchQuery: string;
 }) {
   const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?.id ?? "");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -139,12 +155,24 @@ function ChannelsPanel({
 
   useEffect(() => {
     if (!selectedProjectId) return;
-    setLoading(true);
-    fetch(`/api/messages?projectId=${selectedProjectId}`)
-      .then((res) => res.json())
-      .then((data) => setMessages(data.messages || []))
-      .catch(() => setMessages([]))
-      .finally(() => setLoading(false));
+
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/messages?projectId=${selectedProjectId}`);
+        const data = await res.json();
+        if (!cancelled) setMessages(data.messages || []);
+      } catch {
+        if (!cancelled) setMessages([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [selectedProjectId]);
 
   useEffect(() => {
@@ -249,7 +277,7 @@ function ChannelsPanel({
           <button
             onClick={handleSend}
             disabled={isPending || !input.trim()}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent)] text-white transition-all duration-150 hover:bg-[var(--accent-hover)] hover:scale-[1.05] disabled:opacity-50 disabled:hover:scale-100"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent)] text-[var(--on-accent)] transition-[background-color,transform] duration-150 hover:bg-[var(--accent-hover)] hover:scale-[1.05] disabled:opacity-50 disabled:hover:scale-100"
             aria-label="Send message"
           >
             <Send className="h-4 w-4" />
@@ -278,30 +306,77 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
 
   // Load conversations
   useEffect(() => {
-    setLoading(true);
-    getConversations()
-      .then((convos) => setConversations(convos as unknown as Conversation[]))
-      .catch(() => setConversations([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      try {
+        const convos = await getConversations();
+        if (!cancelled) setConversations(convos as unknown as Conversation[]);
+      } catch {
+        if (!cancelled) setConversations([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  // Marks a conversation read on the server and clears its unread state
+  // locally so the dot disappears immediately.
+  function markRead(conversationId: string) {
+    markConversationRead(conversationId).catch(() => {});
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === conversationId
+          ? {
+              ...c,
+              participants: c.participants.map((p) =>
+                p.userId === currentUserId ? { ...p, lastReadAt: new Date().toISOString() } : p
+              ),
+            }
+          : c
+      )
+    );
+  }
 
   // Load messages for selected conversation
   useEffect(() => {
     if (!selectedConversation) return;
-    setMessagesLoading(true);
-    getDirectMessages(selectedConversation.id)
-      .then((msgs) =>
-        setMessages(
-          msgs.map((m) => ({
-            id: m.id,
-            content: m.content,
-            createdAt: m.createdAt.toISOString(),
-            user: m.user,
-          }))
-        )
-      )
-      .catch(() => setMessages([]))
-      .finally(() => setMessagesLoading(false));
+    const conversationId = selectedConversation.id;
+
+    let cancelled = false;
+    async function load() {
+      setMessagesLoading(true);
+      try {
+        const msgs = await getDirectMessages(conversationId);
+        if (!cancelled) {
+          setMessages(
+            msgs.map((m) => ({
+              id: m.id,
+              content: m.content,
+              isSystem: m.isSystem,
+              createdAt: m.createdAt.toISOString(),
+              user: m.user,
+            }))
+          );
+        }
+      } catch {
+        if (!cancelled) setMessages([]);
+      } finally {
+        if (!cancelled) setMessagesLoading(false);
+      }
+    }
+    load();
+    (function runMarkRead() {
+      markRead(conversationId);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation]);
 
   // Subscribe to Pusher for real-time DMs
@@ -310,11 +385,14 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
     const channel = getPusherClient().subscribe(`private-dm-${selectedConversation.id}`);
     channel.bind("new-dm", (data: Message) => {
       setMessages((prev) => [...prev, data]);
+      // The conversation is open/visible, so mark it read as new messages arrive.
+      markRead(selectedConversation.id);
     });
     return () => {
       channel.unbind_all();
       getPusherClient().unsubscribe(`private-dm-${selectedConversation.id}`);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation]);
 
   useEffect(() => {
@@ -475,6 +553,7 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
               .map((convo) => {
               const other = getOtherParticipant(convo);
               const lastMessage = convo.messages[0];
+              const unread = isConversationUnread(convo, currentUserId);
               return (
                 <button
                   key={convo.id}
@@ -487,7 +566,7 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
                   <UserAvatar user={other || { id: "", name: "?", email: "", imageUrl: null }} size="md" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="truncate text-item-title">
+                      <p className={cn("truncate text-item-title", unread && "font-semibold text-heading")}>
                         {other?.name || other?.email || "Unknown"}
                       </p>
                       {lastMessage && (
@@ -495,11 +574,18 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
                       )}
                     </div>
                     {lastMessage && (
-                      <p className="truncate text-xs text-body">
+                      <p className={cn("truncate text-xs text-body", unread && "font-medium text-heading")}>
                         {lastMessage.content}
                       </p>
                     )}
                   </div>
+                  {unread && (
+                    <span
+                      className="ml-1 h-2 w-2 flex-shrink-0 rounded-full"
+                      style={{ background: "var(--accent)" }}
+                      aria-label="Unread"
+                    />
+                  )}
                 </button>
               );
             })
@@ -573,7 +659,7 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
                 <button
                   onClick={handleSend}
                   disabled={isPending || !input.trim()}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent)] text-white transition-all duration-150 hover:bg-[var(--accent-hover)] hover:scale-[1.05] disabled:opacity-50 disabled:hover:scale-100"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent)] text-[var(--on-accent)] transition-[background-color,transform] duration-150 hover:bg-[var(--accent-hover)] hover:scale-[1.05] disabled:opacity-50 disabled:hover:scale-100"
                   aria-label="Send message"
                 >
                   <Send className="h-4 w-4" />
@@ -590,6 +676,14 @@ function DMsPanel({ currentUserId, searchQuery }: { currentUserId: string; searc
 // ─── Shared Components ──────────────────────────────────────────────────────
 
 function MessageBubble({ msg, currentUserId }: { msg: Message; currentUserId: string }) {
+  if (msg.isSystem) {
+    return (
+      <div className="flex justify-center">
+        <p className="text-xs text-dim">{msg.content}</p>
+      </div>
+    );
+  }
+
   const isOwn = msg.user.id === currentUserId;
 
   function formatTime(dateStr: string) {
@@ -604,7 +698,7 @@ function MessageBubble({ msg, currentUserId }: { msg: Message; currentUserId: st
         className={cn(
           "max-w-[70%] rounded-2xl px-4 py-2.5",
           isOwn
-            ? "bg-[var(--accent)] text-white"
+            ? "bg-[var(--accent)] text-[var(--on-accent)]"
             : "bg-hover text-heading"
         )}
       >

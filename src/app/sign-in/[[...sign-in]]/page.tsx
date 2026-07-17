@@ -123,7 +123,7 @@ export default function SignInPage() {
             <SignIn
               appearance={{
                 variables: {
-                  colorPrimary: "#8B5CF6",
+                  colorPrimary: "var(--accent)",
                   colorBackground: "transparent",
                 },
                 elements: {
@@ -136,7 +136,7 @@ export default function SignInPage() {
                   socialButtonsBlockButton: {
                     border: "1px solid var(--border-default)",
                     borderRadius: "10px",
-                    transition: "all 0.2s ease",
+                    transition: "background-color 0.2s ease, border-color 0.2s ease",
                     overflow: "visible",
                     whiteSpace: "normal",
                     minHeight: "auto",
@@ -147,9 +147,10 @@ export default function SignInPage() {
                     whiteSpace: "normal",
                   },
                   formButtonPrimary: {
-                    backgroundColor: "#8B5CF6",
+                    backgroundColor: "var(--accent)",
+                    color: "var(--on-accent)",
                     borderRadius: "10px",
-                    transition: "all 0.2s ease",
+                    transition: "background-color 0.2s ease",
                   },
                   formFieldInput: {
                     borderRadius: "10px",
@@ -230,20 +231,20 @@ const authStyles = `
 }
 .auth-divider:hover::after,
 .auth-divider-active::after {
-  background: #8B5CF6;
+  background: #D4D4D8;
   width: 3px;
-  box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
 }
 .auth-logo-t1 { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 450; letter-spacing: 0.05em; color: #F2F2F4; }
-.auth-logo-t2 { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 450; letter-spacing: 0.05em; color: #7C3AED; }
-.auth-eyebrow { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8B5CF6; margin-bottom: 20px; }
+.auth-logo-t2 { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 450; letter-spacing: 0.05em; color: var(--logo-accent); }
+.auth-eyebrow { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #D4D4D8; margin-bottom: 20px; }
 .auth-heading { font-family: "Inter", sans-serif; font-size: 54px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.15; color: #F2F2F4; margin-bottom: 24px; }
 .auth-subtext { font-family: "Figtree", sans-serif; font-size: 17px; font-weight: 400; color: #98989F; line-height: 1.6; max-width: 480px; }
 .auth-features { margin-top: 36px; padding-top: 26px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 18px; }
 .auth-feature-item { display: flex; align-items: center; gap: 12px; font-family: "Figtree", sans-serif; font-size: 15px; font-weight: 500; color: #C4C4CC; }
-.auth-feature-icon { width: 21px; height: 21px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #A78BFA; }
+.auth-feature-icon { width: 21px; height: 21px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #A1A1AA; }
 .auth-gradient-text {
-  color: #7C3AED;
+  color: #D4D4D8;
 }
 
 /* ===== RIGHT PANEL - responds to theme toggle ===== */
@@ -265,7 +266,7 @@ const authStyles = `
 .auth-mobile-logo { transition: opacity 0.15s ease; }
 .auth-mobile-logo:hover { opacity: 0.75; }
 .auth-logo-t1-right { font-family: 'Inter', sans-serif; font-size: 25px; font-weight: 450; letter-spacing: 0.05em; color: var(--text-primary); margin-bottom: 0; }
-.auth-logo-t2-right { font-family: 'Inter', sans-serif; font-size: 25px; font-weight: 450; letter-spacing: 0.05em; color: #7C3AED; margin-bottom: 0; }
+.auth-logo-t2-right { font-family: 'Inter', sans-serif; font-size: 25px; font-weight: 450; letter-spacing: 0.05em; color: var(--logo-accent); margin-bottom: 0; }
 
 /* Mobile divider between logo and form - fades at the edges instead of a hard-stopped rule */
 .auth-mobile-divider {
@@ -288,7 +289,7 @@ const authStyles = `
   line-height: 1.15;
 }
 .auth-title-dot {
-  color: #7C3AED;
+  color: var(--accent);
 }
 .auth-custom-subtitle {
   font-family: "Figtree", sans-serif;
@@ -390,7 +391,7 @@ a[href*="clerk.com"],
 .cl-formFieldAction .cl-formFieldActionLink,
 .cl-footer a,
 .cl-alternativeMethods button {
-  color: #8B5CF6 !important;
+  color: var(--accent) !important;
 }
 
 /* ===== CLERK CARD INTERACTIONS ===== */
@@ -410,7 +411,7 @@ a[href*="clerk.com"],
   background: transparent !important;
 }
 .cl-socialButtonsBlockButton:hover {
-  border-color: #8B5CF6 !important;
+  border-color: var(--accent) !important;
 }
 /* Prevent text truncation inside social buttons (fixes "Continue with Google" cutoff) */
 .cl-socialButtonsBlockButton * {
@@ -424,9 +425,10 @@ a[href*="clerk.com"],
   white-space: normal !important;
 }
 
-/* Primary button (Continue) - clean purple, subtle darken on hover, no lift */
+/* Primary button (Continue) - neutral ink fill, subtle darken on hover, no lift */
 .cl-formButtonPrimary {
-  background-color: #8B5CF6 !important;
+  background-color: var(--accent) !important;
+  color: var(--on-accent) !important;
   border-radius: 10px !important;
   font-weight: 600 !important;
   font-size: 14.5px !important;
@@ -435,7 +437,7 @@ a[href*="clerk.com"],
   transition: background-color 0.15s ease !important;
 }
 .cl-formButtonPrimary:hover {
-  background-color: #7C3AED !important;
+  background-color: var(--accent-hover) !important;
 }
 
 /* Input fields - solid visible border + focus purple ring */
@@ -452,8 +454,8 @@ a[href*="clerk.com"],
   background: transparent !important;
 }
 .cl-formFieldInput:focus {
-  border-color: #8B5CF6 !important;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--ring-color) !important;
 }
 .cl-formFieldLabel {
   font-size: 13.5px !important;
@@ -474,13 +476,13 @@ a[href*="clerk.com"],
   text-align: center;
 }
 .auth-account-link a {
-  color: #8B5CF6;
+  color: var(--accent);
   text-decoration: none;
   font-weight: 700;
   transition: color 0.15s ease;
 }
 .auth-account-link a:hover {
-  color: #7C3AED;
+  color: var(--accent-hover);
 }
 
 /* ===== FOOTER ===== */
@@ -503,7 +505,7 @@ a[href*="clerk.com"],
   transition: color 0.15s ease;
 }
 .auth-footer-line a:hover {
-  color: #8B5CF6;
+  color: var(--accent);
 }
 
 /* ===== RESPONSIVE ===== */

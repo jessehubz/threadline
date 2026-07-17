@@ -30,9 +30,9 @@ export function FloatingThemeToggle() {
           key={btn.value}
           onClick={() => setTheme(btn.value)}
           className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200",
+            "flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-200",
             activeTheme === btn.value
-              ? "bg-[var(--accent)] text-white"
+              ? "bg-[var(--accent)] text-[var(--on-accent)]"
               : "text-[var(--text-secondary)] hover:bg-[var(--bg-muted)] hover:text-[var(--text-primary)]"
           )}
           title={btn.label}

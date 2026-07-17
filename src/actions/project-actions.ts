@@ -245,6 +245,54 @@ export async function getDeletedProjects() {
   });
 }
 
+/**
+ * Regenerates the project's public share link, invalidating the old one
+ * (the previous token stops matching /share/[projectId]/[token] immediately).
+ * Also used to (re-)enable link sharing after it has been disabled.
+ * HEAD-only: the link controls access, so it's treated like a settings change.
+ */
+export async function regenerateShareToken(projectId: string) {
+  const user = await requireUser();
+
+  const member = await prisma.projectMember.findUnique({
+    where: { userId_projectId: { userId: user.id, projectId } },
+  });
+  if (!member || member.role !== "HEAD") {
+    return { error: "Only the owner can manage the share link" };
+  }
+
+  const project = await prisma.project.update({
+    where: { id: projectId },
+    data: { shareToken: generateSecureToken() },
+  });
+
+  revalidatePath(`/graph/${projectId}`);
+  return { shareToken: project.shareToken };
+}
+
+/**
+ * Disables public link sharing by clearing shareToken (nullable column, so
+ * this fully revokes access rather than just rotating the token). HEAD-only.
+ */
+export async function disableShareLink(projectId: string) {
+  const user = await requireUser();
+
+  const member = await prisma.projectMember.findUnique({
+    where: { userId_projectId: { userId: user.id, projectId } },
+  });
+  if (!member || member.role !== "HEAD") {
+    return { error: "Only the owner can manage the share link" };
+  }
+
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { shareToken: null },
+  });
+
+  revalidatePath(`/graph/${projectId}`);
+  return { success: true };
+}
+
 export async function reorderProjects(projectIds: string[]) {
   const user = await requireUser();
 

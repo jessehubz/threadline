@@ -20,13 +20,19 @@ export default function DashboardGroupError({
       error.message?.includes("Failed to load chunk") ||
       error.message?.includes("Loading chunk");
 
-    if (isChunkError && !retrying) {
+    if (!isChunkError || retrying) return;
+
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    function scheduleReload() {
       setRetrying(true);
-      const timeout = setTimeout(() => {
+      timeout = setTimeout(() => {
         window.location.reload();
       }, 1500);
-      return () => clearTimeout(timeout);
     }
+    scheduleReload();
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
   }, [error, retrying]);
 
   if (retrying) {

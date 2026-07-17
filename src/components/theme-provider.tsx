@@ -40,13 +40,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem("theme") as Theme | null;
-    const initial = stored || "dark";
-    setThemeState(initial);
+    function init() {
+      const stored = localStorage.getItem("theme") as Theme | null;
+      const initial = stored || "dark";
+      setThemeState(initial);
 
-    const resolved = initial === "system" ? getSystemTheme() : initial;
-    setResolvedTheme(resolved);
-    applyTheme(resolved);
+      const resolved = initial === "system" ? getSystemTheme() : initial;
+      setResolvedTheme(resolved);
+      applyTheme(resolved);
+    }
+    init();
   }, []);
 
   // Listen for system theme changes
@@ -80,10 +83,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Use View Transitions API if available and motion is OK
     if (
       !prefersReducedMotion &&
-      "startViewTransition" in document &&
-      typeof (document as any).startViewTransition === "function"
+      typeof document.startViewTransition === "function"
     ) {
-      (document as any).startViewTransition(() => {
+      document.startViewTransition(() => {
         applyTheme(resolved);
       });
     } else {

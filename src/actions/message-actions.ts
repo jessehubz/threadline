@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { pusherServer } from "@/lib/pusher";
 import { sanitizeMessageContent } from "@/lib/sanitize";
 import { rateLimiters } from "@/lib/rate-limit";
+import { createNotification } from "@/lib/notifications";
 import { z } from "zod/v4";
 
 const sendMessageSchema = z.object({
@@ -64,6 +65,26 @@ export async function sendMessage(data: { projectId: string; content: string }) 
       createdAt: message.createdAt.toISOString(),
       user: message.user,
     }
+  );
+
+  // Notify all other project members of the new message
+  const [project, otherMembers] = await Promise.all([
+    prisma.project.findUnique({ where: { id: parsed.projectId }, select: { name: true } }),
+    prisma.projectMember.findMany({
+      where: { projectId: parsed.projectId, userId: { not: user.id } },
+      select: { userId: true },
+    }),
+  ]);
+  const projectName = project?.name || "a project";
+  await Promise.all(
+    otherMembers.map((m) =>
+      createNotification({
+        userId: m.userId,
+        type: "NEW_MESSAGE",
+        title: `New message in ${projectName}`,
+        relatedProjectId: parsed.projectId,
+      })
+    )
   );
 
   return message;

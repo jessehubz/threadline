@@ -7,6 +7,7 @@ import Link from "next/link";
 interface MemberProfilePopupProps {
   userId: string;
   name: string | null;
+  username?: string | null;
   email: string;
   imageUrl?: string | null;
   bio?: string | null;
@@ -20,6 +21,7 @@ interface MemberProfilePopupProps {
 export function MemberProfilePopup({
   userId,
   name,
+  username,
   email,
   imageUrl,
   bio,
@@ -95,6 +97,14 @@ export function MemberProfilePopup({
                 >
                   {name || email}
                 </p>
+                {username && (
+                  <p
+                    className="text-[11px] truncate"
+                    style={{ color: "var(--accent)" }}
+                  >
+                    @{username}
+                  </p>
+                )}
                 <p
                   className="text-[11px] truncate"
                   style={{ color: "var(--text-muted)" }}

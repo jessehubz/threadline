@@ -2,7 +2,10 @@
 
 import { Bell } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { cn, formatRelativeDate } from "@/lib/utils";
+import { useUserChannel } from "@/hooks/use-user-channel";
 
 interface Notification {
   id: string;
@@ -14,11 +17,14 @@ interface Notification {
   relatedNodeId?: string | null;
 }
 
-export function NotificationDropdown() {
+const FRIEND_TYPES = new Set(["FRIEND_REQUEST", "FRIEND_ACCEPTED"]);
+
+export function NotificationDropdown({ userId }: { userId: string }) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -35,14 +41,41 @@ export function NotificationDropdown() {
 
   // Fetch notifications on mount
   useEffect(() => {
-    fetchNotifications();
+    function load() {
+      fetchNotifications();
+    }
+    load();
   }, [fetchNotifications]);
 
-  // When dropdown opens, mark all as read
+  const markAllRead = useCallback(async () => {
+    await fetch("/api/notifications/read-all", { method: "POST" });
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
+  }, []);
+
+  // Subscribe to the shared private user channel for realtime notifications
+  // and cross-page data refresh. The subscription itself is reference-counted
+  // in useUserChannel since DashboardNavbar also binds to this channel.
+  useUserChannel(userId, {
+    "notification-new": (data) => {
+      const notification = data as Notification;
+      setNotifications((prev) => [notification, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+      toast(notification.message);
+    },
+    "data-refresh": () => {
+      router.refresh();
+    },
+  });
+
+  // Mark all as read when the dropdown closes (not while it's open), so
+  // unread items stay visually distinct while the user is viewing them.
+  const wasOpenRef = useRef(false);
   useEffect(() => {
-    if (open && unreadCount > 0) {
+    if (wasOpenRef.current && !open && unreadCount > 0) {
       markAllRead();
     }
+    wasOpenRef.current = open;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -56,12 +89,6 @@ export function NotificationDropdown() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  async function markAllRead() {
-    await fetch("/api/notifications/read-all", { method: "POST" });
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    setUnreadCount(0);
-  }
-
   function handleToggle() {
     const newOpen = !open;
     setOpen(newOpen);
@@ -71,11 +98,32 @@ export function NotificationDropdown() {
     }
   }
 
+  function handleNotificationClick(notification: Notification) {
+    setOpen(false);
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
+    );
+    if (!notification.read) {
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      fetch(`/api/notifications/${notification.id}/read`, { method: "POST" }).catch(() => {});
+    }
+
+    if (notification.relatedNodeId && notification.relatedProjectId) {
+      router.push(`/graph/${notification.relatedProjectId}?nodeId=${notification.relatedNodeId}`);
+    } else if (notification.relatedProjectId) {
+      router.push(`/graph/${notification.relatedProjectId}`);
+    } else if (FRIEND_TYPES.has(notification.type)) {
+      router.push("/friends");
+    } else {
+      router.push("/dashboard");
+    }
+  }
+
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={handleToggle}
-        className="relative flex items-center justify-center w-[38px] h-[38px] rounded-full cursor-pointer text-[var(--text-secondary)] transition-all duration-[180ms] ease-in-out hover:bg-[rgba(139,92,246,0.08)] hover:text-[var(--text-primary)] hover:-translate-y-px"
+        className="relative flex items-center justify-center w-[38px] h-[38px] rounded-full cursor-pointer text-[var(--text-secondary)] transition-[transform,background-color,color] duration-[180ms] ease-in-out hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)] hover:-translate-y-px"
         aria-label="Notifications"
       >
         <Bell className="h-[18px] w-[18px]" />
@@ -87,7 +135,7 @@ export function NotificationDropdown() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-themed-subtle bg-card shadow-xl animate-[fadeInUp_0.15s_ease-out]">
+        <div className="absolute right-0 top-full z-50 mt-2 w-80 origin-top-right overflow-hidden rounded-2xl border border-themed-subtle bg-card shadow-xl animate-[scaleIn_170ms_var(--ease-out-strong)_both]">
           <div className="flex items-center justify-between border-b border-themed-subtle px-4 py-3">
             <h3 className="text-card-title">Notifications</h3>
             {unreadCount > 0 && (
@@ -106,10 +154,11 @@ export function NotificationDropdown() {
               </div>
             ) : (
               notifications.slice(0, 20).map((notification) => (
-                <div
+                <button
                   key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
                   className={cn(
-                    "border-b border-themed-subtle px-4 py-3.5 last:border-0",
+                    "block w-full text-left border-b border-themed-subtle px-4 py-3.5 last:border-0 cursor-pointer transition-[background-color,transform] active:scale-[0.98] hover:bg-[var(--accent-soft)]",
                     !notification.read && "accent-bg"
                   )}
                 >
@@ -119,7 +168,7 @@ export function NotificationDropdown() {
                   <p className="mt-1 text-[11px] text-dim">
                     {formatRelativeDate(notification.createdAt)}
                   </p>
-                </div>
+                </button>
               ))
             )}
           </div>

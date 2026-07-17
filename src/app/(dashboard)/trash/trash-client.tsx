@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, RotateCcw, Clock, CheckCircle2, X } from "lucide-react";
+import { Trash2, RotateCcw, Clock, CheckCircle2 } from "lucide-react";
 import { restoreProject, permanentlyDeleteProject, getDeletedProjects } from "@/actions/project-actions";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface DeletedProject {
   id: string;
@@ -15,6 +16,16 @@ interface DeletedProject {
 export function TrashPageClient({ initialProjects }: { initialProjects: DeletedProject[] }) {
   const router = useRouter();
   const [projects, setProjects] = useState(initialProjects);
+  // `Date.now()` is impure and must not be called during render (it would
+  // also differ between server and client, causing a hydration mismatch).
+  // Capture it once on mount instead.
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    function init() {
+      setNow(Date.now());
+    }
+    init();
+  }, []);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -23,11 +34,20 @@ export function TrashPageClient({ initialProjects }: { initialProjects: DeletedP
     onConfirm: () => void;
   }>({ open: false, title: "", description: "", confirmLabel: "", onConfirm: () => {} });
 
+  // Rows fade+scale out before being removed from `projects`, so a
+  // destructive/committing action on this page (the whole point of which is
+  // deliberate review) gets motion feedback instead of teleporting away.
+  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
+  const ROW_EXIT_MS = 160;
+
   const handleRestore = async (projectId: string) => {
     await restoreProject(projectId);
-    const updated = await getDeletedProjects();
-    setProjects(updated);
-    router.refresh();
+    setRemovingIds((prev) => new Set(prev).add(projectId));
+    setTimeout(async () => {
+      const updated = await getDeletedProjects();
+      setProjects(updated);
+      router.refresh();
+    }, ROW_EXIT_MS);
   };
 
   const handlePermanentlyDelete = (projectId: string, projectName: string) => {
@@ -39,16 +59,19 @@ export function TrashPageClient({ initialProjects }: { initialProjects: DeletedP
       onConfirm: async () => {
         setConfirmDialog((prev) => ({ ...prev, open: false }));
         await permanentlyDeleteProject(projectId);
-        const updated = await getDeletedProjects();
-        setProjects(updated);
-        router.refresh();
+        setRemovingIds((prev) => new Set(prev).add(projectId));
+        setTimeout(async () => {
+          const updated = await getDeletedProjects();
+          setProjects(updated);
+          router.refresh();
+        }, ROW_EXIT_MS);
       },
     });
   };
 
   const daysUntilPurge = (deleteAfter: Date | null) => {
-    if (!deleteAfter) return null;
-    const diff = new Date(deleteAfter).getTime() - Date.now();
+    if (!deleteAfter || now === null) return null;
+    const diff = new Date(deleteAfter).getTime() - now;
     const days = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
     return days;
   };
@@ -135,6 +158,7 @@ export function TrashPageClient({ initialProjects }: { initialProjects: DeletedP
           {/* List items */}
           {projects.map((project) => {
             const days = daysUntilPurge(project.deleteAfter);
+            const isRemoving = removingIds.has(project.id);
             return (
               <div
                 key={project.id}
@@ -145,7 +169,10 @@ export function TrashPageClient({ initialProjects }: { initialProjects: DeletedP
                   alignItems: "center",
                   padding: "16px 24px",
                   borderBottom: "1px solid var(--border-subtle, var(--border-default))",
-                  transition: "background .15s ease",
+                  transition: "background .15s ease, opacity .15s var(--ease-out-strong), transform .15s var(--ease-out-strong)",
+                  opacity: isRemoving ? 0 : 1,
+                  transform: isRemoving ? "scale(0.98)" : "scale(1)",
+                  pointerEvents: isRemoving ? "none" : undefined,
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-muted)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
@@ -241,113 +268,15 @@ export function TrashPageClient({ initialProjects }: { initialProjects: DeletedP
       )}
 
       {/* ═══ CONFIRM DIALOG ═══ */}
-      {confirmDialog.open && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 10001,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(4px)",
-          }}
-          onClick={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
-        >
-          <div
-            style={{
-              background: "var(--bg-elevated)",
-              border: "1px solid var(--border-default)",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "var(--shadow-lg, 0 25px 50px rgba(0,0,0,0.25))",
-              padding: "28px",
-              width: "100%",
-              maxWidth: "380px",
-              margin: "0 16px",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Icon */}
-            <div
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(239,68,68,0.08)",
-                marginBottom: "16px",
-              }}
-            >
-              <Trash2 style={{ width: "20px", height: "20px", color: "var(--error, #ef4444)" }} />
-            </div>
-
-            {/* Title */}
-            <h3 style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.01em" }}>
-              {confirmDialog.title}
-            </h3>
-
-            {/* Description */}
-            <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "24px" }}>
-              {confirmDialog.description}
-            </p>
-
-            {/* Actions */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "flex-end" }}>
-              <button
-                onClick={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
-                style={{
-                  padding: "9px 18px",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid var(--border-default)",
-                  background: "var(--bg-elevated)",
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                  transition: "all .15s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "var(--text-muted)";
-                  e.currentTarget.style.color = "var(--text-primary)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "var(--border-default)";
-                  e.currentTarget.style.color = "var(--text-secondary)";
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDialog.onConfirm}
-                style={{
-                  padding: "9px 18px",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  borderRadius: "var(--radius-sm)",
-                  border: "none",
-                  background: "var(--error, #ef4444)",
-                  color: "#fff",
-                  cursor: "pointer",
-                  transition: "all .15s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "0.85";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "1";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-              >
-                {confirmDialog.confirmLabel}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={confirmDialog.open}
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        confirmLabel={confirmDialog.confirmLabel}
+        destructive
+        onConfirm={confirmDialog.onConfirm}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+      />
     </>
   );
 }

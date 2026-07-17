@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
 interface TagChipProps {
@@ -18,6 +19,18 @@ interface TagChipProps {
  */
 export function TagChip({ name, color, isSystem, onRemove, onClick, size = "sm" }: TagChipProps) {
   const isSmall = size === "sm";
+  const interactive = !!(onClick || onRemove);
+
+  // Fade+scale in on mount so chips don't teleport into a tag list.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const restScale = pressed ? 0.97 : hovered && interactive ? 1.05 : 1;
 
   return (
     <span
@@ -25,6 +38,10 @@ export function TagChip({ name, color, isSystem, onRemove, onClick, size = "sm" 
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") onClick(); } : undefined}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); setPressed(false); }}
+      onMouseDown={() => interactive && setPressed(true)}
+      onMouseUp={() => setPressed(false)}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -39,18 +56,11 @@ export function TagChip({ name, color, isSystem, onRemove, onClick, size = "sm" 
         color: color,
         background: hexToSoftBg(color),
         cursor: onClick || onRemove ? "pointer" : "default",
-        transition: "all .18s ease",
+        transition: "transform .16s var(--ease-out-strong), box-shadow .16s var(--ease-out-strong), opacity .15s var(--ease-out-strong)",
+        transform: `scale(${mounted ? restScale : 0.95})`,
+        opacity: mounted ? 1 : 0,
+        boxShadow: hovered && interactive ? `0 0 0 2px ${hexToSoftBg(color)}` : "none",
         userSelect: "none",
-      }}
-      onMouseEnter={(e) => {
-        if (onClick || onRemove) {
-          e.currentTarget.style.transform = "scale(1.05)";
-          e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToSoftBg(color)}`;
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "scale(1)";
-        e.currentTarget.style.boxShadow = "none";
       }}
     >
       {name}

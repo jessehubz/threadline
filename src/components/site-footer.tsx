@@ -300,8 +300,8 @@ export function SiteFooter() {
           >
             v2.1.0
           </span>
-          <a
-            href="#"
+          <Link
+            href="/contact"
             style={{ color: "inherit", textDecoration: "none", transition: "color .15s ease" }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
@@ -311,7 +311,7 @@ export function SiteFooter() {
             }}
           >
             Send feedback
-          </a>
+          </Link>
         </div>
       </div>
 

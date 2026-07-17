@@ -24,7 +24,7 @@ export default async function LandingPage() {
         <div className="hero">
           <div>
             <h1>Work flows when <br/>you see <span className="h1-2">how it connects.</span></h1>
-            <p className="lead">Master complex projects and never lose sight of what's blocking your team with intelligent, real-time dependency mapping.</p>
+            <p className="lead">Master complex projects and never lose sight of what&apos;s blocking your team with intelligent, real-time dependency mapping.</p>
             <div className="hero-ctas">
               <Link href="/sign-up" className="btn-primary">
                 Start for free
@@ -97,33 +97,30 @@ export default async function LandingPage() {
             </div>
           </RevealOnScroll>
 
-          {/* Social Proof */}
+          {/* Feature Strip */}
           <RevealOnScroll delay={100}>
             <div className="social-proof">
-              <div className="lbl">Trusted by teams shipping real projects</div>
+              <div className="lbl">Built around a few core ideas</div>
               <div className="logo-row">
-                <span>Vector</span><span>Northwind</span><span>Fablehouse</span><span>Solace</span><span>Kindred</span>
+                <span>Dependency Graphs</span><span>Real-Time Sync</span><span>AI Assistant</span><span>Approval Flows</span><span>Workload Analytics</span>
               </div>
             </div>
           </RevealOnScroll>
 
-          {/* Testimonials */}
+          {/* Principles */}
           <RevealOnScroll delay={150}>
             <div className="testimonial-section">
               <TestimonialCard
-                quote="We were losing a day every sprint untangling blocked tickets in Jira. Now the graph just shows us where the chain actually breaks."
-                name="Sarah Chen"
-                role="Engineering Lead, Vector"
+                quote="Blocked work should show exactly where the chain breaks, not just that something's stuck."
+                principle="Graph-first workflow"
               />
               <TestimonialCard
-                quote="Our team is split across three time zones. Seeing changes land in real time cut our standup down from thirty minutes to ten."
-                name="Marcus Rodriguez"
-                role="Product Manager, Northwind"
+                quote="Distributed teams need changes to land in real time, not at the next standup."
+                principle="Real-time by design"
               />
               <TestimonialCard
-                quote="Most tools flatten everything into a list. This is the first one that actually models how our approvals and sub-projects depend on each other."
-                name="Anika Patel"
-                role="Design Director, Fablehouse"
+                quote="Approvals and sub-projects are dependencies too, so the graph should model the whole chain, not just a flat list."
+                principle="Models real dependencies"
               />
             </div>
           </RevealOnScroll>
@@ -131,10 +128,10 @@ export default async function LandingPage() {
           {/* Stats */}
           <RevealOnScroll delay={200}>
             <div className="stats-row">
-              <div><div className="stat-value">2,000+</div><div className="stat-label">Active teams</div></div>
-              <div><div className="stat-value">99.9%</div><div className="stat-label">Uptime</div></div>
+              <div><div className="stat-value">Free</div><div className="stat-label">While in beta</div></div>
+              <div><div className="stat-value">Solo</div><div className="stat-label">One developer, no team</div></div>
               <div><div className="stat-value">50ms</div><div className="stat-label">Response time</div></div>
-              <div><div className="stat-value">4.9/5</div><div className="stat-label">User rating</div></div>
+              <div><div className="stat-value">Real-time</div><div className="stat-label">Live collaboration</div></div>
             </div>
           </RevealOnScroll>
         </section>
@@ -202,7 +199,7 @@ export default async function LandingPage() {
               <div className="f-visual" style={{ flexDirection: "column", alignItems: "stretch", gap: "14px", padding: "28px" }}>
                 <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
                   <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "linear-gradient(135deg, var(--violet-bright), var(--violet-deep))", flexShrink: 0 }}></div>
-                  <div style={{ background: "rgba(139,92,246,0.08)", borderRadius: "12px", padding: "10px 14px", fontSize: "12.5px", color: "var(--text-2)", lineHeight: 1.5 }}>
+                  <div style={{ background: "var(--accent-soft)", borderRadius: "12px", padding: "10px 14px", fontSize: "12.5px", color: "var(--text-2)", lineHeight: 1.5 }}>
                     &ldquo;Build a marketing site with design, copy, dev, and QA phases. Dev depends on both design and copy.&rdquo;
                   </div>
                 </div>
@@ -210,11 +207,11 @@ export default async function LandingPage() {
                   <div style={{ background: "var(--surface-raised)", border: "1px solid var(--hairline)", borderRadius: "12px", padding: "10px 14px", fontSize: "12.5px", color: "var(--text-1)", lineHeight: 1.5, maxWidth: "220px" }}>
                     <div style={{ fontSize: "10px", fontWeight: 400, color: "#ffffff", marginBottom: "6px" }}>✦ Generated 5 tasks, 4 dependencies</div>
                     <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                      <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "999px", background: "rgba(139,92,246,0.12)", color: "var(--violet-bright)" }}>Design</span>
-                      <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "999px", background: "rgba(139,92,246,0.12)", color: "var(--violet-bright)" }}>Copy</span>
-                      <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "999px", background: "rgba(139,92,246,0.12)", color: "var(--violet-bright)" }}>Dev</span>
-                      <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "999px", background: "rgba(139,92,246,0.12)", color: "var(--violet-bright)" }}>QA</span>
-                      <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "999px", background: "rgba(139,92,246,0.12)", color: "var(--violet-bright)" }}>Launch</span>
+                      <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "999px", background: "var(--accent-soft)", color: "var(--violet-bright)" }}>Design</span>
+                      <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "999px", background: "var(--accent-soft)", color: "var(--violet-bright)" }}>Copy</span>
+                      <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "999px", background: "var(--accent-soft)", color: "var(--violet-bright)" }}>Dev</span>
+                      <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "999px", background: "var(--accent-soft)", color: "var(--violet-bright)" }}>QA</span>
+                      <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "999px", background: "var(--accent-soft)", color: "var(--violet-bright)" }}>Launch</span>
                     </div>
                   </div>
                 </div>
@@ -314,7 +311,7 @@ export default async function LandingPage() {
   );
 }
 
-function TestimonialCard({ quote, name, role }: { quote: string; name: string; role: string }) {
+function TestimonialCard({ quote, principle }: { quote: string; principle: string }) {
   return (
     <div className="quote-card">
       <div className="stars">
@@ -324,8 +321,8 @@ function TestimonialCard({ quote, name, role }: { quote: string; name: string; r
       </div>
       <div className="quote-text">&ldquo;{quote}&rdquo;</div>
       <div className="quote-person">
-        <div className="quote-name">{name}</div>
-        <div className="quote-role">{role}</div>
+        <div className="quote-name">&mdash; Threadline principles</div>
+        <div className="quote-role">{principle}</div>
       </div>
     </div>
   );
@@ -354,20 +351,20 @@ const landingStyles = `
   --text-1: var(--text-primary);
   --text-2: var(--text-secondary);
   --text-3: var(--text-muted);
-  --violet-deep: #4C1D95;
-  --violet: #8B5CF6;
-  --violet-bright: #A78BFA;
-  --orchid: #C4B5FD;
+  --violet-deep: var(--violet-700);
+  --violet: var(--violet-500);
+  --violet-bright: var(--violet-400);
+  --orchid: var(--violet-300);
   --shadow-1: var(--shadow-sm);
   --shadow-2: var(--shadow-md);
   --nav-height: 72px;
   overflow-x: hidden;
 }
 .dark .landing-page {
-  --violet-deep: #4C1D95;
-  --violet: #8B5CF6;
-  --violet-bright: #A78BFA;
-  --orchid: #C4B5FD;
+  --violet-deep: var(--violet-700);
+  --violet: var(--violet-500);
+  --violet-bright: var(--violet-400);
+  --orchid: var(--violet-300);
 }
 
 /* ─── 2. Sticky Nav ─── */
@@ -405,7 +402,7 @@ const landingStyles = `
 
 .word { font-family: 'Inter', sans-serif; font-size: 25px; font-weight: 450; letter-spacing: 0.05em; }
 .word .t1 { color: var(--text-1); }
-.word .t2 { color: #7C3AED;; }
+.word .t2 { color: var(--logo-accent); }
 
 
 .land-links { display: flex; gap: 32px; font-size: 14px; color: var(--text-2); }
@@ -524,35 +521,35 @@ const landingStyles = `
 
 .hero h1 { font-family: 'inter', sans-serif; font-size: 81px; font-weight: 350; line-height: 1.02; letter-spacing: -0.03em; margin-bottom: 26px; color: var(--text-1); }
 
-.hero .h1-2 { color: #7C3AED;; }
+.hero .h1-2 { color: var(--accent); }
 
 :root .landing-page .hero h1 b,
 :not(.dark) .landing-page .hero h1 b {
   background: none;
   -webkit-background-clip: unset;
   background-clip: unset;
-  color: #7C3AED;
+  color: var(--accent);
 }
 .dark .landing-page .hero h1 b {
   background: none;
   -webkit-background-clip: unset;
   background-clip: unset;
-  color: #7C3AED;
+  color: var(--accent);
 }
 .hero p.lead { font-family: "Figtree", sans-serif; font-size: 16px; color: var(--text-2); line-height: 1.6; max-width: 460px; margin-bottom: 34px; }
 .hero-ctas { display: flex; gap: 14px; align-items: center; }
 
 /* Landing btn-primary with gradient */
-.landing-page .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: #7C3AED; color: #fff; border: none; padding: 14px 24px; border-radius: 999px; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; text-decoration: none; }
+.landing-page .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: var(--on-accent); border: none; padding: 14px 24px; border-radius: 999px; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; text-decoration: none; }
 .landing-page .btn-primary:hover { transform: translateY(-2px); }
 
 :root .landing-page .btn-primary,
 
 :not(.dark) .landing-page .btn-primary {
-  background: #7C3AED;
+  background: var(--accent);
 }
 .dark .landing-page .btn-primary {
-  background: #7C3AED;
+  background: var(--accent);
 }
 
 .btn-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 14px 22px; border-radius: 999px; font-size: 14.5px; font-weight: 600;
@@ -591,7 +588,7 @@ const landingStyles = `
   width: 480px;
   height: 480px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(139,92,246,0.18), transparent 70%);
+  background: radial-gradient(circle, rgba(255,255,255,0.14), transparent 70%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -600,7 +597,7 @@ const landingStyles = `
 }
 :root .landing-page .glow-blob,
 :not(.dark) .landing-page .glow-blob {
-  background: radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%);
+  background: radial-gradient(circle, rgba(0,0,0,0.08), transparent 70%);
 }
 .float-card {
   position: absolute;
@@ -676,6 +673,10 @@ const landingStyles = `
   50% { transform: rotate(-2deg) translateY(-10px); }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .float-card.main { animation: none; }
+}
+
 /* Mini card internals scaled proportionally */
 .mini-tab-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
 .mini-dots { display: flex; gap: 6px; }
@@ -695,7 +696,7 @@ const landingStyles = `
   background: #1C1C1F;
   border-color: rgba(255,255,255,0.08);
 }
-.mini-node.done { background: rgba(139,92,246,0.12); border-color: var(--violet); }
+.mini-node.done { background: var(--accent-soft); border-color: var(--violet); }
 .mini-bar { height: 6px; border-radius: 99px; background: var(--violet-bright); margin-bottom: 5px; }
 .mini-track { height: 4px; border-radius: 99px; background: var(--hairline); }
 .mini-stem { width: 1.5px; height: 14px; background: var(--hairline); }
@@ -709,12 +710,12 @@ const landingStyles = `
 .feature-row { max-width: 1320px; margin: 0 auto; padding: 80px 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; }
 .feature-row.rev .f-text { order: 2; }
 .feature-row.rev .f-visual { order: 1; }
-.f-eyebrow { font-family: "DM Sans", sans-serif; font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #7C3AED; margin-bottom: 16px; }
+.f-eyebrow { font-family: "DM Sans", sans-serif; font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
 .f-text h3 { font-family: 'inter', sans-serif; font-size: 34px; font-weight: 500; letter-spacing: -0.015em; margin-bottom: 16px; line-height: 1.15; color: var(--text-1); }
 .f-text p { font-family: "Figtree", sans-serif; font-size: 15.5px; font-weight: 400; color: var(--text-2); line-height: 1.65; max-width: 420px; }
 .f-visual { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-xl); box-shadow: var(--shadow-1); padding: 36px; min-height: 260px; display: flex; align-items: center; justify-content: center; transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; cursor: pointer; }
-.f-visual:hover { transform: translateY(-5px); box-shadow: 0 8px 28px rgba(0,0,0,0.08); border-color: rgba(139,92,246,0.2); }
-.dark .f-visual:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.3); border-color: rgba(139,92,246,0.3); }
+.f-visual:hover { transform: translateY(-5px); box-shadow: 0 8px 28px rgba(0,0,0,0.08); border-color: var(--ring-color); }
+.dark .f-visual:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.3); border-color: var(--ring-color); }
 
 /* Minimal dependency-graph mockup - rounded task cards + dashed bezier links, echoes the real graph editor */
 .mg-graph { position: relative; width: 180px; height: 132px; }
@@ -728,7 +729,7 @@ const landingStyles = `
 
 /* ─── 8. Testimonials ─── */
 .testimonial-section { max-width: 1320px; margin: 0 auto; padding: 52px 48px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
-.stars { display: flex; gap: 3px; color: var(--violet-bright); margin-bottom: 16px; }
+.stars { display: flex; gap: 3px; color: var(--text-1); margin-bottom: 16px; }
 .quote-card { background: var(--surface); border: none; border-radius: 20px; padding: 36px 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.22s ease, box-shadow 0.22s ease; cursor: default; }
 .quote-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
 .dark .quote-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15); }
@@ -778,7 +779,7 @@ a.contact-item:hover { transform: translateY(-2px); }
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--violet-bright);
+  color: var(--accent);
 }
 .contact-item-value {
   font-family: "Figtree", sans-serif;
@@ -788,7 +789,7 @@ a.contact-item:hover { transform: translateY(-2px); }
   line-height: 1.5;
 }
 a.contact-item .contact-item-value { transition: color 0.18s ease; }
-a.contact-item:hover .contact-item-value { color: var(--violet); }
+a.contact-item:hover .contact-item-value { color: var(--accent); }
 
 /* ─── 11. Final CTA ─── */
 .final-cta { max-width: 720px; margin: 40px auto 130px; padding: 60px 48px 0; text-align: center; border-top: 1px solid var(--hairline); }
