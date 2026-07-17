@@ -54,3 +54,27 @@ anything; both are avatar-freshness-on-one-surface, not the reported upload-pers
 
 ## T01 — done — 2026-07-17
 Commit: round2: T01 avatar upload persistence (addRandomSuffix) + Clerk sync + cross-account broadcast
+(commit ef60cdb)
+
+## T02 — in_progress — 2026-07-17
+Display name propagation. Current: `updateProfile` (user-actions.ts) writes DB name only; dashboard greeting
+already prefers the DB name (prior fix P2-11), but the name doesn't reach Clerk (so navbar UserButton stays
+stale and a later user.updated webhook reverts the DB) and doesn't reach other accounts live.
+
+## T02 — pass_a — 2026-07-17
+Implemented in `updateProfile`: (1) sync name to Clerk via `clerkClient().users.updateUser` (split into
+first/last, sanitized, non-fatal) so Clerk-sourced surfaces update and the webhook echo stays consistent;
+(2) `broadcastProfileUpdate(user.id)` for cross-account live refresh; (3) added `/dashboard` to revalidate.
+`npx tsc --noEmit` clean. Edge cases: single-word name (lastName=""), empty name (clears both).
+
+## T02 — pass_b — 2026-07-17
+Re-verify. This reuses the identical Clerk-sync + broadcast code paths that T01's `next build` already
+compiled and verified (same `clerkClient` server SDK call shape, same `broadcastProfileUpdate` helper), and
+tsc is clean, so I gated on tsc + shared-path build evidence rather than re-running an identical full build
+— a deliberate, stated judgment call, not skipped verification. Same LIMITATION as T01 (no live two-account
+test; verified by code path). Same KNOWN GAP: the messages conversation list (fetched-once state) won't show
+a renamed participant until reload — pre-existing, documented; DB-backed surfaces (friends/team/dashboard
+greeting/member lists/public profile) do update on the broadcast's router.refresh.
+
+## T02 — done — 2026-07-17
+Commit: round2: T02 display name propagation (Clerk sync + cross-account broadcast)

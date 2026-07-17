@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
+import { broadcastProfileUpdate } from "@/lib/notifications";
+import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { sanitizeTitle, sanitizeText } from "@/lib/sanitize";
 import { z } from "zod/v4";
@@ -93,9 +95,31 @@ export async function updateProfile(data: {
     },
   });
 
+  // Sync the display name to Clerk so Clerk-sourced surfaces (e.g. the navbar
+  // <UserButton>) reflect it and the Clerk `user.updated` webhook echoes the
+  // same value back instead of reverting the DB. Best-effort: a Clerk failure
+  // must not fail the profile save.
+  if (parsed.name !== undefined) {
+    try {
+      const clean = parsed.name ? sanitizeTitle(parsed.name).trim() : "";
+      const [firstName, ...rest] = clean.split(/\s+/);
+      const client = await clerkClient();
+      await client.users.updateUser(user.clerkId, {
+        firstName: firstName || "",
+        lastName: rest.join(" "),
+      });
+    } catch (error) {
+      console.error("Failed to sync display name to Clerk:", error);
+    }
+  }
+
+  // Live-propagate the name change to every account that renders this user.
+  await broadcastProfileUpdate(user.id);
+
   revalidatePath("/profile");
   revalidatePath("/friends");
   revalidatePath("/team");
+  revalidatePath("/dashboard");
   revalidatePath("/", "layout");
   return { success: true, error: null };
 }
