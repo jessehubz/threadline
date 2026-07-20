@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { Check } from "lucide-react";
+import { RevealOnScroll } from "@/components/reveal-on-scroll";
 
 const plans = [
   {
@@ -16,6 +18,7 @@ const plans = [
       "Community support",
     ],
     cta: "Get Started",
+    ctaHref: "/sign-up",
     highlighted: false,
   },
   {
@@ -27,7 +30,7 @@ const plans = [
       "Unlimited projects",
       "Unlimited tasks",
       "Up to 20 collaborators",
-      "AI Assistant",
+      "Task Helper",
       "Approval workflows",
       "Real-time collaboration",
       "Analytics dashboard",
@@ -35,6 +38,7 @@ const plans = [
       "Priority support",
     ],
     cta: "Start Free Trial",
+    ctaHref: "/sign-up",
     highlighted: true,
   },
   {
@@ -54,6 +58,7 @@ const plans = [
       "Onboarding assistance",
     ],
     cta: "Contact Sales",
+    ctaHref: "/contact",
     highlighted: false,
   },
 ];
@@ -62,31 +67,33 @@ export default function PricingPage() {
   return (
     <div>
       {/* Hero */}
-      <div style={{ textAlign: "center", marginBottom: "56px" }}>
-        <h1
-          style={{
-            fontSize: "42px",
-            fontWeight: 700,
-            color: "var(--text-primary)",
-            letterSpacing: "-0.02em",
-            marginBottom: "16px",
-          }}
-        >
-          Simple, transparent pricing
-        </h1>
-        <p
-          style={{
-            fontSize: "17px",
-            color: "var(--text-secondary)",
-            lineHeight: 1.6,
-            maxWidth: "560px",
-            margin: "0 auto",
-          }}
-        >
-          Start free, upgrade when you need to. No hidden fees, no surprises.
-          Cancel anytime.
-        </p>
-      </div>
+      <RevealOnScroll>
+        <div style={{ textAlign: "center", marginBottom: "56px" }}>
+          <h1
+            style={{
+              fontSize: "42px",
+              fontWeight: 700,
+              color: "var(--text-primary)",
+              letterSpacing: "-0.02em",
+              marginBottom: "16px",
+            }}
+          >
+            Simple, transparent pricing
+          </h1>
+          <p
+            style={{
+              fontSize: "17px",
+              color: "var(--text-secondary)",
+              lineHeight: 1.6,
+              maxWidth: "560px",
+              margin: "0 auto",
+            }}
+          >
+            Start free, upgrade when you need to. No hidden fees, no surprises.
+            Cancel anytime.
+          </p>
+        </div>
+      </RevealOnScroll>
 
       {/* Pricing Grid */}
       <div
@@ -98,9 +105,9 @@ export default function PricingPage() {
           alignItems: "start",
         }}
       >
-        {plans.map((plan) => (
+        {plans.map((plan, idx) => (
+          <RevealOnScroll key={plan.name} delay={idx * 60}>
           <div
-            key={plan.name}
             style={{
               position: "relative",
               background: "var(--bg-elevated)",
@@ -130,7 +137,7 @@ export default function PricingPage() {
                   left: "50%",
                   transform: "translateX(-50%)",
                   background: "var(--accent)",
-                  color: "#fff",
+                  color: "var(--on-accent)",
                   fontSize: "11px",
                   fontWeight: 700,
                   padding: "4px 14px",
@@ -182,18 +189,24 @@ export default function PricingPage() {
             </div>
 
             {/* CTA */}
-            <button
+            <Link
+              href={plan.ctaHref}
+              className="pricing-cta"
               style={{
+                display: "block",
                 width: "100%",
                 padding: "12px",
                 borderRadius: "var(--radius-sm)",
                 fontSize: "14px",
                 fontWeight: 600,
+                textAlign: "center",
+                textDecoration: "none",
+                boxSizing: "border-box",
                 border: plan.highlighted ? "none" : "1px solid var(--border-default)",
                 background: plan.highlighted ? "var(--accent)" : "transparent",
-                color: plan.highlighted ? "#fff" : "var(--text-primary)",
+                color: plan.highlighted ? "var(--on-accent)" : "var(--text-primary)",
                 cursor: "pointer",
-                transition: "all .18s ease",
+                transition: "background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease",
                 marginBottom: "24px",
               }}
               onMouseEnter={(e) => {
@@ -218,7 +231,7 @@ export default function PricingPage() {
               }}
             >
               {plan.cta}
-            </button>
+            </Link>
 
             {/* Features */}
             <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "20px" }}>
@@ -247,6 +260,7 @@ export default function PricingPage() {
               ))}
             </div>
           </div>
+          </RevealOnScroll>
         ))}
       </div>
 
@@ -258,6 +272,10 @@ export default function PricingPage() {
             max-width: 420px !important;
             margin: 0 auto !important;
           }
+        }
+        .pricing-cta:focus-visible {
+          outline: 2px solid var(--ring-color);
+          outline-offset: 2px;
         }
       `}</style>
     </div>

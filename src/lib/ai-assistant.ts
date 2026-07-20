@@ -1,5 +1,6 @@
 // =============================================================================
 // AI Assistant - Heuristic-based task prioritization & scheduling
+// (User-facing name: "Task Helper")
 // Advisory only: does NOT modify graph data, only suggests actions.
 // =============================================================================
 
@@ -51,6 +52,7 @@ const PRIORITY_SCORES = {
 } as const;
 
 const INTENT_PATTERNS: Record<string, RegExp> = {
+  IDENTITY: /\b(what('?s| is) your name|who are you|what are you|are you (an? )?(ai|bot|human|llm|chatgpt|gpt))\b/i,
   PRIORITIZE:
     /\b(prioriti[sz]e|priority|what should i|what to do|focus|most important|next|work on)\b/i,
   SCHEDULE:
@@ -72,6 +74,8 @@ export function parseUserMessage(
   const intent = detectIntent(normalizedMessage);
 
   switch (intent) {
+    case 'IDENTITY':
+      return handleIdentity();
     case 'GREETING':
       return handleGreeting(context);
     case 'HELP':
@@ -198,6 +202,7 @@ export function parseReminderRequest(
 
 function detectIntent(message: string): string {
   // Check patterns in priority order (most specific first)
+  if (INTENT_PATTERNS.IDENTITY.test(message)) return 'IDENTITY';
   if (INTENT_PATTERNS.REMIND.test(message)) return 'REMIND';
   if (INTENT_PATTERNS.SCHEDULE.test(message)) return 'SCHEDULE';
   if (INTENT_PATTERNS.PRIORITIZE.test(message)) return 'PRIORITIZE';
@@ -210,12 +215,20 @@ function detectIntent(message: string): string {
 // Intent handlers
 // -----------------------------------------------------------------------------
 
+function handleIdentity(): AssistantResponse {
+  return {
+    type: 'text',
+    content:
+      "🤖 I'm the **Task Helper**, your built-in planning assistant. I run entirely on your workspace data - no external AI service - and I help you prioritize tasks, plan your schedule, and set reminders. Ask me to prioritize, schedule, or remind you about something!",
+  };
+}
+
 function handleGreeting(context: AssistantContext): AssistantResponse {
   const urgentCount = context.tasks.filter(
     (t) => t.status === 'URGENT' || isOverdue(t),
   ).length;
 
-  let greeting = `👋 Hey ${context.userName}! `;
+  let greeting = `👋 Hey ${context.userName}! I'm the Task Helper, your built-in planning assistant. `;
 
   if (urgentCount > 0) {
     greeting += `You have ${urgentCount} urgent/overdue task${urgentCount > 1 ? 's' : ''}. Want me to help you prioritize?`;
@@ -390,8 +403,6 @@ function groupTasksByDependency(tasks: TaskData[]): {
   doNext: TaskData[];
   flexible: TaskData[];
 } {
-  const taskIds = new Set(tasks.map((t) => t.id));
-
   const doFirst: TaskData[] = [];
   const doNext: TaskData[] = [];
   const flexible: TaskData[] = [];

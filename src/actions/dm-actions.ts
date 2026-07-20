@@ -5,11 +5,16 @@ import { requireUser } from "@/lib/auth";
 import { pusherServer } from "@/lib/pusher";
 import { sanitizeMessageContent } from "@/lib/sanitize";
 import { rateLimiters } from "@/lib/rate-limit";
+import { createNotification } from "@/lib/notifications";
 import { z } from "zod/v4";
 
 const sendDMSchema = z.object({
   conversationId: z.string().min(1, "Conversation is required"),
   content: z.string().min(1, "Message cannot be empty").max(2000),
+});
+
+const markReadSchema = z.object({
+  conversationId: z.string().min(1, "Conversation is required"),
 });
 
 export async function getConversations() {
@@ -158,12 +163,78 @@ export async function sendDirectMessage(data: { conversationId: string; content:
     {
       id: message.id,
       content: message.content,
+      isSystem: message.isSystem,
       createdAt: message.createdAt.toISOString(),
       user: message.user,
     }
   );
 
+  // Notify the other participant(s) of the new message
+  const otherParticipants = await prisma.conversationParticipant.findMany({
+    where: { conversationId: parsed.conversationId, userId: { not: user.id } },
+    select: { userId: true },
+  });
+  const senderName = message.user.name || message.user.email.split("@")[0];
+  const truncatedContent = content.length > 80 ? `${content.slice(0, 80)}...` : content;
+  await Promise.all(
+    otherParticipants.map((p) =>
+      createNotification({
+        userId: p.userId,
+        type: "NEW_MESSAGE",
+        title: `New message from ${senderName}`,
+        message: truncatedContent,
+        relatedNodeId: parsed.conversationId,
+      })
+    )
+  );
+
   return message;
+}
+
+/**
+ * Marks a conversation as read for the caller and fires a "dm-read" event on
+ * their own private user channel so other open tabs/devices can clear the
+ * unread indicator without waiting for a poll.
+ */
+export async function markConversationRead(conversationId: string) {
+  const user = await requireUser();
+
+  // Rate limit
+  const { success: rateLimitOk } = await rateLimiters.api.check(user.id);
+  if (!rateLimitOk) {
+    throw new Error("Rate limited. Please wait before retrying.");
+  }
+
+  const parsed = markReadSchema.parse({ conversationId });
+
+  // Verify user is a participant
+  const participant = await prisma.conversationParticipant.findUnique({
+    where: {
+      conversationId_userId: {
+        conversationId: parsed.conversationId,
+        userId: user.id,
+      },
+    },
+  });
+
+  if (!participant) {
+    throw new Error("You are not a participant in this conversation");
+  }
+
+  await prisma.conversationParticipant.update({
+    where: { id: participant.id },
+    data: { lastReadAt: new Date() },
+  });
+
+  try {
+    await pusherServer.trigger(`private-user-${user.id}`, "dm-read", {
+      conversationId: parsed.conversationId,
+    });
+  } catch (error) {
+    console.error("Failed to trigger dm-read event:", error);
+  }
+
+  return { success: true };
 }
 
 export async function getDirectMessages(conversationId: string, cursor?: string) {
@@ -219,7 +290,7 @@ export async function getTeamMembers() {
         some: { projectId: { in: projectIds } },
       },
     },
-    select: { id: true, name: true, email: true, imageUrl: true },
+    select: { id: true, name: true, username: true, email: true, imageUrl: true },
     distinct: ["id"],
   });
 

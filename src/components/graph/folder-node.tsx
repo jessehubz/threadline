@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { Folder, ChevronRight, MessageCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,19 +12,32 @@ interface FolderNodeData {
   subGraphProgress: { total: number; completed: number } | null;
   commentCount?: number;
   hasUnreadComments?: boolean;
+  isRemoving?: boolean;
   [key: string]: unknown;
 }
 
 function FolderNodeInner({ id, data, selected }: NodeProps & { data: FolderNodeData }) {
   const nodeData = data as FolderNodeData;
-  const accentColor = nodeData.color || "#8b5cf6";
+  const accentColor = nodeData.color || "#71717A";
   const progress = nodeData.subGraphProgress;
   const pct = progress && progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0;
+
+  // Nodes have no native React Flow enter transition, so fade+scale in on
+  // first mount via a rAF-delayed flag (the @starting-style-fallback pattern).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const isVisible = mounted && !nodeData.isRemoving;
 
   return (
     <div
       className={cn(
-        "group relative min-w-[220px] max-w-[300px] rounded-xl border-2 border-dashed bg-card/95 shadow-sm transition-all duration-200",
+        "group relative min-w-[220px] max-w-[300px] rounded-xl border-2 border-dashed bg-card/95 shadow-sm transition-[transform,opacity,box-shadow,border-color] duration-200",
+        isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95",
+        nodeData.isRemoving && "pointer-events-none",
         selected
           ? "shadow-lg ring-2 ring-[var(--accent)]/50"
           : "hover:shadow-md hover:border-solid"
@@ -37,7 +50,7 @@ function FolderNodeInner({ id, data, selected }: NodeProps & { data: FolderNodeD
           e.stopPropagation();
           window.dispatchEvent(new CustomEvent("graph-delete-node", { detail: { nodeId: id } }));
         }}
-        className="absolute -top-2 -right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-themed-subtle bg-card shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-[var(--danger-soft)] hover:border-[var(--danger)] hover:text-[var(--danger)] text-dim"
+        className="absolute -top-2 -right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-themed-subtle bg-card shadow-sm opacity-0 group-hover:opacity-100 transition-[opacity,background-color,border-color,color] duration-200 hover:bg-[var(--danger-soft)] hover:border-[var(--danger)] hover:text-[var(--danger)] text-dim"
         aria-label="Delete node"
       >
         <Trash2 className="h-3 w-3" />
@@ -46,12 +59,12 @@ function FolderNodeInner({ id, data, selected }: NodeProps & { data: FolderNodeD
       <Handle
         type="source"
         position={Position.Right}
-        className="!h-3 !w-3 !rounded-full !border-2 !border-card !bg-[var(--accent)] opacity-60 group-hover:opacity-100 hover:!scale-125 transition-all duration-200"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-card !bg-[var(--accent)] opacity-60 group-hover:opacity-100 hover:!scale-125 transition-[opacity,transform] duration-200"
       />
       <Handle
         type="target"
         position={Position.Left}
-        className="!h-3 !w-3 !rounded-full !border-2 !border-card !bg-[var(--accent)] opacity-60 group-hover:opacity-100 hover:!scale-125 transition-all duration-200"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-card !bg-[var(--accent)] opacity-60 group-hover:opacity-100 hover:!scale-125 transition-[opacity,transform] duration-200"
       />
 
       <div className="p-4">
@@ -86,7 +99,7 @@ function FolderNodeInner({ id, data, selected }: NodeProps & { data: FolderNodeD
           <div className="mt-3">
             <div className="h-1.5 w-full rounded-full bg-hover">
               <div
-                className="h-1.5 rounded-full transition-all duration-500"
+                className="h-1.5 rounded-full transition-[width] duration-300"
                 style={{ width: `${pct}%`, backgroundColor: accentColor }}
               />
             </div>

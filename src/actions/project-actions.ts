@@ -8,13 +8,11 @@ import { z } from "zod/v4";
 
 const createProjectSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  description: z.string().max(500).optional(),
 });
 
 const updateProjectSchema = z.object({
   id: z.string(),
   name: z.string().min(1).max(100).optional(),
-  description: z.string().max(500).optional(),
 });
 
 export async function getProjects() {
@@ -47,6 +45,8 @@ export async function getProjects() {
     orderBy: [{ lastOpenedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
   });
 
+  // Fetch visibility for each project (included in model)
+
   const now = new Date();
 
   const mapped = projects.map((project) => {
@@ -60,8 +60,8 @@ export async function getProjects() {
     return {
       id: project.id,
       name: project.name,
-      description: project.description,
       shareToken: project.shareToken,
+      visibility: project.visibility,
       memberCount: project.members.length,
       totalTasks,
       completedTasks,
@@ -95,17 +95,29 @@ export async function createProject(formData: FormData) {
 
   const parsed = createProjectSchema.safeParse({
     name: formData.get("name"),
-    description: formData.get("description"),
   });
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message || "Invalid input" };
   }
 
+  // Idempotency guard: prevent duplicate projects created within 10 seconds
+  const recentDuplicate = await prisma.project.findFirst({
+    where: {
+      name: parsed.data.name,
+      deletedAt: null,
+      members: { some: { userId: user.id, role: "HEAD" } },
+      createdAt: { gte: new Date(Date.now() - 10_000) },
+    },
+  });
+
+  if (recentDuplicate) {
+    return { project: recentDuplicate, projectId: recentDuplicate.id };
+  }
+
   const project = await prisma.project.create({
     data: {
       name: parsed.data.name,
-      description: parsed.data.description || null,
       shareToken: generateSecureToken(),
       lastOpenedAt: new Date(),
       members: {
@@ -132,7 +144,6 @@ export async function updateProject(formData: FormData) {
   const parsed = updateProjectSchema.safeParse({
     id: formData.get("id"),
     name: formData.get("name"),
-    description: formData.get("description") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -154,7 +165,6 @@ export async function updateProject(formData: FormData) {
     where: { id: parsed.data.id },
     data: {
       ...(parsed.data.name && { name: parsed.data.name }),
-      ...(parsed.data.description !== undefined && { description: parsed.data.description }),
     },
   });
 
@@ -228,6 +238,54 @@ export async function getDeletedProjects() {
   });
 }
 
+/**
+ * Regenerates the project's public share link, invalidating the old one
+ * (the previous token stops matching /share/[projectId]/[token] immediately).
+ * Also used to (re-)enable link sharing after it has been disabled.
+ * HEAD-only: the link controls access, so it's treated like a settings change.
+ */
+export async function regenerateShareToken(projectId: string) {
+  const user = await requireUser();
+
+  const member = await prisma.projectMember.findUnique({
+    where: { userId_projectId: { userId: user.id, projectId } },
+  });
+  if (!member || member.role !== "HEAD") {
+    return { error: "Only the owner can manage the share link" };
+  }
+
+  const project = await prisma.project.update({
+    where: { id: projectId },
+    data: { shareToken: generateSecureToken() },
+  });
+
+  revalidatePath(`/graph/${projectId}`);
+  return { shareToken: project.shareToken };
+}
+
+/**
+ * Disables public link sharing by clearing shareToken (nullable column, so
+ * this fully revokes access rather than just rotating the token). HEAD-only.
+ */
+export async function disableShareLink(projectId: string) {
+  const user = await requireUser();
+
+  const member = await prisma.projectMember.findUnique({
+    where: { userId_projectId: { userId: user.id, projectId } },
+  });
+  if (!member || member.role !== "HEAD") {
+    return { error: "Only the owner can manage the share link" };
+  }
+
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { shareToken: null },
+  });
+
+  revalidatePath(`/graph/${projectId}`);
+  return { success: true };
+}
+
 export async function reorderProjects(projectIds: string[]) {
   const user = await requireUser();
 
@@ -243,4 +301,51 @@ export async function reorderProjects(projectIds: string[]) {
 
   revalidatePath("/dashboard");
   return { success: true };
+}
+
+const bulkDeleteSchema = z.object({
+  projectIds: z.array(z.string()).min(1, "At least one project must be selected"),
+});
+
+export async function bulkDeleteProjects(projectIds: string[]) {
+  const user = await requireUser();
+
+  const parsed = bulkDeleteSchema.safeParse({ projectIds });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || "Invalid input" };
+  }
+
+  // Verify the current user is HEAD of each project
+  const memberships = await prisma.projectMember.findMany({
+    where: {
+      userId: user.id,
+      projectId: { in: parsed.data.projectIds },
+      role: "HEAD",
+    },
+    select: { projectId: true },
+  });
+
+  const authorizedIds = new Set(memberships.map((m) => m.projectId));
+  const unauthorized = parsed.data.projectIds.filter((id) => !authorizedIds.has(id));
+
+  if (unauthorized.length > 0) {
+    return { error: `You can only delete projects you own. ${unauthorized.length} project(s) were not authorized.` };
+  }
+
+  // Soft-delete all in a transaction
+  const now = new Date();
+  const deleteAfter = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+
+  await prisma.$transaction(
+    parsed.data.projectIds.map((id) =>
+      prisma.project.update({
+        where: { id },
+        data: { deletedAt: now, deleteAfter },
+      })
+    )
+  );
+
+  revalidatePath("/dashboard");
+  revalidatePath("/settings");
+  return { success: true, count: parsed.data.projectIds.length };
 }

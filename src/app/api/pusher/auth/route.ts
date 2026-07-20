@@ -58,20 +58,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing socket_id or channel_name" }, { status: 400 });
   }
 
-  // Channel-level authorization: verify user is a member of the project
-  const projectId = await resolveProjectIdFromChannel(channel);
-  if (projectId) {
-    const membership = await prisma.projectMember.findUnique({
-      where: {
-        userId_projectId: { userId: user.id, projectId },
-      },
-    });
+  // Global presence channels (e.g. presence-dashboard) — any authenticated user can join
+  const isGlobalPresence = channel === "presence-dashboard";
 
-    if (!membership) {
-      return NextResponse.json(
-        { error: "Not authorized for this channel" },
-        { status: 403 }
-      );
+  // Channel-level authorization: verify user is a member of the project
+  if (!isGlobalPresence) {
+    const projectId = await resolveProjectIdFromChannel(channel);
+    if (projectId) {
+      const membership = await prisma.projectMember.findUnique({
+        where: {
+          userId_projectId: { userId: user.id, projectId },
+        },
+      });
+
+      if (!membership) {
+        return NextResponse.json(
+          { error: "Not authorized for this channel" },
+          { status: 403 }
+        );
+      }
     }
   }
 
@@ -87,6 +92,17 @@ export async function POST(req: NextRequest) {
     if (!participant) {
       return NextResponse.json(
         { error: "Not authorized for this conversation" },
+        { status: 403 }
+      );
+    }
+  }
+
+  // User channel authorization: only the owning user may subscribe to their own channel
+  const userChannelMatch = channel.match(/^private-user-(.+)$/);
+  if (userChannelMatch) {
+    if (userChannelMatch[1] !== user.id) {
+      return NextResponse.json(
+        { error: "Not authorized for this channel" },
         { status: 403 }
       );
     }

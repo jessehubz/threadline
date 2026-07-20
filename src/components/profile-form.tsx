@@ -13,6 +13,7 @@ import { toast } from "sonner";
 interface User {
   id: string;
   name: string | null;
+  username: string | null;
   email: string;
   imageUrl: string | null;
   bio: string | null;
@@ -24,6 +25,7 @@ interface User {
 
 export function ProfileForm({ user }: { user: User }) {
   const [name, setName] = useState(user.name || "");
+  const [username, setUsername] = useState(user.username || "");
   const [bio, setBio] = useState(user.bio || "");
   const [githubUrl, setGithubUrl] = useState(user.githubUrl || "");
   const [twitterUrl, setTwitterUrl] = useState(user.twitterUrl || "");
@@ -38,6 +40,7 @@ export function ProfileForm({ user }: { user: User }) {
     setSaving(true);
     const result = await updateProfile({
       name,
+      username,
       bio,
       githubUrl,
       twitterUrl,
@@ -106,7 +109,7 @@ export function ProfileForm({ user }: { user: User }) {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-card bg-[var(--accent)] text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-50"
+              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-card bg-[var(--accent)] text-[var(--on-accent)] transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-50"
               aria-label="Upload profile picture"
             >
               <Camera className="h-4 w-4" />
@@ -136,6 +139,14 @@ export function ProfileForm({ user }: { user: User }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Your name"
+        />
+
+        <Input
+          label="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ""))}
+          placeholder="your_username"
+          maxLength={30}
         />
 
         <Input

@@ -2,17 +2,29 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { getStatusColor, getStatusDotColor, getStatusLabel, formatDate } from "@/lib/utils";
+import { getStatusColor, getStatusDotColor, getStatusLabel, getPriorityColor, getPriorityLabel, getPriorityRank, formatDate } from "@/lib/utils";
 import { AlertCircle, Clock, Calendar } from "lucide-react";
 
 interface Task {
   id: string;
   title: string;
   status: string;
+  priority: string;
   dueDate: string | null;
   projectId: string;
   projectName: string;
   graphId: string;
+}
+
+// Priority (URGENT -> NONE) first, then earlier due dates first; tasks
+// without a due date sort last within their priority tier.
+function byPriorityThenDueDate(a: Task, b: Task): number {
+  const priorityDiff = getPriorityRank(a.priority) - getPriorityRank(b.priority);
+  if (priorityDiff !== 0) return priorityDiff;
+  if (!a.dueDate && !b.dueDate) return 0;
+  if (!a.dueDate) return 1;
+  if (!b.dueDate) return -1;
+  return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
 }
 
 export function MyTasksList({ tasks }: { tasks: Task[] }) {
@@ -20,11 +32,11 @@ export function MyTasksList({ tasks }: { tasks: Task[] }) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const overdue = tasks.filter((t) => t.dueDate && new Date(t.dueDate) < today && t.status !== "COMPLETE");
-  const dueToday = tasks.filter((t) => t.dueDate && new Date(t.dueDate).toDateString() === today.toDateString() && t.status !== "COMPLETE");
-  const upcoming = tasks.filter((t) => t.dueDate && new Date(t.dueDate) > today && new Date(t.dueDate) <= nextWeek && t.status !== "COMPLETE");
-  const later = tasks.filter((t) => (t.dueDate && new Date(t.dueDate) > nextWeek && t.status !== "COMPLETE") || (!t.dueDate && t.status !== "COMPLETE"));
-  const completed = tasks.filter((t) => t.status === "COMPLETE");
+  const overdue = tasks.filter((t) => t.dueDate && new Date(t.dueDate) < today && t.status !== "COMPLETE").sort(byPriorityThenDueDate);
+  const dueToday = tasks.filter((t) => t.dueDate && new Date(t.dueDate).toDateString() === today.toDateString() && t.status !== "COMPLETE").sort(byPriorityThenDueDate);
+  const upcoming = tasks.filter((t) => t.dueDate && new Date(t.dueDate) > today && new Date(t.dueDate) <= nextWeek && t.status !== "COMPLETE").sort(byPriorityThenDueDate);
+  const later = tasks.filter((t) => (t.dueDate && new Date(t.dueDate) > nextWeek && t.status !== "COMPLETE") || (!t.dueDate && t.status !== "COMPLETE")).sort(byPriorityThenDueDate);
+  const completed = tasks.filter((t) => t.status === "COMPLETE").sort(byPriorityThenDueDate);
 
   return (
     <div className="space-y-8">
@@ -60,7 +72,7 @@ function TaskGroup({ title, icon, tasks, variant }: { title: string; icon: React
           <Link
             key={task.id}
             href={`/graph/${task.projectId}?nodeId=${task.id}`}
-            className="group flex items-center justify-between gap-3 rounded-lg border-l-[3px] px-3 py-2.5 transition-all duration-150 hover:translate-x-0.5 hover:bg-hover"
+            className="group flex items-center justify-between gap-3 rounded-lg border-l-[3px] px-3 py-2.5 transition-[transform,background-color] duration-150 hover:translate-x-0.5 hover:bg-hover active:scale-[0.98]"
             style={{ borderLeftColor: getStatusDotColor(task.status) }}
           >
             <div className="min-w-0 flex-1">
@@ -70,6 +82,11 @@ function TaskGroup({ title, icon, tasks, variant }: { title: string; icon: React
             <div className="ml-4 flex flex-shrink-0 items-center gap-3">
               {task.dueDate && (
                 <span className="text-meta">{formatDate(task.dueDate)}</span>
+              )}
+              {(task.priority === "HIGH" || task.priority === "URGENT") && (
+                <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-medium ${getPriorityColor(task.priority)}`}>
+                  {getPriorityLabel(task.priority)}
+                </span>
               )}
               <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-medium ${getStatusColor(task.status)}`}>
                 {getStatusLabel(task.status)}

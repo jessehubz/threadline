@@ -4,7 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { pusherServer } from "@/lib/pusher";
+import { createNotification } from "@/lib/notifications";
 import { rateLimiters } from "@/lib/rate-limit";
+import { getEffectivePermissions } from "@/lib/permissions";
 import { sanitizeTitle, sanitizeText } from "@/lib/sanitize";
 import { z } from "zod/v4";
 
@@ -32,11 +34,9 @@ export async function submitForApproval(projectId: string, nodeId: string) {
   // IDOR fix: verify node belongs to the specified project
   if (node.graph.projectId !== projectId) return { error: "Task not found" };
 
-  // Verify user is a member of the project
-  const membership = await prisma.projectMember.findUnique({
-    where: { userId_projectId: { userId: user.id, projectId } },
-  });
-  if (!membership || membership.role === "MEMBER") return { error: "Not authorized" };
+  // Submitting for approval is an edit-level action under the permission matrix
+  const { perms } = await getEffectivePermissions(user.id, projectId);
+  if (!perms.canEditNodes) return { error: "Not authorized" };
 
   const approver = node.assignments.find((a) => a.isApprover);
   if (!approver) return { error: "No approver assigned" };
@@ -56,14 +56,12 @@ export async function submitForApproval(projectId: string, nodeId: string) {
 
   // Create notification for approver (sanitize title for safety)
   const safeTitle = sanitizeTitle(node.title);
-  await prisma.notification.create({
-    data: {
-      userId: approver.userId,
-      type: "APPROVAL_REQUESTED",
-      message: `"${safeTitle}" is awaiting your approval`,
-      relatedNodeId: nodeId,
-      relatedProjectId: projectId,
-    },
+  await createNotification({
+    userId: approver.userId,
+    type: "APPROVAL_REQUESTED",
+    title: `"${safeTitle}" is awaiting your approval`,
+    relatedNodeId: nodeId,
+    relatedProjectId: projectId,
   });
 
   await pusherServer.trigger(`private-graph-${node.graph.id}`, "node-updated", {
@@ -101,14 +99,12 @@ export async function approveCompletion(projectId: string, requestId: string) {
   });
 
   const safeTitle = sanitizeTitle(request.node.title);
-  await prisma.notification.create({
-    data: {
-      userId: request.requesterId,
-      type: "APPROVED",
-      message: `"${safeTitle}" has been approved`,
-      relatedNodeId: request.nodeId,
-      relatedProjectId: projectId,
-    },
+  await createNotification({
+    userId: request.requesterId,
+    type: "APPROVED",
+    title: `"${safeTitle}" has been approved`,
+    relatedNodeId: request.nodeId,
+    relatedProjectId: projectId,
   });
 
   await pusherServer.trigger(`private-graph-${request.node.graph.id}`, "node-updated", {
@@ -146,23 +142,21 @@ export async function rejectCompletion(projectId: string, requestId: string, rea
 
   await prisma.taskNode.update({
     where: { id: request.nodeId },
-    data: { status: "URGENT" },
+    data: { status: "REJECTED" },
   });
 
   const safeTitle = sanitizeTitle(request.node.title);
-  await prisma.notification.create({
-    data: {
-      userId: request.requesterId,
-      type: "REJECTED",
-      message: `"${safeTitle}" was rejected: ${sanitizedReason}`,
-      relatedNodeId: request.nodeId,
-      relatedProjectId: projectId,
-    },
+  await createNotification({
+    userId: request.requesterId,
+    type: "REJECTED",
+    title: `"${safeTitle}" was rejected: ${sanitizedReason}`,
+    relatedNodeId: request.nodeId,
+    relatedProjectId: projectId,
   });
 
   await pusherServer.trigger(`private-graph-${request.node.graph.id}`, "node-updated", {
     id: request.nodeId,
-    status: "URGENT",
+    status: "REJECTED",
   });
 
   revalidatePath(`/graph/${projectId}`);

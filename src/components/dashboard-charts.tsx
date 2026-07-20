@@ -15,7 +15,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { cn } from "@/lib/utils";
 
 // ─── Shared tooltip style ────────────────────────────────────────────────────
 
@@ -80,7 +79,7 @@ export function HealthGauge({ score }: HealthGaugeProps) {
           strokeWidth="10"
           strokeLinecap="round"
           strokeDasharray={`${filledLength} ${totalLength}`}
-          className="transition-all duration-700 ease-out"
+          className="transition-[stroke-dasharray] duration-300 ease-out"
         />
         {/* Score number */}
         <text
@@ -276,7 +275,7 @@ export function WorkloadChart({ data }: WorkloadChartProps) {
           <Bar
             dataKey="completed"
             stackId="workload"
-            fill="var(--violet-200)"
+            fill="var(--violet-400)"
             name="Completed"
             radius={[0, 4, 4, 0]}
           />
@@ -335,7 +334,7 @@ export function ProgressRing({
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          className="transition-all duration-500 ease-out"
+          className="transition-[stroke-dashoffset] duration-300 ease-out"
         />
       </svg>
       {/* Center percentage */}

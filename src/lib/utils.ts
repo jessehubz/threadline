@@ -5,6 +5,27 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+export function formatRelativeTime(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "Opened just now";
+  if (diffMin < 60) return `Opened ${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `Opened ${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `Opened ${diffDay}d ago`;
+  return `Opened ${new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+}
+
 export function formatDate(date: Date | string): string {
   return new Date(date).toLocaleDateString("en-US", {
     month: "short",
@@ -65,6 +86,49 @@ export function getStatusDotColor(status: string): string {
   }
 }
 
+// Priority chip styling follows the same restrained, single-accent idiom as
+// getStatusColor: violet for "needs a bit more attention" (HIGH), the app's
+// one negative/warning hue for the top of the scale (URGENT). NONE/LOW/MEDIUM
+// intentionally render nothing in the UI (see task-node.tsx / my-tasks-list.tsx).
+export function getPriorityColor(priority: string): string {
+  switch (priority) {
+    case "URGENT":
+      return "bg-[var(--danger-soft)] text-[var(--danger)]";
+    case "HIGH":
+      return "bg-[var(--violet-100)] text-[var(--violet-600)]";
+    default:
+      return "bg-[var(--bg-muted)] text-[var(--text-muted)]";
+  }
+}
+
+export function getPriorityLabel(priority: string): string {
+  switch (priority) {
+    case "LOW":
+      return "Low";
+    case "MEDIUM":
+      return "Medium";
+    case "HIGH":
+      return "High";
+    case "URGENT":
+      return "Urgent";
+    default:
+      return "None";
+  }
+}
+
+// URGENT -> HIGH -> MEDIUM -> LOW -> NONE, for sorting task lists.
+const PRIORITY_RANK: Record<string, number> = {
+  URGENT: 0,
+  HIGH: 1,
+  MEDIUM: 2,
+  LOW: 3,
+  NONE: 4,
+};
+
+export function getPriorityRank(priority: string): number {
+  return PRIORITY_RANK[priority] ?? PRIORITY_RANK.NONE;
+}
+
 export function getStatusLabel(status: string): string {
   switch (status) {
     case "NOT_STARTED":
@@ -74,7 +138,7 @@ export function getStatusLabel(status: string): string {
     case "URGENT":
       return "Urgent";
     case "BLOCKED":
-      return "Blocked";
+      return "Waiting upstream";
     case "AWAITING_APPROVAL":
       return "Awaiting Approval";
     case "REJECTED":

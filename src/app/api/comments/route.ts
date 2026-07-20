@@ -53,5 +53,5 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "asc" },
   });
 
-  return NextResponse.json({ comments });
+  return NextResponse.json({ comments, projectId: node.graph.project.id });
 }

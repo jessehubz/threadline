@@ -5,15 +5,11 @@ import { AnalyticsCharts } from "@/components/analytics-charts";
 export default async function AnalyticsPage() {
   const user = await requireUser();
 
-  const projects = await prisma.project.findMany({
-    where: { members: { some: { userId: user.id } } },
-    select: { id: true, name: true },
-  });
-
   // Get all tasks for user's projects
   const tasks = await prisma.taskNode.findMany({
     where: {
-      graph: { project: { members: { some: { userId: user.id } } } },
+      deletedAt: null,
+      graph: { project: { deletedAt: null, members: { some: { userId: user.id } } } },
     },
     include: {
       assignments: { include: { user: true } },
@@ -28,7 +24,7 @@ export default async function AnalyticsPage() {
     { name: "Awaiting Approval", value: tasks.filter((t) => t.status === "AWAITING_APPROVAL").length, color: "var(--violet-500)" },
     { name: "In Progress", value: tasks.filter((t) => t.status === "IN_PROGRESS").length, color: "var(--violet-600)" },
     { name: "Complete", value: tasks.filter((t) => t.status === "COMPLETE").length, color: "var(--violet-700)" },
-    { name: "Blocked", value: tasks.filter((t) => t.status === "BLOCKED").length, color: "var(--danger)" },
+    { name: "Waiting upstream", value: tasks.filter((t) => t.status === "BLOCKED").length, color: "var(--danger)" },
     { name: "Rejected", value: tasks.filter((t) => t.status === "REJECTED").length, color: "var(--danger-hover)" },
   ].filter((s) => s.value > 0);
 

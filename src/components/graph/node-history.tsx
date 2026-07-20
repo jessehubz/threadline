@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { History, ChevronDown, ChevronUp } from "lucide-react";
 import { getNodeHistory } from "@/actions/audit-actions";
-import { cn } from "@/lib/utils";
 
 interface AuditEntry {
   id: string;
@@ -18,29 +17,40 @@ const actionLabels: Record<string, string> = {
   title_changed: "changed title",
   description_changed: "updated description",
   status_changed: "changed status",
+  priority_changed: "changed priority",
   assignee_added: "added assignee",
   assignee_removed: "removed assignee",
+  approver_set: "made approver",
+  approver_removed: "removed approver",
   edge_added: "added dependency",
   edge_removed: "removed dependency",
   due_date_changed: "changed due date",
   color_changed: "changed color",
   created: "created this node",
+  deleted: "deleted this node",
+  restored: "restored this node",
 };
 
 export function NodeHistory({ nodeId }: { nodeId: string }) {
   const [history, setHistory] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
-    if (expanded && history.length === 0) {
+  async function handleToggle() {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && !loaded) {
       setLoading(true);
-      getNodeHistory(nodeId).then((logs) => {
+      try {
+        const logs = await getNodeHistory(nodeId);
         setHistory(logs as AuditEntry[]);
+        setLoaded(true);
+      } finally {
         setLoading(false);
-      });
+      }
     }
-  }, [expanded, nodeId, history.length]);
+  }
 
   function formatTime(date: Date | string) {
     const d = new Date(date);
@@ -58,7 +68,7 @@ export function NodeHistory({ nodeId }: { nodeId: string }) {
   return (
     <div className="border-t" style={{ borderColor: 'var(--border-subtle)' }}>
       <button
-        onClick={() => setExpanded(!expanded)}
+        onClick={handleToggle}
         className="flex w-full items-center justify-between py-3 px-1 transition-colors hover:text-[var(--text-primary)]"
         style={{ color: 'var(--text-secondary)' }}
       >
@@ -92,9 +102,11 @@ export function NodeHistory({ nodeId }: { nodeId: string }) {
                       {' '}
                       <span style={{ color: 'var(--text-secondary)' }}>{actionLabels[entry.action] || entry.action}</span>
                     </p>
-                    {entry.oldValue && entry.newValue && (
+                    {(entry.oldValue || entry.newValue) && (
                       <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
-                        {entry.oldValue} → {entry.newValue}
+                        {entry.oldValue && entry.newValue
+                          ? `${entry.oldValue} → ${entry.newValue}`
+                          : entry.newValue || entry.oldValue}
                       </p>
                     )}
                   </div>

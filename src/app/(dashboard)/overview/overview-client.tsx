@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn, getStatusColor, getStatusLabel } from "@/lib/utils";
-import { ClipboardList, Users, CheckCircle2, Clock, AlertCircle, Sparkles } from "lucide-react";
+import { ClipboardList, CheckCircle2, Clock, AlertCircle, Sparkles } from "lucide-react";
 
 interface Task {
   id: string;
@@ -62,9 +62,9 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
             key={p.id}
             onClick={() => setSelectedId(p.id)}
             className={cn(
-              "rounded-full px-4 py-1.5 text-[13px] font-medium transition-all",
+              "rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors",
               selectedId === p.id
-                ? "bg-[var(--accent)] text-white shadow-sm"
+                ? "bg-[var(--accent)] text-[var(--on-accent)] shadow-sm"
                 : "border border-themed-subtle text-body hover:border-[var(--violet-300)] hover:bg-hover hover:accent-color"
             )}
           >
@@ -99,7 +99,7 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
         <div className="panel-quiet p-4 hover-lift">
           <div className="flex items-center gap-2 mb-1.5">
             <AlertCircle className="h-4 w-4 text-[var(--danger)]" />
-            <span className="text-eyebrow">Blocked</span>
+            <span className="text-eyebrow">Waiting upstream</span>
           </div>
           <p className="text-[24px] text-stat">{blocked}</p>
         </div>
@@ -136,7 +136,7 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
             <span className="text-[13px] font-semibold accent-color">{Math.round((completed / totalTasks) * 100)}%</span>
           </div>
           <div className="h-1.5 w-full rounded-full bg-hover">
-            <div className="h-1.5 rounded-full bg-[var(--accent)] transition-all" style={{ width: `${(completed / totalTasks) * 100}%` }} />
+            <div className="h-1.5 rounded-full bg-[var(--accent)] transition-[width]" style={{ width: `${(completed / totalTasks) * 100}%` }} />
           </div>
         </div>
       )}

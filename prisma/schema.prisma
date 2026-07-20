@@ -16,6 +16,14 @@ enum TaskStatus {
   COMPLETE
 }
 
+enum TaskPriority {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 enum MemberRole {
   HEAD
   CO_HEAD
@@ -30,6 +38,10 @@ enum NotificationType {
   DUE_SOON
   MENTIONED
   INVITED
+  FRIEND_REQUEST
+  FRIEND_ACCEPTED
+  NEW_MESSAGE
+  COMMENT
 }
 
 enum CompletionRequestStatus {
@@ -48,10 +60,17 @@ enum ProjectVisibility {
   PRIVATE
 }
 
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
+// NOTE: After adding the `username` field, run `npx prisma db push` or create a migration.
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
   email     String   @unique
+  username  String?  @unique
   name      String?
   imageUrl  String?
   bio       String?
@@ -65,41 +84,42 @@ model User {
   websiteUrl  String?
 
   // Preferences
-  theme              String @default("system")
+  theme              String  @default("system")
   emailNotifications Boolean @default(true)
   notifyAssigned     Boolean @default(true)
   notifyApproval     Boolean @default(true)
   notifyDueSoon      Boolean @default(true)
   notifyMentioned    Boolean @default(true)
 
-  memberships       ProjectMember[]
-  taskAssignments   TaskAssignment[]
-  notifications     Notification[]
-  messages          Message[]
-  completionRequestsSubmitted CompletionRequest[] @relation("Requester")
-  completionRequestsReceived  CompletionRequest[] @relation("Approver")
-  comments          Comment[]
-  directMessages    DirectMessage[]
-  conversations     ConversationParticipant[]
-  ownedTeams        Team[] @relation("TeamOwner")
-  friends        Friendship[] @relation("UserFriends")
-  friendOf       Friendship[] @relation("FriendOf")
-  auditLogs      NodeAuditLog[]
-  commentReads   CommentRead[]
-  tags           Tag[]
+  memberships                 ProjectMember[]
+  taskAssignments             TaskAssignment[]
+  notifications               Notification[]
+  messages                    Message[]
+  completionRequestsSubmitted CompletionRequest[]       @relation("Requester")
+  completionRequestsReceived  CompletionRequest[]       @relation("Approver")
+  comments                    Comment[]
+  directMessages              DirectMessage[]
+  conversations               ConversationParticipant[]
+  ownedTeams                  Team[]                    @relation("TeamOwner")
+  friends                     Friendship[]              @relation("UserFriends")
+  friendOf                    Friendship[]              @relation("FriendOf")
+  auditLogs                   NodeAuditLog[]
+  commentReads                CommentRead[]
+  tags                        Tag[]
+  teamMemberships             TeamMember[]
 }
 
 model Project {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  shareToken  String?  @unique
-  visibility  ProjectVisibility @default(PRIVATE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String            @id @default(cuid())
+  name         String
+  description  String?
+  shareToken   String?           @unique
+  visibility   ProjectVisibility @default(PRIVATE)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
   lastOpenedAt DateTime?
-  deletedAt   DateTime?
-  deleteAfter DateTime?
+  deletedAt    DateTime?
+  deleteAfter  DateTime?
 
   members     ProjectMember[]
   graphs      Graph[]
@@ -142,6 +162,7 @@ model TaskNode {
   title       String     @default("New Task")
   description String?
   status      TaskStatus @default(NOT_STARTED)
+  priority    TaskPriority @default(NONE)
   nodeType    NodeType   @default(TASK)
   color       String?
   dueDate     DateTime?
@@ -155,13 +176,13 @@ model TaskNode {
   subGraphId String? @unique
   subGraph   Graph?  @relation("SubGraph", fields: [subGraphId], references: [id], onDelete: SetNull)
 
-  graph       Graph            @relation(fields: [graphId], references: [id], onDelete: Cascade)
-  assignments TaskAssignment[]
-  attachments Attachment[]
+  graph              Graph               @relation(fields: [graphId], references: [id], onDelete: Cascade)
+  assignments        TaskAssignment[]
+  attachments        Attachment[]
   completionRequests CompletionRequest[]
-  comments    Comment[]
-  auditLogs   NodeAuditLog[]
-  commentReads CommentRead[]
+  comments           Comment[]
+  auditLogs          NodeAuditLog[]
+  commentReads       CommentRead[]
 
   // Edges
   outgoingEdges Edge[] @relation("SourceNode")
@@ -169,7 +190,7 @@ model TaskNode {
 }
 
 model Edge {
-  id           String @id @default(cuid())
+  id           String   @id @default(cuid())
   graphId      String
   sourceNodeId String
   targetNodeId String
@@ -183,11 +204,11 @@ model Edge {
 }
 
 model TaskAssignment {
-  id        String  @id @default(cuid())
-  nodeId    String
-  userId    String
-  isApprover Boolean @default(false)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  nodeId     String
+  userId     String
+  isApprover Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   node TaskNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
   user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -223,14 +244,14 @@ model CompletionRequest {
 }
 
 model Notification {
-  id              String           @id @default(cuid())
-  userId          String
-  type            NotificationType
-  message         String
-  read            Boolean          @default(false)
-  relatedNodeId   String?
+  id               String           @id @default(cuid())
+  userId           String
+  type             NotificationType
+  message          String
+  read             Boolean          @default(false)
+  relatedNodeId    String?
   relatedProjectId String?
-  createdAt       DateTime         @default(now())
+  createdAt        DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -266,8 +287,8 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  node        TaskNode           @relation(fields: [nodeId], references: [id], onDelete: Cascade)
-  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  node        TaskNode            @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   attachments CommentAttachment[]
 }
 
@@ -295,9 +316,10 @@ model Conversation {
 }
 
 model ConversationParticipant {
-  id             String @id @default(cuid())
+  id             String    @id @default(cuid())
   conversationId String
   userId         String
+  lastReadAt     DateTime?
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -310,6 +332,7 @@ model DirectMessage {
   conversationId String
   userId         String
   content        String
+  isSystem       Boolean  @default(false)
   createdAt      DateTime @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -329,21 +352,24 @@ model Team {
 }
 
 model TeamMember {
-  id     String @id @default(cuid())
-  teamId String
-  email  String
+  id        String   @id @default(cuid())
+  teamId    String
+  email     String
+  userId    String? // linked account, when the email matches a registered user
   createdAt DateTime @default(now())
 
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@unique([teamId, email])
+  @@index([userId])
 }
 
 model ProjectLabel {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   projectId String
   name      String
-  color     String @default("#7c3aed")
+  color     String   @default("#7c3aed")
   createdAt DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -376,10 +402,11 @@ model ProjectTag {
 }
 
 model Friendship {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   userId    String
   friendId  String
-  createdAt DateTime @default(now())
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime         @default(now())
 
   user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
   friend User @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)

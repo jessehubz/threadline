@@ -24,18 +24,21 @@ export async function getCurrentUser() {
         .filter(Boolean)
         .join(" ") || null;
 
+      // NOTE: For username-based login, enable "Username" identifier in Clerk Dashboard
       user = await prisma.user.upsert({
         where: { clerkId: userId },
         update: {
           email,
           name,
           imageUrl: clerkUser.imageUrl,
+          username: clerkUser.username || undefined,
         },
         create: {
           clerkId: userId,
           email,
           name,
           imageUrl: clerkUser.imageUrl,
+          username: clerkUser.username || null,
         },
       });
     } catch (error) {

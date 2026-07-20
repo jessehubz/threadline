@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useCallback, useState, useRef, useEffect, useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -27,6 +27,7 @@ import { FolderNodeComponent } from "@/components/graph/folder-node";
 import { GraphToolbar } from "@/components/graph/graph-toolbar";
 import { CustomControls } from "@/components/graph/custom-controls";
 import { TaskDetailPanel } from "@/components/graph/task-detail-panel";
+import { TaskViewPanel } from "@/components/graph/task-view-panel";
 import { GraphBreadcrumbs } from "@/components/graph/graph-breadcrumbs";
 import { CollaboratorPresence } from "@/components/graph/collaborator-presence";
 import { ShareDialog } from "@/components/graph/share-dialog";
@@ -35,13 +36,16 @@ import { AIAssistantPanel } from "@/components/graph/ai-assistant-panel";
 import { ThemedBezierEdge } from "@/components/graph/themed-edge";
 import { MultiSelectPanel } from "@/components/graph/multi-select-panel";
 import { createNode, createEdge, deleteNode, deleteEdge, updateNodePosition, restoreNode, getDeletedNodes } from "@/actions/graph-actions";
-import { wouldCreateCycle } from "@/lib/graph-utils";
+import { wouldCreateCycle, getBlockedNodeIds } from "@/lib/graph-utils";
 import { toast } from "sonner";
 import { usePusher } from "@/hooks/use-pusher";
 import { useUndo } from "@/hooks/use-undo";
-import { Share2 } from "lucide-react";
+import { Share2, Settings, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { RecentlyDeletedPanel } from "@/components/graph/recently-deleted-panel";
+import { ProjectSettings } from "@/components/project-settings";
+import type { EffectivePermissions } from "@/lib/permissions";
 
 const nodeTypes: NodeTypes = {
   taskNode: TaskNodeComponent,
@@ -52,6 +56,10 @@ const edgeTypes: EdgeTypes = {
   themed: ThemedBezierEdge,
 };
 
+// Matches the node's own transition duration (task-node.tsx / folder-node.tsx)
+// so the node is fully faded out before it's removed from `nodes`.
+const NODE_EXIT_MS = 200;
+
 interface GraphEditorProps {
   projectId: string;
   graph: {
@@ -61,6 +69,7 @@ interface GraphEditorProps {
       title: string;
       description: string | null;
       status: string;
+      priority: string;
       nodeType: string;
       color: string | null;
       dueDate: Date | string | null;
@@ -71,25 +80,30 @@ interface GraphEditorProps {
       attachments: Array<{ id: string; fileName: string; fileUrl: string; fileType: string }>;
       incomingEdges: Array<{ id: string; sourceNodeId: string }>;
       outgoingEdges: Array<{ id: string; targetNodeId: string }>;
+      completionRequests?: Array<{ id: string; approverId: string; requesterId: string }>;
       _count?: { comments: number };
     }>;
     edges: Array<{ id: string; sourceNodeId: string; targetNodeId: string }>;
   };
   projectName: string;
+  projectVisibility: string;
   shareToken: string | null;
   members: Array<{ id: string; role: string; user: { id: string; name: string | null; email: string } }>;
   role: string;
+  perms: EffectivePermissions;
   breadcrumbs: Array<{ id: string; name: string; graphId?: string }>;
   currentPath: string[];
   currentUserId: string;
   unreadCommentNodeIds?: string[];
 }
 
-function makeEdge(id: string, source: string, target: string): Edge {
+function makeEdge(id: string, source: string, target: string, sourceHandle?: string | null, targetHandle?: string | null): Edge {
   return {
     id,
     source,
     target,
+    sourceHandle: sourceHandle ?? undefined,
+    targetHandle: targetHandle ?? undefined,
     type: "themed",
     style: { strokeWidth: 2, stroke: "var(--accent)" },
     markerEnd: {
@@ -101,8 +115,19 @@ function makeEdge(id: string, source: string, target: string): Edge {
   };
 }
 
-export function GraphEditor({ projectId, graph, projectName, shareToken, members, role, breadcrumbs, currentPath, currentUserId, unreadCommentNodeIds = [] }: GraphEditorProps) {
-  const isReadOnly = false; // All project members (HEAD, CO_HEAD, MEMBER) can edit. View-only access uses the separate /share page.
+export function GraphEditor({ projectId, graph, projectName, projectVisibility, shareToken, members, role, perms, breadcrumbs, currentPath, currentUserId, unreadCommentNodeIds = [] }: GraphEditorProps) {
+  // Derived from the ProjectPermission matrix (src/lib/permissions.ts). HEAD
+  // is always fully-permissioned; CO_HEAD/MEMBER follow the project's matrix.
+  const canCreateNodes = perms.canCreateNodes;
+  const canEditNodes = perms.canEditNodes;
+  const canDeleteNodes = perms.canDeleteNodes;
+  const canCreateEdges = perms.canCreateEdges;
+  const canDeleteEdges = perms.canDeleteEdges;
+  const canChangeSettings = perms.canChangeSettings || role === "HEAD";
+  // True only when the user has no edit capability at all - shows the
+  // "View only" pill and disables editing affordances in child panels.
+  const isReadOnly = !canCreateNodes && !canEditNodes && !canDeleteNodes && !canCreateEdges && !canDeleteEdges;
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const initialNodes: Node[] = graph.nodes.map((node) => ({
     id: node.id,
@@ -111,6 +136,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
     data: {
       title: node.title,
       status: node.status,
+      priority: node.priority,
       color: node.color,
       dueDate: node.dueDate,
       assignees: node.assignments.map((a) => a.user),
@@ -132,6 +158,9 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  // Nodes being deleted play an exit transition (opacity/scale, driven via
+  // node.data.isRemoving) before they're actually filtered out of `nodes`.
+  const [removingNodeIds, setRemovingNodeIds] = useState<Set<string>>(new Set());
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
   const [shareOpen, setShareOpen] = useState(false);
@@ -219,14 +248,14 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
   // Real-time via Pusher
   usePusher(graph.id, {
     onNodeCreated: (data: unknown) => {
-      const raw = data as { id: string; title: string; status: string; nodeType: string; color: string | null; positionX: number; positionY: number };
+      const raw = data as { id: string; title: string; status: string; priority?: string; nodeType: string; color: string | null; positionX: number; positionY: number };
       setNodes((nds) => {
         if (nds.find((n) => n.id === raw.id)) return nds;
         return [...nds, {
           id: raw.id,
           type: raw.nodeType === "FOLDER" ? "folderNode" : "taskNode",
           position: { x: raw.positionX, y: raw.positionY },
-          data: { title: raw.title, status: raw.status, color: raw.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
+          data: { title: raw.title, status: raw.status, priority: raw.priority || "NONE", color: raw.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
         }];
       });
     },
@@ -287,8 +316,12 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
 
           const existing = positionUpdateTimeout.current.get(nodeId);
           if (existing) clearTimeout(existing);
-          const timeout = setTimeout(() => {
-            updateNodePosition(projectId, nodeId, newPos.x, newPos.y);
+          const timeout = setTimeout(async () => {
+            try {
+              await updateNodePosition(projectId, nodeId, newPos.x, newPos.y);
+            } catch {
+              toast.error("Failed to save task position");
+            }
             positionUpdateTimeout.current.delete(nodeId);
           }, 300);
           positionUpdateTimeout.current.set(nodeId, timeout);
@@ -313,7 +346,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
 
   const handleConnect = useCallback(
     async (connection: Connection) => {
-      if (isReadOnly || !connection.source || !connection.target) return;
+      if (!canCreateEdges || !connection.source || !connection.target) return;
       const edgeData = edges.map((e) => ({ sourceNodeId: e.source, targetNodeId: e.target }));
       if (wouldCreateCycle(edgeData, connection.source, connection.target)) {
         toast.error("Cannot connect: would create a circular dependency");
@@ -322,8 +355,8 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
 
       // Optimistic: add edge immediately with temp ID
       const tempId = `temp-edge-${Date.now()}`;
-      const tempEdge = makeEdge(tempId, connection.source, connection.target);
-      setEdges((eds) => addEdge({ ...connection, ...tempEdge }, eds));
+      const tempEdge = makeEdge(tempId, connection.source, connection.target, connection.sourceHandle, connection.targetHandle);
+      setEdges((eds) => addEdge(tempEdge, eds));
 
       // Persist to server
       const result = await createEdge(projectId, graph.id, connection.source, connection.target);
@@ -335,7 +368,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
       }
       if (result.edge) {
         // Replace temp edge with real one
-        setEdges((eds) => eds.map((e) => e.id === tempId ? makeEdge(result.edge.id, connection.source!, connection.target!) : e));
+        setEdges((eds) => eds.map((e) => e.id === tempId ? makeEdge(result.edge.id, connection.source!, connection.target!, connection.sourceHandle, connection.targetHandle) : e));
         // Push undo action for edge creation
         const edgeId = result.edge.id;
         pushUndo({
@@ -348,7 +381,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
         });
       }
     },
-    [edges, graph.id, isReadOnly, projectId, setEdges, pushUndo]
+    [edges, graph.id, canCreateEdges, projectId, setEdges, pushUndo]
   );
 
   const isValidConnection = useCallback(
@@ -364,7 +397,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
   );
 
   const handleAddNode = useCallback(async (nodeType: "TASK" | "FOLDER" = "TASK") => {
-    if (isReadOnly) return;
+    if (!canCreateNodes) return;
 
     // Calculate viewport center
     let position = { x: 300, y: 200 }; // fallback
@@ -415,7 +448,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
       id: tempId,
       type: nodeType === "FOLDER" ? "folderNode" : "taskNode",
       position,
-      data: { title: nodeType === "FOLDER" ? "New Folder" : "New Task", status: "NOT_STARTED", color: null, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
+      data: { title: nodeType === "FOLDER" ? "New Folder" : "New Task", status: "NOT_STARTED", priority: "NONE", color: null, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
     }]);
 
     try {
@@ -437,17 +470,34 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
       setNodes((nds) => nds.filter((n) => n.id !== tempId));
       toast.error("Failed to create node");
     }
-  }, [graph.id, isReadOnly, projectId, setNodes, setEdges, nodes, pushUndo]);
+  }, [graph.id, canCreateNodes, projectId, setNodes, setEdges, nodes, pushUndo]);
 
   const handleDeleteNode = useCallback(async (nodeId: string) => {
-    if (isReadOnly) return;
+    if (!canDeleteNodes) return;
     // Capture node data before deletion for undo
     const nodeToDelete = nodes.find((n) => n.id === nodeId);
     const nodeData = nodeToDelete?.data as Record<string, unknown> | undefined;
 
-    await deleteNode(projectId, nodeId);
-    setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-    setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+    try {
+      await deleteNode(projectId, nodeId);
+    } catch {
+      toast.error("Failed to delete task");
+      return;
+    }
+
+    // Play the exit transition (opacity/scale, see task-node.tsx /
+    // folder-node.tsx) before actually removing the node from the canvas.
+    setRemovingNodeIds((prev) => new Set(prev).add(nodeId));
+    setTimeout(() => {
+      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+      setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+      setRemovingNodeIds((prev) => {
+        if (!prev.has(nodeId)) return prev;
+        const next = new Set(prev);
+        next.delete(nodeId);
+        return next;
+      });
+    }, NODE_EXIT_MS);
     setSelectedNodeId(null);
 
     // Add to recently deleted
@@ -476,7 +526,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             id: result.node.id,
             type: result.node.nodeType === "FOLDER" ? "folderNode" : "taskNode",
             position: { x: result.node.positionX, y: result.node.positionY },
-            data: { title: result.node.title, status: result.node.status, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
+            data: { title: result.node.title, status: result.node.status, priority: result.node.priority, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
           }]);
           setDeletedNodes((prev) => prev.filter((n) => n.id !== nodeId));
         }
@@ -492,18 +542,30 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
               id: result.node.id,
               type: result.node.nodeType === "FOLDER" ? "folderNode" : "taskNode",
               position: { x: result.node.positionX, y: result.node.positionY },
-              data: { title: result.node.title, status: result.node.status, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
+              data: { title: result.node.title, status: result.node.status, priority: result.node.priority, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
             }]);
             setDeletedNodes((prev) => prev.filter((n) => n.id !== nodeId));
           }
         },
       },
     });
-  }, [isReadOnly, projectId, setNodes, setEdges, nodes, pushUndo]);
+  }, [canDeleteNodes, projectId, setNodes, setEdges, nodes, pushUndo]);
 
   const handleBatchDelete = useCallback((nodeIds: string[]) => {
-    setNodes((nds) => nds.filter((n) => !nodeIds.includes(n.id)));
-    setEdges((eds) => eds.filter((e) => !nodeIds.includes(e.source) && !nodeIds.includes(e.target)));
+    setRemovingNodeIds((prev) => {
+      const next = new Set(prev);
+      nodeIds.forEach((id) => next.add(id));
+      return next;
+    });
+    setTimeout(() => {
+      setNodes((nds) => nds.filter((n) => !nodeIds.includes(n.id)));
+      setEdges((eds) => eds.filter((e) => !nodeIds.includes(e.source) && !nodeIds.includes(e.target)));
+      setRemovingNodeIds((prev) => {
+        const next = new Set(prev);
+        nodeIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    }, NODE_EXIT_MS);
     setSelectedNodeIds([]);
     setSelectedNodeId(null);
   }, [setNodes, setEdges]);
@@ -525,8 +587,9 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
       onEdgesChange(changes);
       changes.forEach((change) => {
         if (change.type === "remove") {
+          if (!canDeleteEdges) return;
           const removedEdge = edges.find((e) => e.id === change.id);
-          deleteEdge(projectId, change.id);
+          deleteEdge(projectId, change.id).catch(() => toast.error("Failed to delete connection"));
           if (removedEdge) {
             const source = removedEdge.source;
             const target = removedEdge.target;
@@ -544,7 +607,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
         }
       });
     },
-    [onEdgesChange, projectId, edges, graph.id, setEdges, pushUndo]
+    [onEdgesChange, projectId, edges, graph.id, setEdges, pushUndo, canDeleteEdges]
   );
 
   const handleNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
@@ -566,8 +629,9 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
   const handleEdgeContextMenu = useCallback((event: React.MouseEvent, edge: Edge) => {
     event.preventDefault();
     event.stopPropagation();
+    if (!canDeleteEdges) return;
     setEdgeContextMenu({ edgeId: edge.id, x: event.clientX, y: event.clientY });
-  }, []);
+  }, [canDeleteEdges]);
 
   const handleDeleteEdgeFromMenu = useCallback(() => {
     if (!edgeContextMenu) return;
@@ -603,7 +667,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
           id: result.node.id,
           type: result.node.nodeType === "FOLDER" ? "folderNode" : "taskNode",
           position: { x: result.node.positionX, y: result.node.positionY },
-          data: { title: result.node.title, status: result.node.status, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
+          data: { title: result.node.title, status: result.node.status, priority: result.node.priority, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
         }]);
         setDeletedNodes((prev) => prev.filter((n) => n.id !== nodeId));
         toast.success(`Restored "${result.node.title}"`);
@@ -648,7 +712,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
           id: result.node.id,
           type: result.node.nodeType === "FOLDER" ? "folderNode" : "taskNode",
           position,
-          data: { title: result.node.title, status: result.node.status, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
+          data: { title: result.node.title, status: result.node.status, priority: result.node.priority, color: result.node.color, dueDate: null, assignees: [], hasSubGraph: false, subGraphProgress: null, attachmentCount: 0 },
         }]);
         setDeletedNodes((prev) => prev.filter((n) => n.id !== deletedNode.id));
         toast.success(`Restored "${result.node.title}"`);
@@ -673,6 +737,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
     title: (nodes.find((n) => n.id === selectedNodeId)?.data?.title as string) || "New Task",
     description: null,
     status: (nodes.find((n) => n.id === selectedNodeId)?.data?.status as string) || "NOT_STARTED",
+    priority: (nodes.find((n) => n.id === selectedNodeId)?.data?.priority as string) || "NONE",
     nodeType: (nodes.find((n) => n.id === selectedNodeId)?.type === "folderNode" ? "FOLDER" : "TASK"),
     color: (nodes.find((n) => n.id === selectedNodeId)?.data?.color as string | null) || null,
     dueDate: null,
@@ -683,13 +748,58 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
     attachments: [] as Array<{ id: string; fileName: string; fileUrl: string; fileType: string }>,
     incomingEdges: [] as Array<{ id: string; sourceNodeId: string }>,
     outgoingEdges: [] as Array<{ id: string; targetNodeId: string }>,
+    completionRequests: [] as Array<{ id: string; approverId: string; requesterId: string }>,
   } : null);
+
+  // Keeps the last-selected node's data around for NODE_EXIT_MS after
+  // `selectedNodeId` clears, so TaskDetailPanel can play its slide/fade-out
+  // transition instead of unmounting instantly.
+  const [detailPanelPersisted, setDetailPanelPersisted] = useState<{ nodeId: string; node: NonNullable<typeof selectedNode> } | null>(null);
+  useEffect(() => {
+    if (selectedNodeId && selectedNode) {
+      const persistSelection = () =>
+        setDetailPanelPersisted({ nodeId: selectedNodeId, node: selectedNode });
+      persistSelection();
+      return;
+    }
+    const t = setTimeout(() => setDetailPanelPersisted(null), NODE_EXIT_MS);
+    return () => clearTimeout(t);
+    // Intentionally keyed on `selectedNodeId` only: `selectedNode` is
+    // recomputed (and, for not-yet-synced nodes, reconstructed) on every
+    // render, so depending on it here would re-run this effect every render
+    // instead of only on selection changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNodeId]);
 
   const deadlineTasks = graph.nodes
     .filter((n) => n.dueDate)
     .map((n) => ({ id: n.id, title: n.title, status: n.status, dueDate: n.dueDate }));
 
-  const showMultiSelect = selectedNodeIds.length > 1 && !isReadOnly;
+  const showMultiSelect = selectedNodeIds.length > 1 && (canEditNodes || canDeleteNodes);
+
+  // Nodes mid-delete get an `isRemoving` flag so task-node/folder-node can
+  // play their exit transition before actually being filtered out above.
+  const renderNodes = useMemo(
+    () => {
+      // Compute auto-blocked nodes from the current graph state
+      const blockedIds = getBlockedNodeIds(nodes, edges);
+
+      return nodes.map((n) => {
+        const isRemoving = removingNodeIds.has(n.id);
+        const isAutoBlocked = blockedIds.has(n.id);
+        if (!isRemoving && !isAutoBlocked) return n;
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            ...(isRemoving && { isRemoving: true }),
+            ...(isAutoBlocked && { isAutoBlocked: true }),
+          },
+        };
+      });
+    },
+    [nodes, edges, removingNodeIds]
+  );
 
   return (
     <ReactFlowProvider>
@@ -705,10 +815,10 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
 
         <div className="relative flex-1" onContextMenu={handleContextMenu} onDrop={handleDrop} onDragOver={handleDragOver}>
           <ReactFlow
-            nodes={nodes}
+            nodes={renderNodes}
             edges={edges}
-            onNodesChange={isReadOnly ? undefined : handleNodesChange}
-            onEdgesChange={isReadOnly ? undefined : handleEdgesChange}
+            onNodesChange={handleNodesChange}
+            onEdgesChange={handleEdgesChange}
             onConnect={handleConnect}
             connectOnClick={true}
             onInit={(instance) => { reactFlowInstance.current = instance; }}
@@ -723,7 +833,9 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             defaultEdgeOptions={{ type: "themed" }}
             fitView
             fitViewOptions={{ padding: 0.4, maxZoom: 1 }}
-            deleteKeyCode={isReadOnly ? null : ["Delete", "Backspace"]}
+            nodesDraggable={canEditNodes}
+            nodesConnectable={canCreateEdges}
+            deleteKeyCode={(canDeleteNodes || canDeleteEdges) ? ["Delete", "Backspace"] : null}
             className={`bg-page [&_.react-flow__pane]:!cursor-default [&_.react-flow__pane.dragging]:!cursor-grabbing ${isPanning ? "[&_.react-flow__pane]:!cursor-grab [&_.react-flow__pane.dragging]:!cursor-grabbing" : ""}`}
             /* 7.1 - Marquee select by default, spacebar-to-pan */
             selectionOnDrag={!isPanning}
@@ -738,6 +850,16 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             </Panel>
             <Panel position="top-right" className="flex items-center gap-2">
               <CollaboratorPresence graphId={graph.id} />
+              {isReadOnly && (
+                <Badge className="gap-1">
+                  <Lock className="h-3 w-3" /> View only
+                </Badge>
+              )}
+              {canChangeSettings && (
+                <Button size="sm" variant="secondary" onClick={() => setSettingsOpen(true)} className="gap-1.5" aria-label="Project settings">
+                  <Settings className="h-3.5 w-3.5" />
+                </Button>
+              )}
               <Button size="sm" variant="secondary" onClick={() => setShareOpen(true)} className="gap-1.5">
                 <Share2 className="h-3.5 w-3.5" /> Share
               </Button>
@@ -745,10 +867,10 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
           </ReactFlow>
 
           {/* 7.2 - Controls at z-5, below task detail panel */}
-          <CustomControls />
+          <CustomControls projectId={projectId} graphId={graph.id} canEdit={canEditNodes} />
 
           {/* Recently Deleted Panel */}
-          {!isReadOnly && (
+          {canDeleteNodes && (
             <RecentlyDeletedPanel
               deletedNodes={deletedNodes}
               onRestore={handleRestoreNode}
@@ -762,6 +884,8 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
               selectedNodeIds={selectedNodeIds}
               projectId={projectId}
               members={members}
+              canEditNodes={canEditNodes}
+              canDeleteNodes={canDeleteNodes}
               onDelete={handleBatchDelete}
               onClearSelection={() => {
                 setSelectedNodeIds([]);
@@ -770,17 +894,16 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
             />
           )}
 
-          {!isReadOnly && (
-            <GraphToolbar
-              onAddNode={() => handleAddNode("TASK")}
-              onAddFolder={() => handleAddNode("FOLDER")}
-              onToggleDeadlines={() => setShowDeadlines(!showDeadlines)}
-              onToggleAI={() => setShowAI(!showAI)}
-              showDeadlines={showDeadlines}
-            />
-          )}
+          <GraphToolbar
+            onAddNode={() => handleAddNode("TASK")}
+            onAddFolder={() => handleAddNode("FOLDER")}
+            onToggleDeadlines={() => setShowDeadlines(!showDeadlines)}
+            onToggleAI={() => setShowAI(!showAI)}
+            showDeadlines={showDeadlines}
+            canCreateNodes={canCreateNodes}
+          />
 
-          {!isReadOnly && (
+          {canCreateNodes && (
             <AIAssistantPanel
               projectId={projectId}
               graphId={graph.id}
@@ -790,7 +913,7 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
           )}
 
           {/* Edge right-click context menu */}
-          {edgeContextMenu && (
+          {edgeContextMenu && canDeleteEdges && (
             <div
               className="fixed z-50 min-w-[140px] rounded-xl border border-themed-subtle bg-card py-1 shadow-themed-md"
               style={{ left: edgeContextMenu.x, top: edgeContextMenu.y }}
@@ -808,23 +931,39 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
           )}
         </div>
 
-        {/* 7.2 - Task detail panel renders at z-20, above controls */}
-        {selectedNodeId && selectedNode && (
-          <TaskDetailPanel
-            key={selectedNodeId}
-            projectId={projectId}
-            currentUserId={currentUserId}
-            node={selectedNode}
-            graphEdges={edges.map((e) => ({ id: e.id, sourceNodeId: e.source, targetNodeId: e.target }))}
-            graphNodes={graph.nodes.map((gn) => {
-              const liveNode = nodes.find((n) => n.id === gn.id);
-              return { ...gn, status: (liveNode?.data?.status as string) || gn.status };
-            })}
-            members={members}
-            isReadOnly={isReadOnly}
-            onClose={() => setSelectedNodeId(null)}
-            onDelete={() => handleDeleteNode(selectedNodeId)}
-          />
+        {/* 7.2 - Task detail panel renders at z-20, above controls. Stays
+            mounted for NODE_EXIT_MS after closing so it can slide/fade out
+            instead of hard-cutting (see detailPanelPersisted below). */}
+        {detailPanelPersisted && (
+          isReadOnly ? (
+            <TaskViewPanel
+              key={detailPanelPersisted.nodeId}
+              isOpen={!!(selectedNodeId && selectedNode)}
+              projectId={projectId}
+              currentUserId={currentUserId}
+              node={selectedNodeId && selectedNode ? selectedNode : detailPanelPersisted.node}
+              onClose={() => setSelectedNodeId(null)}
+            />
+          ) : (
+            <TaskDetailPanel
+              key={detailPanelPersisted.nodeId}
+              isOpen={!!(selectedNodeId && selectedNode)}
+              projectId={projectId}
+              currentUserId={currentUserId}
+              node={selectedNodeId && selectedNode ? selectedNode : detailPanelPersisted.node}
+              graphEdges={edges.map((e) => ({ id: e.id, sourceNodeId: e.source, targetNodeId: e.target }))}
+              graphNodes={graph.nodes.map((gn) => {
+                const liveNode = nodes.find((n) => n.id === gn.id);
+                return { ...gn, status: (liveNode?.data?.status as string) || gn.status };
+              })}
+              members={members}
+              isReadOnly={!canEditNodes}
+              canDelete={canDeleteNodes}
+              hasUnreadComments={unreadCommentNodeIds.includes(detailPanelPersisted.node.id)}
+              onClose={() => setSelectedNodeId(null)}
+              onDelete={() => handleDeleteNode(detailPanelPersisted.nodeId)}
+            />
+          )
         )}
 
         <ShareDialog
@@ -835,6 +974,17 @@ export function GraphEditor({ projectId, graph, projectName, shareToken, members
           shareToken={shareToken}
           members={members}
           currentUserRole={role}
+          canInviteMembers={perms.canInviteMembers}
+        />
+
+        <ProjectSettings
+          projectId={projectId}
+          currentVisibility={projectVisibility}
+          members={members}
+          currentUserRole={role}
+          canChangeSettings={perms.canChangeSettings}
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
         />
       </div>
     </ReactFlowProvider>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Tag, Plus, X } from "lucide-react";
+import { Tag, Plus } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { TagChip } from "@/components/ui/tag-chip";
 import { TagScrollContainer } from "@/components/ui/tag-scroll-container";
@@ -16,14 +16,14 @@ interface ProjectTagManagerProps {
 }
 
 const TAG_COLORS = [
-  "#8B5CF6", // Violet
-  "#6366F1", // Indigo
-  "#3B82F6", // Blue
-  "#06B6D4", // Cyan
-  "#10B981", // Emerald
-  "#F59E0B", // Amber
-  "#EF4444", // Red
-  "#EC4899", // Pink
+  "#171717", // Near black
+  "#262626", // Dark gray
+  "#404040", // Charcoal
+  "#525252", // Medium dark
+  "#737373", // Medium gray
+  "#A3A3A3", // Light gray
+  "#D4D4D4", // Lighter gray
+  "#3F3F46", // Zinc dark
   "#6B7280", // Gray
 ];
 
@@ -103,7 +103,7 @@ export function ProjectTagManager({ projectId, projectName, currentTags, availab
           background: "transparent",
           color: "var(--text-muted)",
           cursor: "pointer",
-          transition: "all .18s ease",
+          transition: "border-color .18s ease, color .18s ease, background-color .18s ease",
           flexShrink: 0,
         }}
         onMouseEnter={(e) => {
@@ -219,7 +219,7 @@ export function ProjectTagManager({ projectId, projectName, currentTags, availab
                   color: newTagName.trim() ? "#fff" : "var(--text-muted)",
                   border: "none",
                   cursor: newTagName.trim() ? "pointer" : "not-allowed",
-                  transition: "all .18s ease",
+                  transition: "background-color .18s ease, opacity .18s ease",
                   flexShrink: 0,
                   opacity: isPending ? 0.6 : 1,
                 }}

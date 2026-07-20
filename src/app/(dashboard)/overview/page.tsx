@@ -7,6 +7,7 @@ export default async function OverviewPage() {
 
   const projects = await prisma.project.findMany({
     where: {
+      deletedAt: null,
       members: {
         some: { userId: user.id, role: { in: ["HEAD", "CO_HEAD"] } },
       },
@@ -16,6 +17,7 @@ export default async function OverviewPage() {
       graphs: {
         include: {
           nodes: {
+            where: { deletedAt: null },
             include: {
               assignments: { include: { user: { select: { id: true, name: true, email: true } } } },
             },

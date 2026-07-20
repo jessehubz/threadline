@@ -10,7 +10,7 @@ const entries = [
     version: "v2.1.0",
     date: "July 10, 2026",
     highlights: [
-      { type: "feature", text: "AI Assistant can now generate full dependency graphs from a text description" },
+      { type: "feature", text: "Task Helper can now generate full dependency graphs from a text description" },
       { type: "feature", text: "New pre-built templates: Mobile App, Research Paper, Design Project" },
       { type: "improvement", text: "Dark mode overhaul - refined colors and better contrast throughout" },
       { type: "fix", text: "Fixed issue where real-time presence would disconnect after 30 minutes idle" },
@@ -82,7 +82,7 @@ const entries = [
 function TypeBadge({ type }: { type: string }) {
   const styles: Record<string, { bg: string; color: string }> = {
     feature: { bg: "var(--accent-soft)", color: "var(--accent)" },
-    improvement: { bg: "rgba(139, 92, 246, 0.08)", color: "var(--text-secondary)" },
+    improvement: { bg: "color-mix(in srgb, var(--text-secondary) 10%, transparent)", color: "var(--text-secondary)" },
     fix: { bg: "var(--bg-muted)", color: "var(--text-muted)" },
   };
   const s = styles[type] || styles.fix;

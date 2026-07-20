@@ -2,9 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { sanitizeMessageContent } from "@/lib/sanitize";
+import { sanitizeMessageContent, sanitizeTitle } from "@/lib/sanitize";
 import { rateLimiters } from "@/lib/rate-limit";
 import { pusherServer } from "@/lib/pusher";
+import { createNotification } from "@/lib/notifications";
 import { z } from "zod/v4";
 
 const addCommentSchema = z.object({
@@ -21,6 +22,7 @@ const addCommentSchema = z.object({
       })
     )
     .optional(),
+  mentionedUserIds: z.array(z.string()).optional(),
 });
 
 export async function addComment(data: {
@@ -28,6 +30,7 @@ export async function addComment(data: {
   content: string;
   isPrivate?: boolean;
   attachments?: { fileName: string; fileUrl: string; fileType: string; fileSize: number }[];
+  mentionedUserIds?: string[];
 }) {
   const user = await requireUser();
 
@@ -49,11 +52,12 @@ export async function addComment(data: {
   const node = await prisma.taskNode.findUnique({
     where: { id: parsed.nodeId },
     include: {
+      assignments: { select: { userId: true } },
       graph: {
         include: {
           project: {
             include: {
-              members: { where: { userId: user.id } },
+              members: true,
             },
           },
         },
@@ -61,9 +65,18 @@ export async function addComment(data: {
     },
   });
 
-  if (!node || node.graph.project.members.length === 0) {
+  const isMember = node?.graph.project.members.some((m) => m.userId === user.id) ?? false;
+  if (!node || !isMember) {
     return { error: "Node not found or access denied" };
   }
+
+  // Validate mentioned users: must be a project member and not the author.
+  // Deduped against the COMMENT fan-out below so mentioned users get only
+  // the MENTIONED notification, not a duplicate COMMENT one.
+  const projectMemberIds = new Set(node.graph.project.members.map((m) => m.userId));
+  const validMentionIds = Array.from(new Set(parsed.mentionedUserIds ?? [])).filter(
+    (id) => id !== user.id && projectMemberIds.has(id)
+  );
 
   // Create comment with optional attachments
   const comment = await prisma.comment.create({
@@ -105,6 +118,42 @@ export async function addComment(data: {
     commentCount,
     lastCommentUserId: user.id,
   });
+
+  // Notify assignees (minus the comment author, deduped) of the new comment.
+  // NOTE: TaskNode has no creator/owner field in the schema, so this notifies
+  // assignees only (the spec'd "node creator" union member cannot be resolved).
+  // Mentioned users are excluded here - they get a MENTIONED notification instead.
+  const recipientIds = new Set(node.assignments.map((a) => a.userId));
+  recipientIds.delete(user.id);
+  validMentionIds.forEach((id) => recipientIds.delete(id));
+  const safeTitle = sanitizeTitle(node.title);
+  await Promise.all(
+    Array.from(recipientIds).map((userId) =>
+      createNotification({
+        userId,
+        type: "COMMENT",
+        title: `New comment on "${safeTitle}"`,
+        relatedProjectId: node.graph.project.id,
+        relatedNodeId: parsed.nodeId,
+      })
+    )
+  );
+
+  // Notify mentioned users
+  if (validMentionIds.length > 0) {
+    const authorName = user.name || user.email.split("@")[0];
+    await Promise.all(
+      validMentionIds.map((userId) =>
+        createNotification({
+          userId,
+          type: "MENTIONED",
+          title: `${authorName} mentioned you on "${safeTitle}"`,
+          relatedProjectId: node.graph.project.id,
+          relatedNodeId: parsed.nodeId,
+        })
+      )
+    );
+  }
 
   return { comment };
 }

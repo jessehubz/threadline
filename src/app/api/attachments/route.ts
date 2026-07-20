@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { pusherServer } from "@/lib/pusher";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
     where: { id: nodeId },
     select: {
       graph: {
-        select: { projectId: true },
+        select: { id: true, projectId: true },
       },
     },
   });
@@ -55,6 +56,15 @@ export async function POST(req: NextRequest) {
 
   const attachment = await prisma.attachment.create({
     data: { nodeId, fileName, fileUrl, fileType, fileSize },
+  });
+
+  // Get updated attachment count for real-time indicator
+  const attachmentCount = await prisma.attachment.count({ where: { nodeId } });
+
+  // Broadcast real-time update so all viewers see the attachment indicator immediately
+  await pusherServer.trigger(`private-graph-${node.graph.id}`, "node-updated", {
+    id: nodeId,
+    attachmentCount,
   });
 
   return NextResponse.json(attachment);

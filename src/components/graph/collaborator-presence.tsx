@@ -54,7 +54,7 @@ export function CollaboratorPresence({ graphId }: { graphId: string }) {
       {members.length > 5 && (
         <span className="ml-1 text-xs text-dim">+{members.length - 5}</span>
       )}
-      <div className="ml-1 h-2 w-2 rounded-full bg-green-500" title="Live" />
+      <div className="ml-1 h-2 w-2 rounded-full bg-[var(--text-muted)]" title="Live" />
     </div>
   );
 }

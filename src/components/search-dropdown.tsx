@@ -14,9 +14,10 @@ import {
   UserPlus,
   Settings,
   User,
+  Folder,
 } from "lucide-react";
-import { searchPeople, type SearchPersonResult } from "@/actions/search-actions";
-import { cn } from "@/lib/utils";
+import { searchWorkspace, type SearchPersonResult, type SearchProjectResult, type SearchTaskResult } from "@/actions/search-actions";
+import { cn, getStatusDotColor } from "@/lib/utils";
 
 // ─── Nav items (pages) ──────────────────────────────────────────────────────
 
@@ -37,12 +38,13 @@ const allNavItems = [
 
 interface SearchResult {
   id: string;
-  type: "person" | "page";
+  type: "project" | "task" | "person" | "page";
   label: string;
   sublabel?: string;
   href: string;
   imageUrl?: string | null;
   icon?: React.ComponentType<{ className?: string }>;
+  statusColor?: string;
 }
 
 interface SearchDropdownProps {
@@ -128,11 +130,26 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
           icon: item.icon,
         }));
 
-      // Search people (server action)
+      // Search workspace: projects + tasks + people (single server action)
       startTransition(async () => {
+        let projectResults: SearchResult[] = [];
+        let taskResults: SearchResult[] = [];
         let peopleResults: SearchResult[] = [];
         try {
-          const people = await searchPeople(query.trim());
+          const { people, projects, tasks } = await searchWorkspace(query.trim());
+          projectResults = projects.map((p: SearchProjectResult) => ({
+            id: `project-${p.id}`,
+            type: "project" as const,
+            label: p.name,
+            href: `/graph/${p.id}`,
+          }));
+          taskResults = tasks.map((t: SearchTaskResult) => ({
+            id: `task-${t.id}`,
+            type: "task" as const,
+            label: t.title,
+            href: `/graph/${t.projectId}?nodeId=${t.id}`,
+            statusColor: getStatusDotColor(t.status),
+          }));
           peopleResults = people.map((p: SearchPersonResult) => ({
             id: `person-${p.id}`,
             type: "person" as const,
@@ -142,10 +159,10 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
             imageUrl: p.imageUrl,
           }));
         } catch {
-          // Silently fail on people search errors
+          // Silently fail on workspace search errors
         }
 
-        setResults([...peopleResults, ...pageResults]);
+        setResults([...projectResults, ...taskResults, ...peopleResults, ...pageResults]);
         setActiveIndex(-1);
       });
     }, 300);
@@ -190,11 +207,13 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
 
   // ── Group results by type ───────────────────────────────────────────────
 
+  const projectsGroup = results.filter((r) => r.type === "project");
+  const tasksGroup = results.filter((r) => r.type === "task");
   const peopleGroup = results.filter((r) => r.type === "person");
   const pagesGroup = results.filter((r) => r.type === "page");
   const hasQuery = query.trim().length > 0;
   const noResults = hasQuery && !isPending && results.length === 0;
-  const flatResults = [...peopleGroup, ...pagesGroup];
+  const flatResults = [...projectsGroup, ...tasksGroup, ...peopleGroup, ...pagesGroup];
 
   // Show dropdown when focused AND there's a query with content to show
   const showDropdown = focused && hasQuery;
@@ -209,7 +228,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
       */}
       <div
         className={cn(
-          "flex items-center gap-2.5 rounded-full transition-all duration-200",
+          "flex items-center gap-2.5 rounded-full transition-shadow duration-200",
           "border",
           focused && "ring-1 ring-[var(--accent)]"
         )}
@@ -252,7 +271,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
       */}
       {showDropdown && (
         <div
-          className="absolute top-full left-0 right-0 z-50 mt-1.5 overflow-hidden rounded-xl border"
+          className="absolute top-full left-0 right-0 z-50 mt-1.5 origin-top overflow-hidden rounded-xl border animate-[scaleIn_170ms_var(--ease-out-strong)_both]"
           style={{
             borderColor: "var(--border-default)",
             backgroundColor: "var(--bg-elevated)",
@@ -269,6 +288,83 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
               >
                 No results for &ldquo;{query.trim()}&rdquo;
               </p>
+            )}
+
+            {/* Projects group */}
+            {projectsGroup.length > 0 && (
+              <div>
+                <p
+                  className="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Projects
+                </p>
+                {projectsGroup.map((result) => {
+                  const flatIdx = flatResults.indexOf(result);
+                  return (
+                    <button
+                      key={result.id}
+                      onClick={() => navigate(result.href)}
+                      className={cn(
+                        "flex w-full items-center gap-3 px-3 py-2 text-sm transition-colors duration-150",
+                        flatIdx === activeIndex
+                          ? "bg-[var(--accent-soft)]"
+                          : "hover:bg-[var(--accent-soft)]"
+                      )}
+                      style={{
+                        color:
+                          flatIdx === activeIndex
+                            ? "var(--text-primary)"
+                            : "var(--text-secondary)",
+                      }}
+                      onMouseEnter={() => setActiveIndex(flatIdx)}
+                    >
+                      <Folder className="h-4 w-4 flex-shrink-0" style={{ color: "var(--text-muted)" }} />
+                      <span className="truncate font-medium text-[13px]">{result.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Tasks group */}
+            {tasksGroup.length > 0 && (
+              <div>
+                <p
+                  className="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Tasks
+                </p>
+                {tasksGroup.map((result) => {
+                  const flatIdx = flatResults.indexOf(result);
+                  return (
+                    <button
+                      key={result.id}
+                      onClick={() => navigate(result.href)}
+                      className={cn(
+                        "flex w-full items-center gap-3 px-3 py-2 text-sm transition-colors duration-150",
+                        flatIdx === activeIndex
+                          ? "bg-[var(--accent-soft)]"
+                          : "hover:bg-[var(--accent-soft)]"
+                      )}
+                      style={{
+                        color:
+                          flatIdx === activeIndex
+                            ? "var(--text-primary)"
+                            : "var(--text-secondary)",
+                      }}
+                      onMouseEnter={() => setActiveIndex(flatIdx)}
+                    >
+                      <span
+                        className="h-2 w-2 flex-shrink-0 rounded-full"
+                        style={{ backgroundColor: result.statusColor }}
+                      />
+                      <span className="truncate font-medium text-[13px]">{result.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             )}
 
             {/* People group */}
@@ -289,8 +385,8 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
                       className={cn(
                         "flex w-full items-center gap-3 px-3 py-2 text-sm transition-colors duration-150",
                         flatIdx === activeIndex
-                          ? "bg-[rgba(139,92,246,0.08)]"
-                          : "hover:bg-[rgba(139,92,246,0.08)]"
+                          ? "bg-[var(--accent-soft)]"
+                          : "hover:bg-[var(--accent-soft)]"
                       )}
                       style={{
                         color:
@@ -308,7 +404,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
                         />
                       ) : (
                         <div
-                          className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                          className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-[var(--on-accent)]"
                           style={{ backgroundColor: "var(--accent)" }}
                         >
                           {(result.label || "?").charAt(0).toUpperCase()}
@@ -352,8 +448,8 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
                       className={cn(
                         "flex w-full items-center gap-3 px-3 py-2 text-sm transition-colors duration-150",
                         flatIdx === activeIndex
-                          ? "bg-[rgba(139,92,246,0.08)]"
-                          : "hover:bg-[rgba(139,92,246,0.08)]"
+                          ? "bg-[var(--accent-soft)]"
+                          : "hover:bg-[var(--accent-soft)]"
                       )}
                       style={{
                         color:

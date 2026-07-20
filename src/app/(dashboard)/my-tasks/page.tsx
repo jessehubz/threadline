@@ -8,7 +8,10 @@ export default async function MyTasksPage() {
   const user = await requireUser();
 
   const assignments = await prisma.taskAssignment.findMany({
-    where: { userId: user.id },
+    where: {
+      userId: user.id,
+      node: { deletedAt: null, graph: { project: { deletedAt: null } } },
+    },
     include: {
       node: {
         include: {
@@ -25,6 +28,7 @@ export default async function MyTasksPage() {
     id: a.node.id,
     title: a.node.title,
     status: a.node.status,
+    priority: a.node.priority,
     dueDate: a.node.dueDate?.toISOString() || null,
     projectId: a.node.graph.projectId,
     projectName: a.node.graph.project.name,

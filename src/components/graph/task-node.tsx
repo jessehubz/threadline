@@ -1,13 +1,14 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { Calendar, Paperclip, ChevronRight, FileText, MessageCircle, Lock, Trash2 } from "lucide-react";
-import { cn, getStatusLabel, getStatusDotColor, formatDate } from "@/lib/utils";
+import { Calendar, Paperclip, ChevronRight, FileText, MessageCircle, Lock, Trash2, AlertTriangle } from "lucide-react";
+import { cn, getStatusLabel, getStatusDotColor, getPriorityColor, getPriorityLabel, formatDate } from "@/lib/utils";
 
 interface TaskNodeData {
   title: string;
   status: string;
+  priority?: string;
   color: string | null;
   dueDate: Date | string | null;
   assignees: Array<{ id: string; name: string | null; imageUrl: string | null }>;
@@ -18,6 +19,8 @@ interface TaskNodeData {
   commentCount?: number;
   hasUnreadComments?: boolean;
   isRestricted?: boolean;
+  isRemoving?: boolean;
+  isAutoBlocked?: boolean;
   [key: string]: unknown;
 }
 
@@ -25,13 +28,27 @@ function TaskNodeInner({ id, data, selected }: NodeProps & { data: TaskNodeData 
   const nodeData = data as TaskNodeData;
   const accentColor = nodeData.color || getStatusDotColor(nodeData.status);
 
+  // Nodes have no native React Flow enter transition, so fade+scale in on
+  // first mount via a rAF-delayed flag (the @starting-style-fallback pattern).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const isVisible = mounted && !nodeData.isRemoving;
+
   return (
     <div
       className={cn(
-        "group relative min-w-[220px] max-w-[300px] rounded-2xl border transition-all duration-200 ease-out",
+        "group relative min-w-[220px] max-w-[300px] rounded-2xl border transition-[transform,opacity,box-shadow,border-color] duration-200 ease-out",
+        isVisible ? "opacity-100" : "opacity-0 scale-95",
+        nodeData.isRemoving && "pointer-events-none",
         selected
           ? "shadow-lg ring-2 ring-[var(--accent)]/40 scale-[1.02]"
-          : "hover:-translate-y-0.5 hover:shadow-md hover:border-[var(--accent)]/30"
+          : isVisible
+            ? "scale-100 hover:-translate-y-0.5 hover:shadow-md hover:border-[var(--accent)]/30"
+            : undefined
       )}
       style={{
         backgroundColor: 'var(--bg-elevated)',
@@ -45,60 +62,38 @@ function TaskNodeInner({ id, data, selected }: NodeProps & { data: TaskNodeData 
           e.stopPropagation();
           window.dispatchEvent(new CustomEvent("graph-delete-node", { detail: { nodeId: id } }));
         }}
-        className="absolute -top-2 -right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-themed-subtle bg-card shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-[var(--danger-soft)] hover:border-[var(--danger)] hover:text-[var(--danger)] text-dim"
+        className="absolute -top-2 -right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-themed-subtle bg-card shadow-sm opacity-0 group-hover:opacity-100 transition-[opacity,background-color,border-color,color] duration-200 hover:bg-[var(--danger-soft)] hover:border-[var(--danger)] hover:text-[var(--danger)] text-dim"
         aria-label="Delete node"
       >
         <Trash2 className="h-3 w-3" />
       </button>
 
-      {/* Connection Handles - all 4 sides */}
-      <Handle
-        type="source"
-        position={Position.Top}
-        id="top-source"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-all duration-200"
-      />
+      {/* Connection Handles — target (incoming) on TOP & LEFT, source (outgoing) on BOTTOM & RIGHT.
+          Separating source/target to distinct positions prevents the ambiguity that caused arrows
+          to sometimes point the wrong direction when handles overlapped at the same position. */}
       <Handle
         type="target"
         position={Position.Top}
         id="top-target"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-all duration-200"
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right-source"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-all duration-200"
-      />
-      <Handle
-        type="target"
-        position={Position.Right}
-        id="right-target"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-all duration-200"
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="bottom-source"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-all duration-200"
-      />
-      <Handle
-        type="target"
-        position={Position.Bottom}
-        id="bottom-target"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-all duration-200"
-      />
-      <Handle
-        type="source"
-        position={Position.Left}
-        id="left-source"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-all duration-200"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
       />
       <Handle
         type="target"
         position={Position.Left}
         id="left-target"
-        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-all duration-200"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom-source"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right-source"
+        className="!h-3 !w-3 !rounded-full !border-2 !border-[var(--bg-elevated)] !bg-[var(--border-default)] opacity-40 group-hover:opacity-100 hover:!bg-[var(--accent)] transition-[opacity,background-color] duration-200"
       />
 
       {/* Color accent bar at top */}
@@ -110,13 +105,20 @@ function TaskNodeInner({ id, data, selected }: NodeProps & { data: TaskNodeData 
       <div className="p-4">
         {/* Top row: Status + indicators */}
         <div className="flex items-center justify-between mb-2">
-          <span
-            className="status-tint"
-            style={{ backgroundColor: `${accentColor}18`, color: accentColor }}
-          >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
-            {getStatusLabel(nodeData.status)}
-          </span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span
+              className="status-tint"
+              style={{ backgroundColor: `${accentColor}18`, color: accentColor }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
+              {getStatusLabel(nodeData.status)}
+            </span>
+            {(nodeData.priority === "HIGH" || nodeData.priority === "URGENT") && (
+              <span className={cn("status-tint", getPriorityColor(nodeData.priority))}>
+                {getPriorityLabel(nodeData.priority)}
+              </span>
+            )}
+          </div>
 
           {/* Right-side indicators */}
           <div className="flex items-center gap-1">
@@ -142,12 +144,20 @@ function TaskNodeInner({ id, data, selected }: NodeProps & { data: TaskNodeData 
           {nodeData.title}
         </h4>
 
+        {/* Auto-blocked indicator */}
+        {nodeData.isAutoBlocked && nodeData.status !== "COMPLETE" && (
+          <div className="flex items-center gap-1 mb-2 rounded-md bg-[var(--danger-soft)] px-2 py-1">
+            <AlertTriangle className="h-3 w-3 text-[var(--danger)] shrink-0" />
+            <span className="text-[10px] font-medium text-[var(--danger)]">Waiting on dependencies</span>
+          </div>
+        )}
+
         {/* Sub-graph progress */}
         {nodeData.hasSubGraph && nodeData.subGraphProgress && nodeData.subGraphProgress.total > 0 && (
           <div className="flex items-center gap-1.5 mb-2">
             <div className="h-1.5 flex-1 rounded-full" style={{ backgroundColor: 'var(--border-default)' }}>
               <div
-                className="h-1.5 rounded-full transition-all duration-500"
+                className="h-1.5 rounded-full transition-[width] duration-300"
                 style={{ width: `${nodeData.subGraphProgress.total > 0 ? (nodeData.subGraphProgress.completed / nodeData.subGraphProgress.total) * 100 : 0}%`, backgroundColor: accentColor }}
               />
             </div>

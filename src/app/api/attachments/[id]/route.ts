@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { pusherServer } from "@/lib/pusher";
 import { del } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -25,7 +26,7 @@ export async function DELETE(
       node: {
         select: {
           graph: {
-            select: { projectId: true },
+            select: { id: true, projectId: true },
           },
         },
       },
@@ -58,5 +59,15 @@ export async function DELETE(
   }
 
   await prisma.attachment.delete({ where: { id } });
+
+  // Get updated attachment count for real-time indicator
+  const attachmentCount = await prisma.attachment.count({ where: { nodeId: attachment.nodeId } });
+
+  // Broadcast real-time update so all viewers see the attachment indicator immediately
+  await pusherServer.trigger(`private-graph-${attachment.node.graph.id}`, "node-updated", {
+    id: attachment.nodeId,
+    attachmentCount,
+  });
+
   return NextResponse.json({ success: true });
 }

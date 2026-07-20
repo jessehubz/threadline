@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DashboardContent } from "@/components/dashboard-content";
 import { getPendingReminders } from "@/actions/ai-assistant-actions";
-import { getUserTags } from "@/actions/tag-actions";
+import { computeDependencyGlyphs } from "@/lib/dependency-map";
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -17,7 +17,8 @@ export default async function DashboardPage() {
 
   const allTasks = await prisma.taskNode.findMany({
     where: {
-      graph: { project: { members: { some: { userId: user.id } } } },
+      deletedAt: null,
+      graph: { project: { deletedAt: null, members: { some: { userId: user.id } } } },
     },
     include: {
       assignments: { include: { user: { select: { id: true, name: true, email: true, imageUrl: true } } } },
@@ -223,11 +224,13 @@ export default async function DashboardPage() {
   const projectList = projects.map((p) => ({
     id: p.id,
     name: p.name,
+    visibility: p.visibility,
     totalTasks: p.totalTasks,
     completedTasks: p.completedTasks,
     memberCount: p.memberCount,
     lastOpenedAt: p.lastOpenedAt ? p.lastOpenedAt.toISOString() : null,
     displayOrder: p.displayOrder,
+    role: p.role,
     labels: p.labels.map((l) => ({ id: l.id, name: l.name, color: l.color })),
     tags: p.tags.map((t) => ({ id: t.id, name: t.name, color: t.color, isSystem: t.isSystem })),
   }));
@@ -235,13 +238,105 @@ export default async function DashboardPage() {
   // Active tasks = not completed
   const activeTasks = totalTasks - completedTasks;
 
-  // ─── Available tags for tag management ─────────────────────────────────────
-  let availableTags: Array<{ id: string; name: string; color: string; isSystem: boolean }> = [];
-  try {
-    availableTags = await getUserTags();
-  } catch {
-    // Non-critical - default to empty
-  }
+  const awaitingApprovalCount = allTasks.filter((t) => t.status === "AWAITING_APPROVAL").length;
+
+  // ─── Dependency map preview + "first up" task (design-preview12's focus
+  // card + map section). Reuses positionX/positionY already stored on each
+  // TaskNode from the real graph editor — no fabricated layout — plus each
+  // graph's real edges, to derive status glyphs and blocking counts. ───────
+  const graphIds = Array.from(new Set(allTasks.map((t) => t.graphId)));
+  const allEdges = graphIds.length
+    ? await prisma.edge.findMany({
+        where: { graphId: { in: graphIds } },
+        select: { graphId: true, sourceNodeId: true, targetNodeId: true },
+      })
+    : [];
+  const depGlyphs = computeDependencyGlyphs(
+    allTasks.map((t) => ({ id: t.id, status: t.status })),
+    allEdges
+  );
+
+  // "First up": the single most urgent task, preferring one that's actively
+  // blocking others — overdue beats due-today beats "is a blocker" beats
+  // soonest-due. Mirrors the file's own example (a blocker task, not
+  // necessarily assigned to the viewer).
+  const eligible = allTasks.filter((t) => t.status !== "COMPLETE" && t.status !== "REJECTED");
+  const byBlocksThenDue = (a: (typeof eligible)[number], b: (typeof eligible)[number]) => {
+    const diff = (depGlyphs.get(b.id)?.blocks ?? 0) - (depGlyphs.get(a.id)?.blocks ?? 0);
+    if (diff !== 0) return diff;
+    if (a.dueDate && b.dueDate) return a.dueDate.getTime() - b.dueDate.getTime();
+    return 0;
+  };
+  const overdueEligible = eligible.filter((t) => t.dueDate && t.dueDate < now).sort(byBlocksThenDue);
+  const dueTodayEligible = eligible
+    .filter((t) => t.dueDate && t.dueDate >= now && t.dueDate < todayEnd)
+    .sort(byBlocksThenDue);
+  const blockerEligible = eligible
+    .filter((t) => (depGlyphs.get(t.id)?.blocks ?? 0) > 0)
+    .sort(byBlocksThenDue);
+  const soonestEligible = eligible.filter((t) => t.dueDate).sort((a, b) => a.dueDate!.getTime() - b.dueDate!.getTime());
+  const firstUpNode =
+    overdueEligible[0] ?? dueTodayEligible[0] ?? blockerEligible[0] ?? soonestEligible[0] ?? eligible[0] ?? null;
+
+  const firstUpTask = firstUpNode
+    ? (() => {
+        const isOverdue = firstUpNode.dueDate !== null && firstUpNode.dueDate < now;
+        const isDueToday = firstUpNode.dueDate !== null && firstUpNode.dueDate >= now && firstUpNode.dueDate < todayEnd;
+        const dueLabel = isOverdue
+          ? `Overdue · was due ${firstUpNode.dueDate!.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+          : isDueToday
+            ? `Due today · ${firstUpNode.dueDate!.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
+            : firstUpNode.dueDate
+              ? `Due ${firstUpNode.dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+              : "No due date";
+        return {
+          id: firstUpNode.id,
+          title: firstUpNode.title,
+          projectId: firstUpNode.graph.project.id,
+          projectName: firstUpNode.graph.project.name,
+          dueLabel,
+          glyph: depGlyphs.get(firstUpNode.id)?.glyph ?? "ready",
+          unblocksCount: depGlyphs.get(firstUpNode.id)?.blocks ?? 0,
+        };
+      })()
+    : null;
+
+  // Dependency map project-switcher: the same handful of projects already
+  // shown in the sidebar/dashboard, capped to match the file's 3-tab switcher.
+  const mapProjects = projects.slice(0, 4);
+  const dependencyMaps = mapProjects.map((p) => {
+    const projectTasks = allTasks.filter((t) => t.graph.project.id === p.id);
+    const projectGraphIds = new Set(projectTasks.map((t) => t.graphId));
+    const projectEdges = allEdges.filter((e) => projectGraphIds.has(e.graphId));
+    return {
+      projectId: p.id,
+      projectName: p.name,
+      nodes: projectTasks.map((t) => {
+        const computed = depGlyphs.get(t.id)!;
+        return {
+          id: t.id,
+          title: t.title,
+          positionX: t.positionX,
+          positionY: t.positionY,
+          dueDate: t.dueDate ? t.dueDate.toISOString() : null,
+          glyph: computed.glyph,
+          waitingOn: computed.waitingOn,
+          blocks: computed.blocks,
+          isFirstUp: t.id === firstUpTask?.id,
+        };
+      }),
+      edges: projectEdges.map((e) => ({
+        source: e.sourceNodeId,
+        target: e.targetNodeId,
+        kind:
+          e.sourceNodeId === firstUpTask?.id
+            ? ("hot" as const)
+            : depGlyphs.get(e.sourceNodeId)?.glyph === "done"
+              ? ("done" as const)
+              : ("" as const),
+      })),
+    };
+  });
 
   return (
     <DashboardContent
@@ -265,7 +360,9 @@ export default async function DashboardPage() {
       needsAttentionCount={needsAttention.length}
       inProgressTasks={inProgressTasks}
       blockedTasksCount={blockedTasksCount}
-      availableTags={availableTags}
+      awaitingApprovalCount={awaitingApprovalCount}
+      firstUpTask={firstUpTask}
+      dependencyMaps={dependencyMaps}
     />
   );
 }

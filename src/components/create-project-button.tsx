@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, X, Users, UserPlus, Search } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { createProject } from "@/actions/project-actions";
 import { inviteMember } from "@/actions/team-actions";
 import { getFriends } from "@/actions/friend-actions";
@@ -22,7 +21,7 @@ interface Friend {
   imageUrl: string | null;
 }
 
-export function CreateProjectButton() {
+export function CreateProjectButton({ trigger }: { trigger?: React.ReactNode } = {}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<Array<{ email: string; role: "CO_HEAD" | "MEMBER"; name?: string | null }>>([]);
@@ -30,6 +29,7 @@ export function CreateProjectButton() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [activeTab, setActiveTab] = useState<InviteTab>("friends");
   const [friendSearch, setFriendSearch] = useState("");
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (open) {
@@ -52,19 +52,25 @@ export function CreateProjectButton() {
   }
 
   async function handleSubmit(formData: FormData) {
+    // Ref-based guard prevents double-submission even if re-render hasn't happened yet
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setLoading(true);
     const result = await createProject(formData);
-    if (result.error) { toast.error(result.error); setLoading(false); return; }
+    if (result.error) { toast.error(result.error); setLoading(false); submittingRef.current = false; return; }
 
     if (members.length > 0 && result.projectId) {
       for (const m of members) await inviteMember(result.projectId, m.email, m.role);
       toast.success(`Project created with ${members.length} invite(s)`);
     } else {
-      toast.success("Project created");
+      toast.success("Project created successfully!");
     }
-    setLoading(false);
+    // Don't reset loading/submitting here - the dialog is closing, and leaving
+    // the button disabled until then avoids a flash of re-enabled state.
     setMembers([]);
     setOpen(false);
+    setLoading(false);
+    submittingRef.current = false;
   }
 
   const filteredFriends = friendSearch
@@ -78,12 +84,17 @@ export function CreateProjectButton() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> New Project</Button>
+      {trigger ? (
+        <button type="button" onClick={() => setOpen(true)} title="New project" aria-label="New project">
+          {trigger}
+        </button>
+      ) : (
+        <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> New Project</Button>
+      )}
 
       <Dialog open={open} onClose={() => setOpen(false)} title="Create Project">
         <form action={handleSubmit} className="space-y-4">
           <Input name="name" label="Project Name" placeholder="My new project" required />
-          <Textarea name="description" label="Description (optional)" placeholder="What is this project about?" rows={2} />
 
           {/* Invite Members - Tabbed UI */}
           <div>
@@ -99,7 +110,7 @@ export function CreateProjectButton() {
                   type="button"
                   onClick={() => setActiveTab(tab.key)}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
+                    "flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150",
                     activeTab === tab.key
                       ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm"
                       : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
@@ -140,7 +151,7 @@ export function CreateProjectButton() {
                             disabled={isAdded}
                             onClick={() => handleAddFriend(friend)}
                             className={cn(
-                              "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-all duration-150",
+                              "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors duration-150",
                               isAdded ? "opacity-50 cursor-not-allowed" : "hover:bg-[var(--bg-muted)] hover:scale-[1.01]"
                             )}
                           >
@@ -175,7 +186,7 @@ export function CreateProjectButton() {
                           key={t.id}
                           type="button"
                           onClick={() => handleAddTeam(t.id)}
-                          className="flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-all duration-150 hover:border-[var(--accent)] hover:bg-[var(--bg-muted)] hover:scale-[1.01]"
+                          className="flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-[border-color,background-color,transform] duration-150 hover:border-[var(--accent)] hover:bg-[var(--bg-muted)] hover:scale-[1.01]"
                           style={{ borderColor: 'var(--border-default)' }}
                         >
                           <Users className="h-4 w-4 text-[var(--accent)]" />
@@ -207,7 +218,7 @@ export function CreateProjectButton() {
 
           <div className="flex justify-end gap-3 pt-1">
             <Button variant="secondary" type="button" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" loading={loading}>Create Project</Button>
+            <Button type="submit" loading={loading}>{loading ? "Creating…" : "Create Project"}</Button>
           </div>
         </form>
       </Dialog>

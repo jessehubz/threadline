@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, ExternalLink, Phone, Code2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Mail, ExternalLink, Phone, Code2, Sparkles } from "lucide-react";
 
 const footerLinks = {
   product: [
@@ -27,16 +28,36 @@ const socialLinks = [
 ];
 
 export function SiteFooter() {
+  const router = useRouter();
+  // Footer Assistant entry — consistent across every page. Opens the AI chat
+  // panel when one is mounted (dashboard pages); otherwise goes to /dashboard.
+  const openAssistant = () => {
+    if ((window as unknown as { __tlAssistantReady?: boolean }).__tlAssistantReady) {
+      window.dispatchEvent(new Event("open-ai-chat"));
+    } else {
+      router.push("/dashboard");
+    }
+  };
   return (
     <footer
       style={{
         width: "100%",
-        background: "var(--bg-elevated)",
-        borderTop: "1px solid var(--border-default)",
+        background: "#1d1d1f",
+        borderTop: "none",
         padding: "40px 44px 26px",
-        marginTop: "40px",
+        marginTop: "0",
+        color: "#f5f5f7",
       }}
     >
+      {/* Tagline headline */}
+      <div
+        style={{
+          maxWidth: "1520px",
+          margin: "0 auto",
+          paddingBottom: "26px",
+        }}
+      >
+      </div>
       <div
         className="site-footer-grid"
         style={{
@@ -46,7 +67,7 @@ export function SiteFooter() {
           maxWidth: "1520px",
           margin: "0 auto",
           paddingBottom: "30px",
-          borderBottom: "1px solid var(--border-subtle)",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
         }}
       >
         {/* Brand */}
@@ -56,15 +77,15 @@ export function SiteFooter() {
             style={{
               fontSize: "20px",
               marginBottom: "12px",
+              color: "#f5f5f7",
             }}
           >
-            <span className="text-heading">thread</span>
-            <span className="logo-word-accent">line</span>
+            <span style={{ color: "#f5f5f7" }}>threadline</span>
           </div>
           <p
             style={{
               fontSize: "13px",
-              color: "var(--text-secondary)",
+              color: "#a1a1a6",
               lineHeight: 1.6,
               maxWidth: "240px",
               marginBottom: "20px",
@@ -77,7 +98,7 @@ export function SiteFooter() {
               fontSize: "10.5px",
               letterSpacing: "0.1em",
               textTransform: "uppercase" as const,
-              color: "var(--text-muted)",
+              color: "#8e8e93",
               marginBottom: "8px",
             }}
           >
@@ -86,12 +107,12 @@ export function SiteFooter() {
           <div
             style={{
               fontSize: "12.5px",
-              color: "var(--text-secondary)",
+              color: "#a1a1a6",
               marginBottom: "18px",
               lineHeight: 1.8,
             }}
           >
-            <strong style={{ color: "var(--text-primary)", fontWeight: 600 }}>Jesse David Francisco</strong>
+            <strong style={{ color: "#f5f5f7", fontWeight: 600 }}>Jesse David Francisco</strong>
           </div>
           {/* Social */}
           <div style={{ display: "flex", gap: "10px" }}>
@@ -104,11 +125,11 @@ export function SiteFooter() {
                   width: "34px",
                   height: "34px",
                   borderRadius: "50%",
-                  border: "1px solid var(--border-default)",
+                  border: "1px solid rgba(255, 255, 255, 0.16)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "var(--text-muted)",
+                  color: "#8e8e93",
                   transition: "all .18s ease",
                   textDecoration: "none",
                   cursor: "pointer",
@@ -116,14 +137,14 @@ export function SiteFooter() {
                 onMouseEnter={(e) => {
                   const el = e.currentTarget;
                   el.style.transform = "translateY(-2px)";
-                  el.style.borderColor = "var(--accent)";
-                  el.style.color = "var(--accent)";
+                  el.style.borderColor = "#f5f5f7";
+                  el.style.color = "#f5f5f7";
                 }}
                 onMouseLeave={(e) => {
                   const el = e.currentTarget;
                   el.style.transform = "translateY(0)";
-                  el.style.borderColor = "var(--border-default)";
-                  el.style.color = "var(--text-muted)";
+                  el.style.borderColor = "rgba(255, 255, 255, 0.16)";
+                  el.style.color = "#8e8e93";
                 }}
               >
                 <Icon style={{ width: "15px", height: "15px" }} />
@@ -140,12 +161,38 @@ export function SiteFooter() {
               fontWeight: 700,
               letterSpacing: "0.08em",
               textTransform: "uppercase" as const,
-              color: "var(--text-muted)",
+              color: "#8e8e93",
               marginBottom: "16px",
             }}
           >
             Product
           </div>
+          <button
+            onClick={openAssistant}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              fontSize: "13.5px",
+              color: "#a1a1a6",
+              background: "none",
+              border: "none",
+              padding: 0,
+              marginBottom: "12px",
+              cursor: "pointer",
+              transition: "color .15s ease",
+              fontFamily: "inherit",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "#f5f5f7";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "#a1a1a6";
+            }}
+          >
+            <Sparkles style={{ width: "13px", height: "13px" }} />
+            Assistant
+          </button>
           {footerLinks.product.map((link) => (
             <Link
               key={link.label}
@@ -153,16 +200,16 @@ export function SiteFooter() {
               style={{
                 display: "block",
                 fontSize: "13.5px",
-                color: "var(--text-secondary)",
+                color: "#a1a1a6",
                 textDecoration: "none",
                 marginBottom: "12px",
                 transition: "color .15s ease",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+                (e.currentTarget as HTMLElement).style.color = "#f5f5f7";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+                (e.currentTarget as HTMLElement).style.color = "#a1a1a6";
               }}
             >
               {link.label}
@@ -178,7 +225,7 @@ export function SiteFooter() {
               fontWeight: 700,
               letterSpacing: "0.08em",
               textTransform: "uppercase" as const,
-              color: "var(--text-muted)",
+              color: "#8e8e93",
               marginBottom: "16px",
             }}
           >
@@ -191,16 +238,16 @@ export function SiteFooter() {
               style={{
                 display: "block",
                 fontSize: "13.5px",
-                color: "var(--text-secondary)",
+                color: "#a1a1a6",
                 textDecoration: "none",
                 marginBottom: "12px",
                 transition: "color .15s ease",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+                (e.currentTarget as HTMLElement).style.color = "#f5f5f7";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+                (e.currentTarget as HTMLElement).style.color = "#a1a1a6";
               }}
             >
               {link.label}
@@ -216,7 +263,7 @@ export function SiteFooter() {
               fontWeight: 700,
               letterSpacing: "0.08em",
               textTransform: "uppercase" as const,
-              color: "var(--text-muted)",
+              color: "#8e8e93",
               marginBottom: "16px",
             }}
           >
@@ -229,16 +276,16 @@ export function SiteFooter() {
               style={{
                 display: "block",
                 fontSize: "13.5px",
-                color: "var(--text-secondary)",
+                color: "#a1a1a6",
                 textDecoration: "none",
                 marginBottom: "12px",
                 transition: "color .15s ease",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+                (e.currentTarget as HTMLElement).style.color = "#f5f5f7";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+                (e.currentTarget as HTMLElement).style.color = "#a1a1a6";
               }}
             >
               {link.label}
@@ -261,15 +308,15 @@ export function SiteFooter() {
           gap: "12px",
         }}
       >
-        <div style={{ display: "flex", gap: "20px", fontSize: "12.5px", color: "var(--text-secondary)" }}>
+        <div style={{ display: "flex", gap: "20px", fontSize: "12.5px", color: "#a1a1a6" }}>
           <Link
             href="/terms"
             style={{ color: "inherit", textDecoration: "none", transition: "color .15s ease" }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+              (e.currentTarget as HTMLElement).style.color = "#f5f5f7";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+              (e.currentTarget as HTMLElement).style.color = "#a1a1a6";
             }}
           >
             Terms of Use
@@ -278,40 +325,41 @@ export function SiteFooter() {
             href="/privacy"
             style={{ color: "inherit", textDecoration: "none", transition: "color .15s ease" }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+              (e.currentTarget as HTMLElement).style.color = "#f5f5f7";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+              (e.currentTarget as HTMLElement).style.color = "#a1a1a6";
             }}
           >
             Privacy Policy
           </Link>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "14px", fontSize: "11.5px", color: "var(--text-muted)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", fontSize: "11.5px", color: "#8e8e93" }}>
           <span>© 2026 Threadline</span>
           <span
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              background: "var(--bg-muted)",
+              background: "rgba(255, 255, 255, 0.08)",
               padding: "3px 9px",
               borderRadius: "6px",
               fontSize: "10px",
+              color: "#a1a1a6",
             }}
           >
             v2.1.0
           </span>
-          <a
-            href="#"
+          <Link
+            href="/contact"
             style={{ color: "inherit", textDecoration: "none", transition: "color .15s ease" }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+              (e.currentTarget as HTMLElement).style.color = "#a1a1a6";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
+              (e.currentTarget as HTMLElement).style.color = "#8e8e93";
             }}
           >
             Send feedback
-          </a>
+          </Link>
         </div>
       </div>
 

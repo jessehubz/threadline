@@ -1,17 +1,20 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Users } from "lucide-react";
 import { TeamsGrid } from "@/components/teams-grid";
+import { getProjects } from "@/actions/project-actions";
 
 export default async function TeamPage() {
   const user = await requireUser();
 
-  const teams = await prisma.team.findMany({
-    where: { ownerId: user.id },
-    include: { members: true },
-    orderBy: { updatedAt: "desc" },
-  });
+  const [teams, projects] = await Promise.all([
+    prisma.team.findMany({
+      where: { ownerId: user.id },
+      include: { members: { include: { user: true } } },
+      orderBy: { updatedAt: "desc" },
+    }),
+    getProjects(),
+  ]);
+  const projectList = projects.map((p) => ({ id: p.id, name: p.name }));
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -22,7 +25,7 @@ export default async function TeamPage() {
         </p>
       </div>
 
-      <TeamsGrid teams={teams} />
+      <TeamsGrid teams={teams} projects={projectList} />
     </div>
   );
 }

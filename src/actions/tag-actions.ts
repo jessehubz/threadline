@@ -26,7 +26,7 @@ const removeTagFromProjectSchema = z.object({
 
 const SYSTEM_TAGS = [
   { name: "Draft", color: "#6B7280" },
-  { name: "Ongoing", color: "#8B5CF6" },
+  { name: "Ongoing", color: "#525252" },
 ] as const;
 
 export async function ensureSystemTags() {

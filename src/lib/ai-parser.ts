@@ -1,4 +1,4 @@
-import { templates, type TemplateNode } from "./ai-templates";
+import { templates } from "./ai-templates";
 
 interface GeneratedGraph {
   nodes: { title: string; x: number; y: number }[];
@@ -30,7 +30,6 @@ export function parseDescription(description: string): GeneratedGraph {
   for (let i = 1; i < steps.length; i++) {
     // Check for keywords that suggest parallelism
     const step = steps[i].toLowerCase();
-    const prevStep = steps[i - 1].toLowerCase();
 
     if (step.includes("meanwhile") || step.includes("at the same time") || step.includes("simultaneously")) {
       // Parallel: depends on same parent as previous

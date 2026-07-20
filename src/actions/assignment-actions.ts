@@ -3,15 +3,35 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { pusherServer } from "@/lib/pusher";
+import { createNotification } from "@/lib/notifications";
+import { getEffectivePermissions } from "@/lib/permissions";
+import { logNodeChange } from "@/actions/audit-actions";
+
+// Resolves canEditNodes for the current user, converting the "not a member"
+// throw into the {error} return convention this file uses.
+async function requireCanEditNodes(userId: string, projectId: string) {
+  try {
+    const { perms } = await getEffectivePermissions(userId, projectId);
+    if (!perms.canEditNodes) return { error: "Not authorized" as const };
+    return { error: null };
+  } catch {
+    return { error: "Not authorized" as const };
+  }
+}
 
 export async function assignUser(projectId: string, nodeId: string, userId: string, isApprover: boolean = false) {
   const currentUser = await requireUser();
 
-  // Verify project membership
-  const member = await prisma.projectMember.findUnique({
-    where: { userId_projectId: { userId: currentUser.id, projectId } },
+  // Verify project membership and require canEditNodes permission
+  const access = await requireCanEditNodes(currentUser.id, projectId);
+  if (access.error) return { error: access.error };
+
+  // IDOR fix: verify node belongs to this project
+  const node = await prisma.taskNode.findUnique({
+    where: { id: nodeId },
+    select: { graphId: true, graph: { select: { projectId: true } } },
   });
-  if (!member) return { error: "Not authorized" };
+  if (!node || node.graph.projectId !== projectId) return { error: "Task not found" };
 
   // Verify target user is a project member
   const targetMember = await prisma.projectMember.findUnique({
@@ -28,21 +48,18 @@ export async function assignUser(projectId: string, nodeId: string, userId: stri
 
   // Notify the assigned user
   if (userId !== currentUser.id) {
-    await prisma.notification.create({
-      data: {
-        userId,
-        type: "ASSIGNED",
-        message: `You were assigned to a task`,
-        relatedNodeId: nodeId,
-        relatedProjectId: projectId,
-      },
+    await createNotification({
+      userId,
+      type: "ASSIGNED",
+      title: "You were assigned to a task",
+      relatedNodeId: nodeId,
+      relatedProjectId: projectId,
     });
   }
 
-  const node = await prisma.taskNode.findUnique({ where: { id: nodeId }, select: { graphId: true } });
-  if (node) {
-    await pusherServer.trigger(`private-graph-${node.graphId}`, "node-updated", { id: nodeId });
-  }
+  await pusherServer.trigger(`private-graph-${node.graphId}`, "node-updated", { id: nodeId });
+
+  logNodeChange(nodeId, "assignee_added", null, assignment.user.name || assignment.user.email).catch(() => {});
 
   return { assignment };
 }
@@ -50,21 +67,67 @@ export async function assignUser(projectId: string, nodeId: string, userId: stri
 export async function unassignUser(projectId: string, nodeId: string, userId: string) {
   const currentUser = await requireUser();
 
-  const member = await prisma.projectMember.findUnique({
-    where: { userId_projectId: { userId: currentUser.id, projectId } },
+  // Verify project membership and require canEditNodes permission
+  const access = await requireCanEditNodes(currentUser.id, projectId);
+  if (access.error) return { error: access.error };
+
+  // IDOR fix: verify node belongs to this project
+  const node = await prisma.taskNode.findUnique({
+    where: { id: nodeId },
+    select: { graphId: true, graph: { select: { projectId: true } } },
   });
-  if (!member) return { error: "Not authorized" };
+  if (!node || node.graph.projectId !== projectId) return { error: "Task not found" };
+
+  const targetUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true, email: true },
+  });
 
   await prisma.taskAssignment.delete({
     where: { nodeId_userId: { nodeId, userId } },
   }).catch(() => {});
 
-  const node = await prisma.taskNode.findUnique({ where: { id: nodeId }, select: { graphId: true } });
-  if (node) {
-    await pusherServer.trigger(`private-graph-${node.graphId}`, "node-updated", { id: nodeId });
-  }
+  await pusherServer.trigger(`private-graph-${node.graphId}`, "node-updated", { id: nodeId });
+
+  logNodeChange(nodeId, "assignee_removed", null, targetUser?.name || targetUser?.email || null).catch(() => {});
 
   return { success: true };
+}
+
+export async function setApprover(projectId: string, nodeId: string, userId: string, isApprover: boolean) {
+  const currentUser = await requireUser();
+
+  // Verify project membership and require canEditNodes permission
+  const access = await requireCanEditNodes(currentUser.id, projectId);
+  if (access.error) return { error: access.error };
+
+  // IDOR fix: verify node belongs to this project
+  const node = await prisma.taskNode.findUnique({
+    where: { id: nodeId },
+    select: { graphId: true, graph: { select: { projectId: true } } },
+  });
+  if (!node || node.graph.projectId !== projectId) return { error: "Task not found" };
+
+  const assignment = await prisma.taskAssignment
+    .update({
+      where: { nodeId_userId: { nodeId, userId } },
+      data: { isApprover },
+      include: { user: true },
+    })
+    .catch(() => null);
+
+  if (!assignment) return { error: "User is not assigned to this task" };
+
+  await pusherServer.trigger(`private-graph-${node.graphId}`, "node-updated", { id: nodeId });
+
+  logNodeChange(
+    nodeId,
+    isApprover ? "approver_set" : "approver_removed",
+    null,
+    assignment.user.name || assignment.user.email
+  ).catch(() => {});
+
+  return { assignment };
 }
 
 export async function getProjectMembers(projectId: string) {

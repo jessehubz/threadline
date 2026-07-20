@@ -48,6 +48,14 @@ export default async function PublicProfilePage({
             >
               {user.name || "Anonymous"}
             </h1>
+            {user.username && (
+              <p
+                className="text-sm"
+                style={{ color: "var(--accent)" }}
+              >
+                @{user.username}
+              </p>
+            )}
             {user.bio && (
               <p
                 className="mt-1 text-sm"
@@ -163,14 +171,6 @@ export default async function PublicProfilePage({
                   >
                     {project.name}
                   </h3>
-                  {project.description && (
-                    <p
-                      className="text-xs mt-1"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      {project.description}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>

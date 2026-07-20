@@ -52,17 +52,17 @@ export function SitePageHeader() {
             borderRadius: "999px",
             fontSize: "13px",
             fontWeight: 600,
-            color: "#fff",
+            color: "var(--on-accent)",
             background: "var(--accent)",
             textDecoration: "none",
-            transition: "all .18s ease",
+            transition: "background-color .18s ease, transform .18s ease, box-shadow .18s ease",
             cursor: "pointer",
           }}
           onMouseEnter={(e) => {
             const el = e.currentTarget;
             el.style.background = "var(--accent-hover)";
             el.style.transform = "translateY(-1px)";
-            el.style.boxShadow = "0 4px 12px rgba(139, 92, 246, 0.3)";
+            el.style.boxShadow = "var(--shadow-md)";
           }}
           onMouseLeave={(e) => {
             const el = e.currentTarget;
