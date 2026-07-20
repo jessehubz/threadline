@@ -21,7 +21,7 @@ interface Friend {
   imageUrl: string | null;
 }
 
-export function CreateProjectButton() {
+export function CreateProjectButton({ trigger }: { trigger?: React.ReactNode } = {}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<Array<{ email: string; role: "CO_HEAD" | "MEMBER"; name?: string | null }>>([]);
@@ -84,7 +84,13 @@ export function CreateProjectButton() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> New Project</Button>
+      {trigger ? (
+        <button type="button" onClick={() => setOpen(true)} title="New project" aria-label="New project">
+          {trigger}
+        </button>
+      ) : (
+        <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> New Project</Button>
+      )}
 
       <Dialog open={open} onClose={() => setOpen(false)} title="Create Project">
         <form action={handleSubmit} className="space-y-4">

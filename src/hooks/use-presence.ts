@@ -64,3 +64,40 @@ export function usePresence(channelName: string, enabled = true) {
 
   return onlineIds;
 }
+
+/**
+ * Same subscription as usePresence, but returns full member info (name,
+ * imageUrl) instead of just ids — for UI that renders actual avatars
+ * (e.g. the topbar's presence cluster), not just an online/offline check.
+ */
+export function usePresenceMembers(channelName: string, enabled = true) {
+  const [members, setMembers] = useState<PresenceMember[]>([]);
+
+  useEffect(() => {
+    if (!enabled || !channelName.startsWith("presence-")) return;
+
+    const pusher = getPusherClient();
+    const channel = pusher.subscribe(channelName) as PresenceChannel;
+
+    channel.bind("pusher:subscription_succeeded", (members: Members) => {
+      const list: PresenceMember[] = [];
+      members.each((member: PresenceMember) => list.push(member));
+      setMembers(list);
+    });
+
+    channel.bind("pusher:member_added", (member: PresenceMember) => {
+      setMembers((prev) => (prev.some((m) => m.id === member.id) ? prev : [...prev, member]));
+    });
+
+    channel.bind("pusher:member_removed", (member: PresenceMember) => {
+      setMembers((prev) => prev.filter((m) => m.id !== member.id));
+    });
+
+    return () => {
+      channel.unbind_all();
+      pusher.unsubscribe(channelName);
+    };
+  }, [channelName, enabled]);
+
+  return members;
+}

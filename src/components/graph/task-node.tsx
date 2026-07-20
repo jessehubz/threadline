@@ -148,7 +148,7 @@ function TaskNodeInner({ id, data, selected }: NodeProps & { data: TaskNodeData 
         {nodeData.isAutoBlocked && nodeData.status !== "COMPLETE" && (
           <div className="flex items-center gap-1 mb-2 rounded-md bg-[var(--danger-soft)] px-2 py-1">
             <AlertTriangle className="h-3 w-3 text-[var(--danger)] shrink-0" />
-            <span className="text-[10px] font-medium text-[var(--danger)]">Blocked by dependencies</span>
+            <span className="text-[10px] font-medium text-[var(--danger)]">Waiting on dependencies</span>
           </div>
         )}
 

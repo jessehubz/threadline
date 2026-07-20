@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>threadline — dashboard · round 12</title>
+<style>
+/* ============================================================
+   threadline · round 12 — calm dashboard, strict monochrome
+   Fix for round 11: too dense / overwhelming.
+   One focal point per band. More air. Fewer boxes. 3-item lists.
+   ============================================================ */
+:root {
+  --bg: #ffffff;
+  --card: #ffffff;
+  --band: #f5f5f7;
+  --band-2: #fafafa;
+  --ink: #1d1d1f;
+  --ink-2: #6e6e73;
+  --ink-3: #86868b;
+  --hair: rgba(0, 0, 0, 0.12);
+  --hair-soft: rgba(0, 0, 0, 0.07);
+  --edge: rgba(29, 29, 31, 0.18);
+  --edge-done: rgba(29, 29, 31, 0.38);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04);
+  --shadow-2: 0 2px 6px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.07);
+  --r-lg: 16px;
+  --r-md: 12px;
+  --r-sm: 8px;
+  --pill: 999px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+[data-theme="dark"] {
+  --bg: #000000;
+  --card: #0a0a0a;
+  --band: #141414;
+  --band-2: #0e0e0e;
+  --ink: #f5f5f7;
+  --ink-2: #a1a1a6;
+  --ink-3: #8e8e93;
+  --hair: rgba(255, 255, 255, 0.16);
+  --hair-soft: rgba(255, 255, 255, 0.09);
+  --edge: rgba(245, 245, 247, 0.20);
+  --edge-done: rgba(245, 245, 247, 0.42);
+  --shadow-1: none;
+  --shadow-2: 0 8px 24px rgba(0,0,0,.5);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+body {
+  font-family: var(--font);
+  background: var(--bg); color: var(--ink);
+  font-size: 14px; line-height: 1.5; letter-spacing: -0.008em;
+}
+button { font: inherit; letter-spacing: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+input { font: inherit; letter-spacing: inherit; color: var(--ink); }
+.num { font-variant-numeric: tabular-nums; }
+svg { display: block; }
+
+/* ---------- app shell ---------- */
+.app { display: flex; height: 100vh; overflow: hidden; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.content { flex: 1; overflow-y: auto; padding: 36px 44px 72px; }
+.content-inner { max-width: 1060px; margin: 0 auto; }
+
+/* ---------- sidebar ---------- */
+.sidebar {
+  width: 232px; flex-shrink: 0; display: flex; flex-direction: column;
+  border-right: 0.5px solid var(--hair-soft); background: var(--band-2);
+  padding: 18px 12px 14px;
+}
+.wordmark {
+  font-size: 17px; font-weight: 700; letter-spacing: -0.035em;
+  padding: 2px 12px 20px; display: flex; align-items: center;
+}
+
+.nav { display: flex; flex-direction: column; gap: 1px; }
+.nav a {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--r-sm);
+  color: var(--ink-2); text-decoration: none; font-weight: 500; font-size: 13.5px;
+  transition: background 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+.nav a svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+@media (hover: hover) and (pointer: fine) { .nav a:hover { background: var(--band); color: var(--ink); } }
+.nav a.on { background: var(--band); color: var(--ink); font-weight: 600; }
+.nav a .count { margin-left: auto; font-size: 11.5px; font-weight: 600; color: var(--ink-3); }
+.nav a.on .count { color: var(--ink-2); }
+
+.side-sec {
+  margin-top: 26px; padding: 0 12px 8px; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3);
+  display: flex; align-items: center;
+}
+.side-sec button { margin-left: auto; color: var(--ink-3); font-size: 14px; line-height: 1; padding: 0 2px; border-radius: 4px; }
+@media (hover: hover) and (pointer: fine) { .side-sec button:hover { color: var(--ink); } }
+
+.side-foot { margin-top: auto; padding-top: 12px; border-top: 0.5px solid var(--hair-soft); display: flex; align-items: center; gap: 9px; padding-left: 6px; }
+.side-foot .who { min-width: 0; }
+.side-foot .who b { display: block; font-size: 12.5px; font-weight: 600; letter-spacing: -0.01em; }
+.side-foot .who span { display: block; font-size: 11px; color: var(--ink-3); }
+.theme-btn {
+  margin-left: auto; width: 30px; height: 30px; border-radius: var(--r-sm); display: grid; place-items: center;
+  color: var(--ink-2); transition: background 140ms var(--ease-out), transform 160ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .theme-btn:hover { background: var(--band); color: var(--ink); } }
+.theme-btn:active { transform: scale(0.94); }
+.theme-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- avatars ---------- */
+.ava {
+  width: 26px; height: 26px; border-radius: 50%; display: inline-grid; place-items: center;
+  font-size: 10px; font-weight: 600; letter-spacing: 0;
+  background: var(--band); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--hair-soft); flex-shrink: 0;
+}
+.ava.me { background: var(--ink); color: var(--bg); box-shadow: none; }
+.ava.xs { width: 20px; height: 20px; font-size: 8.5px; }
+
+/* ---------- topbar ---------- */
+.topbar {
+  display: flex; align-items: center; gap: 14px; padding: 12px 32px;
+  border-bottom: 0.5px solid var(--hair-soft); flex-shrink: 0; background: var(--bg);
+}
+.searchbox {
+  display: flex; align-items: center; gap: 8px; width: 320px; max-width: 40vw;
+  padding: 7px 11px; border-radius: var(--r-md); background: var(--band);
+  color: var(--ink-3); transition: box-shadow 160ms var(--ease-out), background 160ms var(--ease-out);
+}
+.searchbox svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; flex-shrink: 0; }
+.searchbox input { flex: 1; border: 0; background: none; outline: none; font-size: 13px; min-width: 0; }
+.searchbox input::placeholder { color: var(--ink-3); }
+.searchbox:focus-within { background: var(--card); box-shadow: 0 0 0 1.5px var(--ink); color: var(--ink); }
+.searchbox kbd {
+  font-family: var(--font); font-size: 10px; font-weight: 600; color: var(--ink-3);
+  border: 0.5px solid var(--hair); border-radius: 5px; padding: 2px 5px; background: var(--card);
+}
+.topbar .spacer { flex: 1; }
+
+.presence { display: flex; align-items: center; }
+.presence .ava { margin-left: -5px; box-shadow: 0 0 0 2px var(--bg), inset 0 0 0 1px var(--hair-soft); }
+.presence .ava:first-child { margin-left: 0; }
+.presence .ava.me { box-shadow: 0 0 0 2px var(--bg); }
+.live { display: flex; align-items: center; gap: 6px; margin-left: 10px; font-size: 11px; font-weight: 600; color: var(--ink-3); letter-spacing: 0.02em; }
+.live i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
+@media (prefers-reduced-motion: no-preference) {
+  .live i { animation: livePulse 2.4s var(--ease-in-out) infinite; }
+  @keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+}
+
+.icon-btn {
+  position: relative; width: 32px; height: 32px; border-radius: var(--r-sm); display: grid; place-items: center;
+  color: var(--ink-2); transition: background 140ms var(--ease-out), transform 160ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .icon-btn:hover { background: var(--band); color: var(--ink); } }
+.icon-btn:active { transform: scale(0.94); }
+.icon-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn .unread { position: absolute; top: 6px; right: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 2px var(--bg); }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+  transition: transform 160ms var(--ease-out), background 140ms var(--ease-out), box-shadow 140ms var(--ease-out);
+}
+.btn:active { transform: scale(0.97); }
+.btn-ink { background: var(--ink); color: var(--bg); }
+.btn-quiet { box-shadow: inset 0 0 0 1px var(--hair); color: var(--ink); background: var(--card); }
+@media (hover: hover) and (pointer: fine) { .btn-quiet:hover { box-shadow: inset 0 0 0 1px var(--ink-3); } }
+.btn-on-ink { background: var(--bg); color: var(--ink); }
+.btn-ghost-on-ink { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bg) 34%, transparent); color: var(--bg); }
+@media (hover: hover) and (pointer: fine) { .btn-ghost-on-ink:hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bg) 60%, transparent); } }
+
+/* ---------- status glyphs (shape carries state — no color) ---------- */
+.g { width: 10px; height: 10px; border-radius: 50%; display: inline-block; position: relative; flex-shrink: 0; }
+.g-done    { background: var(--ink); }
+.g-prog    { box-shadow: inset 0 0 0 1.4px var(--ink); background: linear-gradient(90deg, var(--ink) 50%, transparent 50%); }
+.g-ready   { box-shadow: inset 0 0 0 1.8px var(--ink); }
+.g-blocked { box-shadow: inset 0 0 0 1.3px var(--ink-3); }
+.g-blocked::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--ink-3); opacity: 0.35; }
+.g-await   { border: 1.3px dashed var(--ink); border-radius: 50%; }
+.g-rej     {
+  border-radius: 3px;
+  background: repeating-linear-gradient(45deg, var(--ink-3) 0 1.5px, transparent 1.5px 4px);
+  box-shadow: inset 0 0 0 1px var(--ink-3);
+}
+
+/* ---------- greeting: one quiet line, ring on the right ---------- */
+.greet-row { display: flex; align-items: center; gap: 20px; }
+.greet-row h1 { font-size: 27px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.2; }
+.greet-row .sub { margin-top: 5px; font-size: 13.5px; color: var(--ink-2); }
+.greet-row .sub b { font-weight: 650; color: var(--ink); }
+.greet-row .sub .sep { color: var(--ink-3); opacity: .6; margin: 0 7px; }
+.health { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.health svg { width: 42px; height: 42px; }
+.health .ring-track { stroke: var(--hair-soft); }
+.health .ring-val { stroke: var(--ink); stroke-linecap: round; transition: stroke-dashoffset 900ms var(--ease-in-out); }
+.health .h-label b { display: block; font-size: 13px; font-weight: 650; letter-spacing: -0.01em; }
+.health .h-label span { display: block; font-size: 11.5px; color: var(--ink-3); }
+
+/* ---------- focus card: the single loud element on the page ---------- */
+.focus-card {
+  margin-top: 28px;
+  background: var(--ink); color: var(--bg); border-radius: var(--r-lg); padding: 24px 26px 12px;
+}
+[data-theme="dark"] .focus-card { box-shadow: inset 0 0 0 0.5px rgba(255,255,255,.14); }
+.focus-card .ftop { display: flex; align-items: center; gap: 24px; }
+.focus-card .fbody { min-width: 0; }
+.focus-card .eyebrow {
+  display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 650;
+  letter-spacing: 0.09em; text-transform: uppercase; color: color-mix(in srgb, var(--bg) 55%, transparent);
+}
+.focus-card .g-prog { box-shadow: inset 0 0 0 1.4px color-mix(in srgb, var(--bg) 65%, transparent); background: linear-gradient(90deg, color-mix(in srgb, var(--bg) 65%, transparent) 50%, transparent 50%); }
+.focus-card .g-ready { box-shadow: inset 0 0 0 1.8px color-mix(in srgb, var(--bg) 72%, transparent); }
+.focus-card .g-await { border-color: color-mix(in srgb, var(--bg) 72%, transparent); }
+.focus-card h2 { margin-top: 8px; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; }
+.focus-card .fmeta { margin-top: 6px; font-size: 13.5px; color: color-mix(in srgb, var(--bg) 62%, transparent); }
+.focus-card .fmeta b { color: var(--bg); font-weight: 600; }
+.focus-card .fmeta .sep { margin: 0 7px; opacity: .6; }
+.focus-card .frow { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+/* ---------- day counts: a quiet ledger inside the focus card ---------- */
+.focus-card .fstats {
+  display: flex; margin-top: 22px;
+  border-top: 0.5px solid color-mix(in srgb, var(--bg) 22%, transparent);
+}
+.focus-card .fstat {
+  flex: 1; display: flex; flex-direction: column; gap: 3px; align-items: flex-start;
+  padding: 15px 20px 13px; text-align: left; border-radius: var(--r-md);
+  transition: background 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .focus-card .fstat:hover { background: color-mix(in srgb, var(--bg) 9%, transparent); } }
+.focus-card .fstat + .fstat { position: relative; }
+.focus-card .fstat + .fstat::before { content: ""; position: absolute; left: 0; top: 16px; bottom: 14px; width: 0.5px; background: color-mix(in srgb, var(--bg) 22%, transparent); }
+.focus-card .fstat b { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+.focus-card .fstat .sl { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: color-mix(in srgb, var(--bg) 62%, transparent); }
+
+/* ---------- section shells ---------- */
+.sect { margin-top: 44px; }
+.sect-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.sect-head h3 { font-size: 17px; font-weight: 700; letter-spacing: -0.018em; }
+.sect-head .hint { font-size: 12.5px; color: var(--ink-3); }
+.sect-head .more { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--ink-2); text-decoration: none; transition: color 140ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .sect-head .more:hover { color: var(--ink); } }
+
+.card {
+  background: var(--card); border-radius: var(--r-lg);
+  box-shadow: inset 0 0 0 0.5px var(--hair-soft), var(--shadow-1);
+}
+[data-theme="dark"] .card { box-shadow: inset 0 0 0 0.5px var(--hair-soft); }
+
+/* ---------- segmented control ---------- */
+.seg { position: relative; display: inline-flex; background: var(--band); border-radius: var(--pill); padding: 3px; }
+.seg-pill {
+  position: absolute; top: 3px; left: 0; height: calc(100% - 6px); background: var(--ink); border-radius: var(--pill);
+  transition: transform 220ms var(--ease-out), width 220ms var(--ease-out);
+}
+.seg button {
+  position: relative; z-index: 1; padding: 5px 14px; font-size: 12.5px; font-weight: 600; color: var(--ink-2);
+  border-radius: var(--pill); white-space: nowrap; transition: color 200ms var(--ease-out);
+}
+.seg button.on { color: var(--bg); }
+
+/* ---------- dependency map ---------- */
+.map-card { padding: 0; overflow: hidden; }
+.map-head { display: flex; align-items: center; gap: 14px; padding: 16px 20px 14px; flex-wrap: wrap; }
+.map-head .open-editor {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600;
+  color: var(--ink-2); text-decoration: none; transition: color 140ms var(--ease-out);
+}
+.map-head .open-editor svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+@media (hover: hover) and (pointer: fine) { .map-head .open-editor:hover { color: var(--ink); } }
+
+.map-body { position: relative; overflow-x: auto; overscroll-behavior-x: contain; }
+.map-canvas { position: relative; min-width: 1044px; height: 400px; transition: filter 180ms var(--ease-out), opacity 180ms var(--ease-out); }
+.map-canvas.swapping { filter: blur(5px); opacity: 0.25; }
+.map-canvas .edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.edge { fill: none; stroke: var(--edge); stroke-width: 1.5; }
+.edge.done { stroke: var(--edge-done); }
+.edge.hot { stroke: var(--ink); stroke-width: 1.8; stroke-dasharray: 5 5; }
+@media (prefers-reduced-motion: no-preference) {
+  .edge.hot { animation: edgeFlow 1.4s linear infinite; }
+  @keyframes edgeFlow { to { stroke-dashoffset: -20; } }
+}
+
+.tnode {
+  position: absolute; width: 180px; background: var(--card); border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--hair), var(--shadow-1); padding: 11px 13px 12px; cursor: default;
+  transition: box-shadow 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .tnode:hover { box-shadow: inset 0 0 0 1px var(--ink-3), var(--shadow-2); transform: translateY(-1px); }
+}
+.tnode .tstat {
+  display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 650;
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap;
+}
+.tnode .tt { margin-top: 6px; font-size: 13px; font-weight: 600; letter-spacing: -0.012em; line-height: 1.3; }
+.tnode .tm { margin-top: 8px; display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--ink-3); }
+.tnode .tm .due { margin-left: auto; white-space: nowrap; }
+.tnode .tm .due.hot { color: var(--ink); font-weight: 650; }
+.tnode.is-done .tt { color: var(--ink-2); }
+.tnode.is-blocked { box-shadow: none; border: 1px dashed var(--hair); background: var(--band-2); }
+@media (hover: hover) and (pointer: fine) { .tnode.is-blocked:hover { border-color: var(--ink-3); transform: translateY(-1px); } }
+.tnode.is-blocker { box-shadow: inset 0 0 0 1.6px var(--ink), var(--shadow-2); }
+.tnode .badge {
+  position: absolute; top: -9px; right: 10px; background: var(--ink); color: var(--bg);
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  border-radius: var(--pill); padding: 3px 8px;
+}
+.tnode .waitn { font-weight: 650; color: var(--ink-2); }
+
+.map-foot {
+  display: flex; align-items: center; gap: 16px; padding: 12px 20px;
+  border-top: 0.5px solid var(--hair-soft); flex-wrap: wrap;
+}
+.map-foot .insight { font-size: 12.5px; color: var(--ink-2); }
+.map-foot .insight b { font-weight: 650; color: var(--ink); }
+.lg { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-3); }
+.map-foot .legend { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+
+/* ---------- two-column: attention + deadlines ---------- */
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.rowlist { padding: 8px 10px; }
+.trow {
+  display: flex; align-items: center; gap: 12px; padding: 13px 12px; border-radius: var(--r-sm);
+  transition: background 140ms var(--ease-out); cursor: default;
+}
+@media (hover: hover) and (pointer: fine) { .trow:hover { background: var(--band); } }
+.trow + .trow { position: relative; }
+.trow + .trow::before { content: ""; position: absolute; top: 0; left: 44px; right: 12px; height: 0.5px; background: var(--hair-soft); }
+.trow .g { margin-top: 1px; }
+.trow .tbody { min-width: 0; flex: 1; }
+.trow .tbody b { display: block; font-size: 13.5px; font-weight: 600; letter-spacing: -0.012em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trow .tbody span { display: block; font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.trow .tbody span em { font-style: normal; font-weight: 650; color: var(--ink); }
+.trow .tright { text-align: right; flex-shrink: 0; }
+.trow .tright .due { display: block; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.trow .tright .due.hot { color: var(--ink); }
+.trow .tright .proj { display: block; font-size: 11px; color: var(--ink-3); margin-top: 1px; }
+.trow .act { flex-shrink: 0; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: var(--pill); box-shadow: inset 0 0 0 1px var(--hair); transition: transform 160ms var(--ease-out), box-shadow 140ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .trow .act:hover { box-shadow: inset 0 0 0 1px var(--ink-3); } }
+.trow .act:active { transform: scale(0.96); }
+
+/* deadlines tabs */
+.dl-head { display: flex; align-items: center; padding: 14px 18px 0; }
+.dl-head .seg button { padding: 4px 12px; font-size: 12px; }
+.dl-head .count-lbl { margin-left: auto; font-size: 11.5px; color: var(--ink-3); }
+.dl-body { transition: filter 160ms var(--ease-out), opacity 160ms var(--ease-out); }
+.dl-body.swapping { filter: blur(4px); opacity: 0.25; }
+
+/* ---------- projects: quiet rows, not dense cards ---------- */
+.prow {
+  display: flex; align-items: center; gap: 14px; padding: 15px 18px; width: 100%; text-align: left;
+  border-radius: var(--r-sm); transition: background 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .prow:hover { background: var(--band); } }
+.prow + .prow { position: relative; }
+.prow + .prow::before { content: ""; position: absolute; top: 0; left: 18px; right: 18px; height: 0.5px; background: var(--hair-soft); }
+.prow .pname { min-width: 0; width: 200px; flex-shrink: 0; }
+.prow .pname b { display: block; font-size: 14px; font-weight: 650; letter-spacing: -0.014em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prow .pname span { display: block; font-size: 11.5px; color: var(--ink-3); margin-top: 1px; }
+.prow .pprog { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.prow .pbar { flex: 1; height: 3px; border-radius: var(--pill); background: var(--band); overflow: hidden; max-width: 220px; }
+.prow .pbar i { display: block; height: 100%; background: var(--ink); border-radius: var(--pill); }
+.prow .pfrac { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+.prow .pfrac b { font-weight: 650; color: var(--ink); }
+.role { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; border-radius: var(--pill); padding: 3px 9px; flex-shrink: 0; }
+.role-head { background: var(--ink); color: var(--bg); }
+.role-cohead { box-shadow: inset 0 0 0 1.4px var(--ink); color: var(--ink); }
+.role-member { box-shadow: inset 0 0 0 1px var(--hair); color: var(--ink-2); }
+.prow .chev { flex-shrink: 0; color: var(--ink-3); font-size: 15px; }
+
+/* ---------- helper: one quiet line at the end ---------- */
+.helper {
+  margin-top: 44px; display: flex; align-items: center; gap: 14px; padding: 15px 20px;
+  border-radius: var(--r-lg); background: var(--band-2); box-shadow: inset 0 0 0 0.5px var(--hair-soft);
+}
+.helper .hk {
+  width: 32px; height: 32px; border-radius: 10px; background: var(--ink); color: var(--bg);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.helper .hk svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.helper .ht b { font-size: 13.5px; font-weight: 650; letter-spacing: -0.012em; }
+.helper .ht span { font-size: 13px; color: var(--ink-2); margin-left: 8px; }
+.helper .btn { margin-left: auto; flex-shrink: 0; }
+
+/* ---------- notifications popover ---------- */
+.notif-wrap { position: relative; }
+.popover {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 340px; z-index: 40;
+  background: var(--card); border-radius: var(--r-lg); box-shadow: inset 0 0 0 0.5px var(--hair), var(--shadow-2);
+  transform-origin: top right; padding: 6px;
+  opacity: 1; transform: scale(1); transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+}
+.popover[hidden] { display: none; }
+.popover.entering { opacity: 0; transform: scale(0.96); }
+.popover .ph { display: flex; align-items: center; padding: 9px 12px 7px; font-size: 12px; font-weight: 650; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); }
+.popover .ph button { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--ink-2); text-transform: none; letter-spacing: -0.008em; }
+.nrow { display: flex; gap: 10px; padding: 10px 12px; border-radius: var(--r-sm); font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
+@media (hover: hover) and (pointer: fine) { .nrow:hover { background: var(--band); } }
+.nrow b { color: var(--ink); font-weight: 600; }
+.nrow .nun { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); margin-top: 6px; flex-shrink: 0; }
+.nrow.read .nun { background: transparent; box-shadow: inset 0 0 0 1px var(--hair); }
+.nrow small { display: block; color: var(--ink-3); margin-top: 2px; font-size: 11.5px; }
+
+/* ---------- entrance ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .rise { animation: rise 460ms var(--ease-out) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .content-inner > *:nth-child(1) { animation-delay: 0ms; }
+  .content-inner > *:nth-child(2) { animation-delay: 45ms; }
+  .content-inner > *:nth-child(3) { animation-delay: 90ms; }
+  .content-inner > *:nth-child(4) { animation-delay: 135ms; }
+  .content-inner > *:nth-child(5) { animation-delay: 180ms; }
+  .content-inner > *:nth-child(6) { animation-delay: 225ms; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: fadeOnly 200ms ease both; }
+  @keyframes fadeOnly { from { opacity: 0; } to { opacity: 1; } }
+  .edge.hot { animation: none; }
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 1180px) {
+  .content { padding: 32px 32px 64px; }
+}
+@media (max-width: 1020px) {
+  .focus-card .ftop { flex-direction: column; align-items: flex-start; gap: 18px; }
+  .focus-card .frow { margin-left: 0; }
+  .focus-card .fstats { flex-wrap: wrap; }
+  .focus-card .fstat { flex-basis: 33%; }
+}
+@media (max-width: 920px) {
+  .sidebar { display: none; }
+  .cols { grid-template-columns: 1fr; }
+  .content { padding: 24px 18px 56px; }
+  .topbar { padding: 12px 18px; }
+  .live span { display: none; }
+  .prow .pname { width: auto; flex: 1; }
+  .prow .pprog { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ======================= sidebar ======================= -->
+  <aside class="sidebar">
+    <div class="wordmark"><span>threadline</span></div>
+
+    <nav class="nav">
+      <a href="#" class="on">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>
+        Dashboard
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24"><path d="M4 6.5h10M4 12h16M4 17.5h13"/><circle cx="19" cy="6.5" r="1.4"/></svg>
+        My tasks <span class="count num">11</span>
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+        Deadlines <span class="count num">3</span>
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6"/><circle cx="17" cy="9.5" r="2.5"/><path d="M16 14.7c2.3.2 4 1.6 4.5 4"/></svg>
+        Team
+      </a>
+      <a href="#" id="moreNav">
+        <svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.1"/><circle cx="12" cy="12" r="1.1"/><circle cx="18" cy="12" r="1.1"/></svg>
+        More
+      </a>
+    </nav>
+
+    <div class="side-sec">Projects <button title="New project" aria-label="New project">+</button></div>
+    <nav class="nav" id="projNav">
+      <a href="#" class="proj-item on" data-proj="launch">Launch v2 <span class="count num">12</span></a>
+      <a href="#" class="proj-item" data-proj="website">Website refresh <span class="count num">9</span></a>
+      <a href="#" class="proj-item" data-proj="q3">Q3 roadmap <span class="count num">6</span></a>
+    </nav>
+
+    <div class="side-foot">
+      <span class="ava me">AF</span>
+      <div class="who"><b>Alexandra F.</b><span>alexandra@usecrafted.com</span></div>
+      <button class="theme-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24"><path d="M20 13.2A8 8 0 1 1 10.8 4 6.3 6.3 0 0 0 20 13.2Z"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ======================= main ======================= -->
+  <div class="main">
+    <header class="topbar">
+      <label class="searchbox">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-3.8-3.8"/></svg>
+        <input id="searchInput" type="text" placeholder="Search tasks, projects, people…" />
+        <kbd>⌘K</kbd>
+      </label>
+      <div class="spacer"></div>
+      <div class="presence" title="Online now">
+        <span class="ava me" title="Alexandra">AF</span><span class="ava" title="Maya K.">MK</span><span class="ava" title="Rosa S.">RS</span>
+      </div>
+      <div class="live"><i></i><span>3 online</span></div>
+      <div class="notif-wrap">
+        <button class="icon-btn" id="notifBtn" title="Notifications" aria-label="Notifications">
+          <svg viewBox="0 0 24 24"><path d="M18 9.5a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6"/><path d="M10 19a2.2 2.2 0 0 0 4 0"/></svg>
+          <span class="unread" id="unreadDot"></span>
+        </button>
+        <div class="popover" id="notifPop" hidden>
+          <div class="ph">Notifications <button id="markRead">Mark all read</button></div>
+          <div class="nrow"><span class="nun"></span><span>Maya assigned you <b>“Review onboarding copy”</b><small>4 min ago · Website refresh</small></span></div>
+          <div class="nrow"><span class="nun"></span><span><b>“Fix API rate limits”</b> is now blocking 3 tasks<small>26 min ago · Launch v2</small></span></div>
+          <div class="nrow"><span class="nun"></span><span><b>“Beta invite email”</b> is awaiting your approval<small>1 h ago · Launch v2</small></span></div>
+          <div class="nrow read"><span class="nun"></span><span>Rosa completed <b>“API schema”</b><small>Yesterday · Launch v2</small></span></div>
+        </div>
+      </div>
+      <button class="btn btn-quiet" id="assistantBtn">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3.5 13.8 9 19 10.8 13.8 12.6 12 18l-1.8-5.4L5 10.8 10.2 9Z"/><path d="M18.5 15.5 19.2 17.6 21.3 18.3 19.2 19 18.5 21.1 17.8 19 15.7 18.3 17.8 17.6Z"/></svg>
+        Assistant
+      </button>
+      <button class="btn btn-ink">＋ New task</button>
+    </header>
+
+    <main class="content">
+      <div class="content-inner">
+
+        <!-- greeting: one line of context, nothing more -->
+        <section class="rise">
+          <div class="greet-row">
+            <div>
+              <h1 id="greetTitle">Good morning, Alexandra.</h1>
+              <div class="sub"><span id="dateLbl" class="num">Saturday, July 19</span><span class="sep">·</span><b>3</b> due today<span class="sep">·</span><b>1</b> blocker to clear</div>
+            </div>
+            <div class="health">
+              <svg viewBox="0 0 40 40" aria-hidden="true">
+                <circle class="ring-track" cx="20" cy="20" r="16.5" fill="none" stroke-width="3.5"/>
+                <circle class="ring-val" id="healthRing" cx="20" cy="20" r="16.5" fill="none" stroke-width="3.5"
+                        stroke-dasharray="103.7" stroke-dashoffset="103.7" transform="rotate(-90 20 20)"/>
+              </svg>
+              <div class="h-label"><b>On track</b><span class="num">31 of 45 tasks clear</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- first up: the only loud element -->
+        <section class="rise">
+          <div class="focus-card">
+            <div class="ftop">
+              <div class="fbody">
+                <div class="eyebrow"><span class="g g-prog"></span>First up</div>
+                <h2>Fix API rate limits</h2>
+                <div class="fmeta num">Due today · 2:00 PM<span class="sep">·</span>Launch v2<span class="sep">·</span><b>unblocks 3 tasks</b></div>
+              </div>
+              <div class="frow">
+                <button class="btn btn-on-ink">Open task</button>
+                <button class="btn btn-ghost-on-ink" id="viewInGraph">View in graph</button>
+              </div>
+            </div>
+            <div class="fstats">
+              <button class="fstat"><b class="num">3</b><span class="sl"><span class="g g-ready"></span>Due today</span></button>
+              <button class="fstat"><b class="num">4</b><span class="sl"><span class="g g-prog"></span>In progress</span></button>
+              <button class="fstat"><b class="num">1</b><span class="sl"><span class="g g-await"></span>Awaiting approval</span></button>
+            </div>
+          </div>
+        </section>
+
+        <!-- attention + deadlines -->
+        <section class="rise sect cols">
+          <div>
+            <div class="sect-head"><h3>Needs attention</h3><a class="more" href="#">Show all 4 ›</a></div>
+            <div class="card rowlist">
+              <div class="trow">
+                <span class="g g-prog"></span>
+                <div class="tbody"><b>Fix API rate limits</b><span>Blocking <em>3 tasks</em> downstream</span></div>
+                <div class="tright"><span class="due hot num">Today · 2:00 PM</span><span class="proj">Launch v2</span></div>
+              </div>
+              <div class="trow">
+                <span class="g g-prog"></span>
+                <div class="tbody"><b>Homepage hero copy</b><span><em>Overdue</em> — was due yesterday</span></div>
+                <div class="tright"><span class="due hot num">Jul 18 · 11:59 PM</span><span class="proj">Website refresh</span></div>
+              </div>
+              <div class="trow">
+                <span class="g g-await"></span>
+                <div class="tbody"><b>Beta invite email</b><span>Awaiting <em>your</em> approval</span></div>
+                <button class="act">Review</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="sect-head"><h3>Deadlines</h3><a class="more" href="#">Calendar ›</a></div>
+            <div class="card">
+              <div class="dl-head">
+                <div class="seg" id="dlSeg">
+                  <span class="seg-pill" id="dlPill"></span>
+                  <button data-tab="today" class="on">Today</button>
+                  <button data-tab="week">This week</button>
+                </div>
+                <span class="count-lbl num" id="dlCount">3 due</span>
+              </div>
+              <div class="rowlist dl-body" id="dlBody"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- projects: quiet rows -->
+        <section class="rise sect">
+          <div class="sect-head"><h3>Projects</h3><span class="hint num">3 active</span><a class="more" href="#">All projects ›</a></div>
+          <div class="card">
+            <button class="prow">
+              <span class="pname"><b>Launch v2</b><span>Private · updated 26 min ago</span></span>
+              <span class="pprog"><span class="pbar"><i style="width:42%"></i></span><span class="pfrac num"><b>5</b> of 12 done</span></span>
+              <span class="role role-head">Head</span>
+              <span class="chev">›</span>
+            </button>
+            <button class="prow">
+              <span class="pname"><b>Website refresh</b><span>Team · updated 1 h ago</span></span>
+              <span class="pprog"><span class="pbar"><i style="width:33%"></i></span><span class="pfrac num"><b>3</b> of 9 done</span></span>
+              <span class="role role-cohead">Co-head</span>
+              <span class="chev">›</span>
+            </button>
+            <button class="prow">
+              <span class="pname"><b>Q3 roadmap</b><span>Private · updated yesterday</span></span>
+              <span class="pprog"><span class="pbar"><i style="width:58%"></i></span><span class="pfrac num"><b>2</b> of 6 done</span></span>
+              <span class="role role-member">Member</span>
+              <span class="chev">›</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- dependency map: exploration, after the actionable lists -->
+        <section class="rise sect">
+          <div class="sect-head"><h3>Dependency map</h3><span class="hint" id="mapInsight"><b>1 task</b> is blocking <b>3 others</b></span></div>
+          <div class="card map-card" id="mapCard">
+            <div class="map-head">
+              <div class="seg" id="projSeg">
+                <span class="seg-pill" id="segPill"></span>
+                <button data-proj="launch" class="on">Launch v2</button>
+                <button data-proj="website">Website refresh</button>
+                <button data-proj="q3">Q3 roadmap</button>
+              </div>
+              <a class="open-editor" href="#">Open editor
+                <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>
+              </a>
+            </div>
+            <div class="map-body">
+              <div class="map-canvas" id="mapCanvas">
+                <svg class="edges" id="edgeSvg"></svg>
+              </div>
+            </div>
+            <div class="map-foot">
+              <span class="insight">Scroll to pan · full graph in the editor</span>
+              <div class="legend" id="mapLegend"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- assistant: one quiet line, mirrors the topbar entry point -->
+        <section class="rise helper">
+          <span class="hk"><svg viewBox="0 0 24 24"><path d="M12 3.5 13.8 9 19 10.8 13.8 12.6 12 18l-1.8-5.4L5 10.8 10.2 9Z"/><path d="M18.5 15.5 19.2 17.6 21.3 18.3 19.2 19 18.5 21.1 17.8 19 15.7 18.3 17.8 17.6Z"/></svg></span>
+          <div class="ht"><b>Assistant</b><span>Describe a goal — get a ready dependency map.</span></div>
+          <button class="btn btn-quiet">Open Assistant</button>
+        </section>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ================= theme ================= */
+const q = new URLSearchParams(location.search);
+const savedTheme = q.has("dark") ? "dark" : q.has("light") ? "light"
+  : localStorage.getItem("tl-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+document.documentElement.dataset.theme = savedTheme;
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem("tl-theme", next);
+});
+
+/* ================= greeting / date ================= */
+const now = new Date();
+const h = now.getHours();
+document.getElementById("greetTitle").textContent =
+  (h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening") + ", Alexandra.";
+document.getElementById("dateLbl").textContent =
+  now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+/* ================= health ring ================= */
+requestAnimationFrame(() => {
+  document.getElementById("healthRing").style.strokeDashoffset = String(103.7 * (1 - 0.69));
+});
+
+/* ================= command-K focuses search ================= */
+addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); document.getElementById("searchInput").focus(); }
+});
+
+/* ================= notifications popover ================= */
+const notifBtn = document.getElementById("notifBtn"), notifPop = document.getElementById("notifPop");
+notifBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  if (notifPop.hidden) {
+    notifPop.hidden = false; notifPop.classList.add("entering");
+    requestAnimationFrame(() => requestAnimationFrame(() => notifPop.classList.remove("entering")));
+  } else notifPop.hidden = true;
+});
+document.addEventListener("click", e => { if (!notifPop.hidden && !notifPop.contains(e.target)) notifPop.hidden = true; });
+document.getElementById("markRead").addEventListener("click", () => {
+  notifPop.querySelectorAll(".nrow").forEach(r => r.classList.add("read"));
+  document.getElementById("unreadDot").style.display = "none";
+});
+
+/* ================= segmented pill helper ================= */
+function segInit(segEl, pillEl, onPick) {
+  const place = btn => { pillEl.style.width = btn.offsetWidth + "px"; pillEl.style.transform = `translateX(${btn.offsetLeft - 3}px)`; };
+  const current = () => segEl.querySelector("button.on");
+  requestAnimationFrame(() => place(current()));
+  segEl.querySelectorAll("button").forEach(btn => btn.addEventListener("click", () => {
+    if (btn.classList.contains("on")) return;
+    current().classList.remove("on"); btn.classList.add("on"); place(btn); onPick(btn);
+  }));
+  addEventListener("resize", () => place(current()));
+  return { set: name => { const b = segEl.querySelector(`button[data-proj="${name}"]`); if (b && !b.classList.contains("on")) { current().classList.remove("on"); b.classList.add("on"); place(b); onPick(b); } } };
+}
+
+/* ================= dependency map ================= */
+const STATUS = {
+  done:    ["g-done",    "Done"],
+  prog:    ["g-prog",    "In progress"],
+  ready:   ["g-ready",   "Ready"],
+  blocked: ["g-blocked", "Waiting upstream"],
+  await:   ["g-await",   "Awaiting approval"],
+  rej:     ["g-rej",     "Rejected"],
+};
+
+const GRAPHS = {
+  launch: {
+    insight: `<b>1 task</b> is blocking <b>3 others</b>`,
+    nodes: [
+      { id: "brief",  t: "Design brief",        who: "MK", nm: "Maya",  s: "done",    due: "Jul 14",            x: 16,   y: 40  },
+      { id: "schema", t: "API schema",          who: "RS", nm: "Rosa",  s: "done",    due: "Jul 16",            x: 16,   y: 252 },
+      { id: "auth",   t: "Auth flows",          who: "MK", nm: "Maya",  s: "done",    due: "Jul 17",            x: 228, y: 40  },
+      { id: "rate",   t: "Fix API rate limits", who: "JT", nm: "Jonah", s: "prog",    due: "Today 2:00 PM",  hot: true, blocker: "Blocks 3", x: 228, y: 252 },
+      { id: "fe",     t: "Frontend build",      who: "RS", nm: "Rosa",  s: "blocked", wait: 1,                  x: 440, y: 114 },
+      { id: "notes",  t: "Release notes",       who: "MK", nm: "Maya",  s: "blocked", wait: 1,                  x: 440, y: 294 },
+      { id: "qa",     t: "QA checklist pass",   who: "RS", nm: "Rosa",  s: "blocked", wait: 2,                  x: 652, y: 202 },
+      { id: "launch", t: "Launch v2 live",      who: "AF", nm: "Alex",  s: "await",   due: "Fri 11:59 PM",   x: 864, y: 202 },
+    ],
+    edges: [
+      ["brief","auth","done"], ["schema","rate","done"],
+      ["auth","fe",""], ["rate","fe","hot"], ["rate","notes","hot"],
+      ["fe","qa",""], ["notes","qa",""], ["qa","launch",""],
+    ],
+  },
+  website: {
+    insight: `<b>“Pricing table”</b> was rejected — rework it to publish`,
+    nodes: [
+      { id: "cbrief",  t: "Content brief",       who: "AF", nm: "Alex", s: "done",    due: "Jul 10",           x: 16,   y: 156 },
+      { id: "audit",   t: "Design system audit", who: "MK", nm: "Maya", s: "done",    due: "Jul 15",           x: 228, y: 36  },
+      { id: "hero",    t: "Homepage hero copy",  who: "AF", nm: "Alex", s: "prog",    due: "Jul 18 11:59 PM", hot: true, x: 228, y: 156 },
+      { id: "pricing", t: "Pricing table",       who: "RS", nm: "Rosa", s: "rej",     due: "Mon 11:59 PM",  blocker: "Rework", x: 228, y: 278 },
+      { id: "home",    t: "Homepage build",      who: "RS", nm: "Rosa", s: "blocked", wait: 1,                 x: 440, y: 94  },
+      { id: "ppage",   t: "Pricing page",        who: "MK", nm: "Maya", s: "blocked", wait: 1,                 x: 440, y: 278 },
+      { id: "publish", t: "Publish site",        who: "AF", nm: "Alex", s: "blocked", wait: 2,                 x: 652, y: 186 },
+    ],
+    edges: [
+      ["cbrief","audit","done"], ["cbrief","hero","done"], ["cbrief","pricing","done"],
+      ["audit","home",""], ["hero","home","hot"], ["pricing","ppage","hot"],
+      ["home","publish",""], ["ppage","publish",""],
+    ],
+  },
+  q3: {
+    insight: `Nothing is waiting upstream — <b>2 tasks are ready</b> to start`,
+    nodes: [
+      { id: "ux",     t: "User interviews",    who: "MK", nm: "Maya",  s: "done",  due: "Jul 8",           x: 16,   y: 68  },
+      { id: "metrics",t: "Metrics review",     who: "JT", nm: "Jonah", s: "done",  due: "Jul 11",          x: 16,   y: 256 },
+      { id: "synth",  t: "Synthesis doc",      who: "AF", nm: "Alex",  s: "prog",  due: "Wed 11:59 PM", x: 228, y: 162 },
+      { id: "okrs",   t: "Draft Q3 OKRs",      who: "AF", nm: "Alex",  s: "ready", due: "Jul 28",          x: 440, y: 68  },
+      { id: "budget", t: "Budget ask",         who: "JT", nm: "Jonah", s: "ready", due: "Jul 30",          x: 440, y: 256 },
+      { id: "review", t: "Leadership review",  who: "AF", nm: "Alex",  s: "await", due: "Aug 4 11:59 PM", x: 652, y: 162 },
+    ],
+    edges: [
+      ["ux","synth","done"], ["metrics","synth","done"],
+      ["synth","okrs",""], ["synth","budget",""],
+      ["okrs","review",""], ["budget","review",""],
+    ],
+  },
+};
+
+const canvas = document.getElementById("mapCanvas");
+const edgeSvg = document.getElementById("edgeSvg");
+const NODE_W = 180;
+
+function nodeHTML(n) {
+  const [gcls, glabel] = STATUS[n.s];
+  const cls = ["tnode"];
+  if (n.s === "done") cls.push("is-done");
+  if (n.s === "blocked") cls.push("is-blocked");
+  if (n.blocker) cls.push("is-blocker");
+  const statTxt = n.s === "blocked" ? `Waiting on <span class="waitn num">${n.wait}</span>` : glabel;
+  const dueTxt = n.s === "blocked" ? "queued" : (n.due || "");
+  return `<div class="${cls.join(" ")}" style="left:${n.x}px;top:${n.y}px" data-id="${n.id}">
+    ${n.blocker ? `<span class="badge">${n.blocker}</span>` : ""}
+    <div class="tstat"><span class="g ${gcls}"></span>${statTxt}</div>
+    <div class="tt">${n.t}</div>
+    <div class="tm"><span class="ava xs${n.who === "AF" ? " me" : ""}">${n.who}</span>${n.nm}
+      <span class="due num${n.hot ? " hot" : ""}">${dueTxt}</span></div>
+  </div>`;
+}
+
+function renderGraph(key) {
+  const g = GRAPHS[key];
+  edgeSvg.innerHTML = "";
+  canvas.querySelectorAll(".tnode").forEach(el => el.remove());
+  canvas.insertAdjacentHTML("beforeend", g.nodes.map(nodeHTML).join(""));
+
+  // measure node heights, then draw bezier edges right-center → left-center
+  const rects = {};
+  g.nodes.forEach(n => {
+    const el = canvas.querySelector(`[data-id="${n.id}"]`);
+    rects[n.id] = { x: n.x, y: n.y, w: NODE_W, h: el.offsetHeight };
+  });
+  const paths = g.edges.map(([from, to, kind]) => {
+    const a = rects[from], b = rects[to];
+    const x1 = a.x + a.w, y1 = a.y + a.h / 2;
+    const x2 = b.x, y2 = b.y + b.h / 2;
+    const dx = Math.max(34, (x2 - x1) * 0.5);
+    return `<path class="edge ${kind}" d="M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}"/>`;
+  });
+  edgeSvg.innerHTML = paths.join("");
+  document.getElementById("mapInsight").innerHTML = g.insight;
+
+  // legend shows only the statuses present in this graph — less to parse
+  const present = [...new Set(g.nodes.map(n => n.s))];
+  document.getElementById("mapLegend").innerHTML = present.map(s => {
+    const [gcls, glabel] = STATUS[s];
+    return `<span class="lg"><span class="g ${gcls}"></span>${glabel}</span>`;
+  }).join("");
+}
+
+function swapGraph(key) {
+  canvas.classList.add("swapping");
+  setTimeout(() => { renderGraph(key); canvas.classList.remove("swapping"); }, 180);
+}
+
+renderGraph("launch");
+
+const projSeg = segInit(document.getElementById("projSeg"), document.getElementById("segPill"),
+  btn => swapGraph(btn.dataset.proj));
+
+/* sidebar project list drives the same switcher */
+document.querySelectorAll("#projNav .proj-item").forEach(a => a.addEventListener("click", e => {
+  e.preventDefault();
+  document.querySelectorAll("#projNav .proj-item").forEach(x => x.classList.remove("on"));
+  a.classList.add("on");
+  projSeg.set(a.dataset.proj);
+}));
+
+/* "View in graph" scrolls to the map */
+document.getElementById("viewInGraph").addEventListener("click", () => {
+  projSeg.set("launch");
+  document.getElementById("mapCard").scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+/* ================= deadlines tabs ================= */
+const DL = {
+  today: [
+    { g: "g-prog",  t: "Fix API rate limits",     s: "Launch v2 · Jonah",        due: "2:00 PM",  hot: true },
+    { g: "g-ready", t: "Review onboarding copy",  s: "Website refresh · you",    due: "11:59 PM" },
+    { g: "g-ready", t: "Standup notes",           s: "Launch v2 · you",          due: "11:59 PM" },
+  ],
+  week: [
+    { g: "g-blocked", t: "QA checklist pass", s: "Launch v2 · Rosa",       due: "Tue · 11:59 PM" },
+    { g: "g-rej",     t: "Pricing table",     s: "Website refresh · Rosa", due: "Mon · 11:59 PM", hot: true },
+    { g: "g-ready",   t: "Draft Q3 OKRs",     s: "Q3 roadmap · you",       due: "Jul 28 · 11:59 PM" },
+    { g: "g-await",   t: "Launch v2 live",    s: "Launch v2 · approval",   due: "Fri · 11:59 PM" },
+  ],
+};
+const dlBody = document.getElementById("dlBody"), dlCount = document.getElementById("dlCount");
+function renderDl(tab) {
+  dlBody.innerHTML = DL[tab].map(r => `<div class="trow">
+    <span class="g ${r.g}"></span>
+    <div class="tbody"><b>${r.t}</b><span>${r.s}</span></div>
+    <div class="tright"><span class="due num${r.hot ? " hot" : ""}">${r.due}</span></div>
+  </div>`).join("");
+  dlCount.textContent = DL[tab].length + " due";
+}
+renderDl("today");
+segInit(document.getElementById("dlSeg"), document.getElementById("dlPill"), btn => {
+  dlBody.classList.add("swapping");
+  setTimeout(() => { renderDl(btn.dataset.tab); dlBody.classList.remove("swapping"); }, 160);
+});
+</script>
+</body>
+</html>

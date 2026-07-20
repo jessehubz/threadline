@@ -24,7 +24,7 @@ export default async function AnalyticsPage() {
     { name: "Awaiting Approval", value: tasks.filter((t) => t.status === "AWAITING_APPROVAL").length, color: "var(--violet-500)" },
     { name: "In Progress", value: tasks.filter((t) => t.status === "IN_PROGRESS").length, color: "var(--violet-600)" },
     { name: "Complete", value: tasks.filter((t) => t.status === "COMPLETE").length, color: "var(--violet-700)" },
-    { name: "Blocked", value: tasks.filter((t) => t.status === "BLOCKED").length, color: "var(--danger)" },
+    { name: "Waiting upstream", value: tasks.filter((t) => t.status === "BLOCKED").length, color: "var(--danger)" },
     { name: "Rejected", value: tasks.filter((t) => t.status === "REJECTED").length, color: "var(--danger-hover)" },
   ].filter((s) => s.value > 0);
 

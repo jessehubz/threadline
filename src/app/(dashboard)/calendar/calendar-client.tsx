@@ -17,7 +17,7 @@ interface Task {
 const STATUS_LABELS: Record<string, string> = {
   NOT_STARTED: "Not Started",
   IN_PROGRESS: "In Progress",
-  BLOCKED: "Blocked",
+  BLOCKED: "Waiting upstream",
   AWAITING_APPROVAL: "Awaiting Approval",
   REJECTED: "Rejected",
   COMPLETE: "Complete",

@@ -34,7 +34,7 @@ const sections = [
     topics: [
       {
         title: "Task nodes & statuses",
-        body: "Every task node carries a title, description, due date, assignees, attachments, and one of six statuses: Not Started, In Progress, Blocked, Awaiting Approval, Rejected, or Complete. Nodes are color-coded by status automatically, or you can override the color per node.",
+        body: "Every task node carries a title, description, due date, assignees, attachments, and one of six statuses: Not Started, In Progress, Waiting upstream, Awaiting Approval, Rejected, or Complete. Nodes are color-coded by status automatically, or you can override the color per node.",
       },
       {
         title: "Dependencies & edges",

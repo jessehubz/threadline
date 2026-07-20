@@ -99,7 +99,7 @@ export function OverviewClient({ projects }: { projects: ProjectData[] }) {
         <div className="panel-quiet p-4 hover-lift">
           <div className="flex items-center gap-2 mb-1.5">
             <AlertCircle className="h-4 w-4 text-[var(--danger)]" />
-            <span className="text-eyebrow">Blocked</span>
+            <span className="text-eyebrow">Waiting upstream</span>
           </div>
           <p className="text-[24px] text-stat">{blocked}</p>
         </div>

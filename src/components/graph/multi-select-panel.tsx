@@ -10,7 +10,7 @@ import { toast } from "sonner";
 const STATUS_OPTIONS = [
   { value: "NOT_STARTED", label: "Not Started" },
   { value: "IN_PROGRESS", label: "In Progress" },
-  { value: "BLOCKED", label: "Blocked" },
+  { value: "BLOCKED", label: "Waiting upstream" },
   { value: "AWAITING_APPROVAL", label: "Awaiting Approval" },
   { value: "REJECTED", label: "Rejected" },
   { value: "COMPLETE", label: "Complete" },

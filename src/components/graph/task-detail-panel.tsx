@@ -59,7 +59,7 @@ interface TaskDetailPanelProps {
 const STATUS_OPTIONS = [
   { value: "NOT_STARTED", label: "Not Started" },
   { value: "IN_PROGRESS", label: "In Progress" },
-  { value: "BLOCKED", label: "Blocked" },
+  { value: "BLOCKED", label: "Waiting upstream" },
   { value: "COMPLETE", label: "Complete" },
 ];
 

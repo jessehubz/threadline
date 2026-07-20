@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
-import { Home, Users, Layers, Mail } from "lucide-react";
+import { Home, Layers, Tag, Mail } from "lucide-react";
 
 const navItems = [
   { label: "Home", href: "#home", icon: Home },
-  { label: "About", href: "#about", icon: Users },
   { label: "Features", href: "#services", icon: Layers },
-  { label: "Contact", href: "#contact", icon: Mail },
+  { label: "Pricing", href: "#pricing", icon: Tag },
+  { label: "Contact", href: "/contact", icon: Mail },
 ];
 
 export function LandingNav() {
@@ -24,6 +24,7 @@ export function LandingNav() {
   }, []);
 
   const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (!href.startsWith("#")) return; // route links (e.g. /contact) navigate normally
     e.preventDefault();
     const id = href.replace("#", "");
     if (id === "home") {
